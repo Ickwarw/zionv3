@@ -8,7 +8,6 @@ def register_routes(app):
     from modules.voip.routes import voip_bp
     # from modules.statistics.routes import statistics_bp
     from modules.financial.routes import financial_bp
-    from modules.leads.routes import leads_bp
     # from modules.groups.routes import groups_bp
     from modules.logs.routes import logs_bp
     from modules.products.routes import products_bp
@@ -20,6 +19,12 @@ def register_routes(app):
     
     # Import LeadsDashAgent blueprints
     from leadsdashagent import lead_bp, dashboard_bp, leadattributes_bp, leadinfos_bp, raizen_bp
+
+    # Backward compatibility: modules.leads may not exist in some deployments
+    try:
+        from modules.leads.routes import leads_bp
+    except ModuleNotFoundError:
+        leads_bp = lead_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
