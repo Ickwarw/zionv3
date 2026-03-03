@@ -45,7 +45,8 @@ def register_routes(app):
     app.register_blueprint(report_bp, url_prefix='/api/report')
     
     # Register LeadsDashAgent blueprints
-    app.register_blueprint(lead_bp, url_prefix='/api/leadsdashagent/leads')
+    if leads_bp is not lead_bp:
+        app.register_blueprint(lead_bp, url_prefix='/api/leadsdashagent/leads')
     app.register_blueprint(dashboard_bp, url_prefix='/api/leadsdashagent/dashboard')
     app.register_blueprint(leadattributes_bp, url_prefix='/api/leadsdashagent/attributes')
     app.register_blueprint(leadinfos_bp, url_prefix='/api/leadsdashagent/infos')
