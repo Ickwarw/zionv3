@@ -21,10 +21,7 @@ def register_routes(app):
     from leadsdashagent import lead_bp, dashboard_bp, leadattributes_bp, leadinfos_bp, raizen_bp
 
     # Backward compatibility: modules.leads may not exist in some deployments
-    try:
-        from modules.leads.routes import leads_bp
-    except ModuleNotFoundError:
-        leads_bp = lead_bp
+    from modules.leads.routes import leads_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -45,8 +42,7 @@ def register_routes(app):
     app.register_blueprint(report_bp, url_prefix='/api/report')
     
     # Register LeadsDashAgent blueprints
-    if leads_bp is not lead_bp:
-        app.register_blueprint(lead_bp, url_prefix='/api/leadsdashagent/leads')
+    app.register_blueprint(lead_bp, url_prefix='/api/leadsdashagent/leads')
     app.register_blueprint(dashboard_bp, url_prefix='/api/leadsdashagent/dashboard')
     app.register_blueprint(leadattributes_bp, url_prefix='/api/leadsdashagent/attributes')
     app.register_blueprint(leadinfos_bp, url_prefix='/api/leadsdashagent/infos')
