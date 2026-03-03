@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistentes IA - ZION CRM</title>
+    <meta name="description" content="Assistentes de inteligência artificial para otimizar seu trabalho" />
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 font-inter">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ZION CRM
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="sobre-nos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Sobre Nós</a>
+                            <a href="contato.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Contato</a>
+                            <a href="produtos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Produtos</a>
+                            <a href="agenda.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Agenda</a>
+                            <a href="financeiro.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Financeiro</a>
+                            <a href="leads.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Leads</a>
+                            <a href="chat-voip.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Chat & VoIP</a>
+                            <a href="tarefas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Tarefas</a>
+                            <a href="relatorios.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Relatórios</a>
+                            <a href="estatisticas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="assistentes-ia.html" class="text-purple-600 border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm font-medium">Assistentes IA</a>
+                            <a href="grupos-permissoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Grupos e Permissões</a>
+                            <a href="logs.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                            <a href="configuracoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Configurações</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    Assistentes IA
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Inteligência artificial para otimizar seu trabalho
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-compass text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Julia - Suporte</h3>
+                        <p class="text-gray-600 text-sm">Assistente de suporte e ajuda ao usuário</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Ajuda interativa</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Explicações detalhadas</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Suporte em tempo real</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Ativar Julia
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Brayan - Análise</h3>
+                        <p class="text-gray-600 text-sm">Especialista em análise de dados e métricas</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Análise de dados</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Relatórios automáticos</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Insights de negócio</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Ativar Brayan
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-teal-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-users text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Joce - Vendas</h3>
+                        <p class="text-gray-600 text-sm">Assistente especializada em vendas e leads</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Gestão de leads</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Follow-up automatizado</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check text-green-600"></i>
+                            <span class="text-sm text-gray-700">Análise de conversão</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Ativar Joce
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Recursos dos Assistentes IA</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-robot text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Processamento de Linguagem Natural</h4>
+                                <p class="text-sm text-gray-600">Compreende e responde em linguagem natural</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-brain text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Aprendizado Contínuo</h4>
+                                <p class="text-sm text-gray-600">Melhora com base nas interações</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-green-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Disponibilidade 24/7</h4>
+                                <p class="text-sm text-gray-600">Sempre disponível para ajudar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Estatísticas de Uso</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Interações Hoje</span>
+                            <span class="font-bold text-gray-900">1,247</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Problemas Resolvidos</span>
+                            <span class="font-bold text-green-600">892</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Taxa de Satisfação</span>
+                            <span class="font-bold text-purple-600">94%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Tempo Médio de Resposta</span>
+                            <span class="font-bold text-blue-600">1.2s</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="font-semibold text-gray-900 mb-2">Eficiência Geral</h3>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full" style="width: 94%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">94% de eficiência</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 ZION CRM. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

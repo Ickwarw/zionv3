@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financeiro - ZION CRM</title>
+    <meta name="description" content="Gestão financeira completa com ZION CRM" />
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 font-inter">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ZION CRM
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="sobre-nos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Sobre Nós</a>
+                            <a href="contato.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Contato</a>
+                            <a href="produtos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Produtos</a>
+                            <a href="agenda.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Agenda</a>
+                            <a href="financeiro.html" class="text-purple-600 border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm font-medium">Financeiro</a>
+                            <a href="leads.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Leads</a>
+                            <a href="chat-voip.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Chat & VoIP</a>
+                            <a href="tarefas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Tarefas</a>
+                            <a href="relatorios.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Relatórios</a>
+                            <a href="estatisticas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="assistentes-ia.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Assistentes IA</a>
+                            <a href="grupos-permissoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Grupos e Permissões</a>
+                            <a href="logs.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                            <a href="configuracoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Configurações</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    Gestão Financeira
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Controle completo das finanças do seu negócio
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Receita Total</p>
+                            <p class="text-3xl font-bold text-green-600">R$ 125.450</p>
+                            <p class="text-sm text-green-600">+12% este mês</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-arrow-up text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Despesas</p>
+                            <p class="text-3xl font-bold text-red-600">R$ 45.890</p>
+                            <p class="text-sm text-red-600">+5% este mês</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-arrow-down text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Lucro Líquido</p>
+                            <p class="text-3xl font-bold text-purple-600">R$ 79.560</p>
+                            <p class="text-sm text-green-600">+18% este mês</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Fluxo de Caixa</h2>
+                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <p class="text-gray-500">Gráfico de Fluxo de Caixa</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Últimas Transações</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-plus text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Pagamento Cliente XYZ</p>
+                                    <p class="text-sm text-gray-600">Hoje, 14:30</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-green-600">+R$ 2.500</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-minus text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Fornecedor ABC</p>
+                                    <p class="text-sm text-gray-600">Ontem, 16:45</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-red-600">-R$ 850</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-plus text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Venda Online</p>
+                                    <p class="text-sm text-gray-600">Ontem, 10:20</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-green-600">+R$ 1.200</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 ZION CRM. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

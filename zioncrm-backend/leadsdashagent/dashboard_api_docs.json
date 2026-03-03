@@ -1,0 +1,390 @@
+{
+  "api_dashboard": {
+    "base_url": "http://localhost:5004",
+    "descricao": "API REST para sistema de dashboard com gráficos personalizáveis usando Chart.js",
+    
+    "endpoints": {
+      
+      "listar_assuntos": {
+        "method": "GET",
+        "path": "/api/dashboard/assuntos",
+        "descricao": "Lista todos os 12 assuntos disponíveis para criação de gráficos",
+        "response_example": {
+          "success": true,
+          "data": {
+            "perdas_clientes_fidelizados": {
+              "label": "Perdas de Clientes Fidelizados",
+              "descricao": "Clientes ativos satisfeitos que cancelaram contrato"
+            },
+            "perdas_leads_ruins": {
+              "label": "Perda de Leads Ruins",
+              "descricao": "Leads com prioridade 'Ruim' que foram perdidas"
+            },
+            "leads_recuperadas": {
+              "label": "Leads Recuperadas",
+              "descricao": "Leads que estavam inativas e foram recuperadas"
+            },
+            "leads_queimando_perdidas": {
+              "label": "Leads Queimando Perdidas",
+              "descricao": "Leads de alta prioridade (Queimando) que foram perdidas"
+            },
+            "tempo_ordem_servico_funcionario": {
+              "label": "Tempo por Ordem de Serviço (por Funcionário)",
+              "descricao": "Tempo médio de atendimento por funcionário"
+            },
+            "distribuicao_prioridade": {
+              "label": "Distribuição por Prioridade (Temperatura)",
+              "descricao": "Quantidade de leads por nível de prioridade"
+            },
+            "distribuicao_departamento": {
+              "label": "Distribuição por Departamento",
+              "descricao": "Leads por departamento (Vendas vs Pós-Venda)"
+            },
+            "taxa_conversao_vendas": {
+              "label": "Taxa de Conversão de Vendas",
+              "descricao": "Status do funil de vendas"
+            },
+            "satisfacao_cliente": {
+              "label": "Satisfação do Cliente",
+              "descricao": "Distribuição de níveis de contentamento"
+            },
+            "origem_leads": {
+              "label": "Origem das Leads (Canais)",
+              "descricao": "Leads por canal de comunicação"
+            },
+            "status_financeiro": {
+              "label": "Status Financeiro",
+              "descricao": "Leads em dia vs em atraso"
+            },
+            "score_medio_periodo": {
+              "label": "Score Médio por Período",
+              "descricao": "Evolução do score médio das leads ao longo do tempo"
+            }
+          },
+          "total": 12
+        }
+      },
+      
+      "obter_dados_assunto": {
+        "method": "GET",
+        "path": "/api/dashboard/assuntos/{assunto_key}",
+        "descricao": "Obtém dados de um assunto específico no formato Chart.js",
+        "exemplo_path": "/api/dashboard/assuntos/perdas_clientes_fidelizados",
+        "response_example": {
+          "success": true,
+          "data": {
+            "label": "Perdas de Clientes Fidelizados",
+            "descricao": "Clientes ativos satisfeitos que cancelaram contrato",
+            "labels": ["2026-02", "2026-01", "2025-12", "2025-11"],
+            "data": [5, 8, 3, 10]
+          }
+        },
+        "uso_chartjs": {
+          "exemplo": "const chartData = response.data; new Chart(ctx, { type: 'bar', data: { labels: chartData.labels, datasets: [{ label: chartData.label, data: chartData.data }] } });"
+        }
+      },
+      
+      "obter_estatisticas": {
+        "method": "GET",
+        "path": "/api/dashboard/estatisticas",
+        "descricao": "Retorna estatísticas gerais para os 12 cards principais do dashboard",
+        "response_example": {
+          "success": true,
+          "data": {
+            "total_leads": 500,
+            "por_departamento": {
+              "vendas": 300,
+              "pos_venda": 200
+            },
+            "leads_prioritarias": 50,
+            "score_medio": 65.5,
+            "perdas_clientes_fidelizados": {
+              "label": "Perdas de Clientes Fidelizados",
+              "labels": ["2026-02", "2026-01"],
+              "data": [5, 8]
+            },
+            "perdas_leads_ruins": {
+              "label": "Perda de Leads Ruins",
+              "labels": ["2026-02", "2026-01"],
+              "data": [12, 15]
+            }
+          }
+        }
+      },
+      
+      "listar_graficos": {
+        "method": "GET",
+        "path": "/api/dashboard/graficos",
+        "descricao": "Lista todos os gráficos personalizados salvos pelo usuário",
+        "query_params": {
+          "ativo": "true|false (opcional, padrão: true)"
+        },
+        "response_example": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "titulo": "Análise de Perdas vs Recuperações",
+              "descricao": "Comparação mensal de perdas e recuperações de leads",
+              "tipo_grafico": "line",
+              "assuntos": [
+                "perdas_clientes_fidelizados",
+                "leads_recuperadas"
+              ],
+              "configuracoes": {
+                "colors": ["#FF6384", "#36A2EB"],
+                "borderWidth": 2
+              },
+              "ativo": true
+            }
+          ],
+          "total": 1
+        }
+      },
+      
+      "obter_grafico": {
+        "method": "GET",
+        "path": "/api/dashboard/graficos/{id}",
+        "descricao": "Obtém detalhes de um gráfico específico",
+        "exemplo_path": "/api/dashboard/graficos/1",
+        "response_example": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "titulo": "Análise de Perdas vs Recuperações",
+            "descricao": "Comparação mensal de perdas e recuperações de leads",
+            "tipo_grafico": "line",
+            "assuntos": [
+              "perdas_clientes_fidelizados",
+              "leads_recuperadas"
+            ],
+            "configuracoes": {
+              "colors": ["#FF6384", "#36A2EB"]
+            },
+            "ativo": true
+          }
+        }
+      },
+      
+      "obter_dados_grafico": {
+        "method": "GET",
+        "path": "/api/dashboard/graficos/{id}/dados",
+        "descricao": "Obtém dados do gráfico no formato Chart.js (pronto para uso)",
+        "exemplo_path": "/api/dashboard/graficos/1/dados",
+        "response_example": {
+          "success": true,
+          "data": {
+            "labels": ["2026-02", "2026-01", "2025-12"],
+            "datasets": [
+              {
+                "label": "Perdas de Clientes Fidelizados",
+                "data": [5, 8, 3],
+                "labels": ["2026-02", "2026-01", "2025-12"]
+              },
+              {
+                "label": "Leads Recuperadas",
+                "data": [10, 12, 8],
+                "labels": ["2026-02", "2026-01", "2025-12"]
+              }
+            ],
+            "tipo_grafico": "line",
+            "titulo": "Análise de Perdas vs Recuperações",
+            "descricao": "Comparação mensal de perdas e recuperações de leads"
+          }
+        },
+        "uso_chartjs": {
+          "exemplo": "const chartData = response.data; new Chart(ctx, { type: chartData.tipo_grafico, data: { labels: chartData.labels, datasets: chartData.datasets }, options: { plugins: { title: { display: true, text: chartData.titulo } } } });"
+        }
+      },
+      
+      "criar_grafico": {
+        "method": "POST",
+        "path": "/api/dashboard/graficos",
+        "descricao": "Cria um novo gráfico personalizado",
+        "content_type": "application/json",
+        "request_body": {
+          "titulo": "Análise de Perdas",
+          "descricao": "Comparação de perdas e recuperações",
+          "tipo_grafico": "line",
+          "assuntos": [
+            "perdas_clientes_fidelizados",
+            "leads_recuperadas",
+            "perdas_leads_ruins"
+          ],
+          "configuracoes": {
+            "colors": ["#FF6384", "#36A2EB", "#FFCE56"],
+            "borderWidth": 2
+          }
+        },
+        "tipos_grafico_validos": [
+          "bar",
+          "line",
+          "pie",
+          "doughnut",
+          "radar",
+          "polarArea"
+        ],
+        "response_example": {
+          "success": true,
+          "data": {
+            "id": 5,
+            "titulo": "Análise de Perdas",
+            "descricao": "Comparação de perdas e recuperações",
+            "tipo_grafico": "line",
+            "assuntos": [
+              "perdas_clientes_fidelizados",
+              "leads_recuperadas",
+              "perdas_leads_ruins"
+            ],
+            "configuracoes": {
+              "colors": ["#FF6384", "#36A2EB", "#FFCE56"],
+              "borderWidth": 2
+            },
+            "ativo": true
+          },
+          "message": "Gráfico criado com sucesso"
+        }
+      },
+      
+      "atualizar_grafico": {
+        "method": "PUT",
+        "path": "/api/dashboard/graficos/{id}",
+        "descricao": "Atualiza um gráfico existente",
+        "exemplo_path": "/api/dashboard/graficos/1",
+        "content_type": "application/json",
+        "request_body": {
+          "titulo": "Novo Título do Gráfico",
+          "tipo_grafico": "bar",
+          "assuntos": [
+            "perdas_clientes_fidelizados"
+          ]
+        },
+        "response_example": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "titulo": "Novo Título do Gráfico",
+            "tipo_grafico": "bar",
+            "assuntos": ["perdas_clientes_fidelizados"],
+            "ativo": true
+          },
+          "message": "Gráfico atualizado com sucesso"
+        }
+      },
+      
+      "deletar_grafico": {
+        "method": "DELETE",
+        "path": "/api/dashboard/graficos/{id}",
+        "descricao": "Remove um gráfico (soft delete - marca como inativo)",
+        "exemplo_path": "/api/dashboard/graficos/1",
+        "response_example": {
+          "success": true,
+          "message": "Gráfico removido com sucesso"
+        }
+      },
+      
+      "listar_graficos_predefinidos": {
+        "method": "GET",
+        "path": "/api/dashboard/graficos-predefinidos",
+        "descricao": "Lista os 12 gráficos/cards predefinidos do dashboard",
+        "response_example": {
+          "success": true,
+          "data": [
+            {
+              "key": "perdas_clientes_fidelizados",
+              "label": "Perdas de Clientes Fidelizados",
+              "descricao": "Clientes ativos satisfeitos que cancelaram",
+              "icon": "📉",
+              "color": "#FF6384"
+            },
+            {
+              "key": "perdas_leads_ruins",
+              "label": "Perda de Leads Ruins",
+              "descricao": "Leads com baixa prioridade perdidas",
+              "icon": "⚫",
+              "color": "#9CA3AF"
+            },
+            {
+              "key": "leads_recuperadas",
+              "label": "Leads Recuperadas",
+              "descricao": "Leads inativas que foram recuperadas",
+              "icon": "🔄",
+              "color": "#10B981"
+            }
+          ],
+          "total": 12
+        }
+      },
+      
+      "obter_dados_grafico_predefinido": {
+        "method": "GET",
+        "path": "/api/dashboard/graficos-predefinidos/{key}/dados",
+        "descricao": "Obtém dados de um gráfico predefinido específico",
+        "exemplo_path": "/api/dashboard/graficos-predefinidos/perdas_clientes_fidelizados/dados",
+        "response_example": {
+          "success": true,
+          "data": {
+            "label": "Perdas de Clientes Fidelizados",
+            "descricao": "Clientes ativos satisfeitos que cancelaram contrato",
+            "labels": ["2026-02", "2026-01", "2025-12"],
+            "data": [5, 8, 3]
+          }
+        }
+      }
+    },
+    
+    "fluxo_uso_frontend": {
+      "1_carregar_dashboard": {
+        "descricao": "Ao abrir o dashboard, carregar os 12 cards",
+        "endpoint": "GET /api/dashboard/graficos-predefinidos",
+        "acao": "Renderizar 12 cards clicáveis com ícones e cores"
+      },
+      
+      "2_clicar_card": {
+        "descricao": "Ao clicar em um card, abrir página com detalhes do assunto",
+        "endpoint": "GET /api/dashboard/graficos-predefinidos/{key}/dados",
+        "acao": "Renderizar gráfico com Chart.js usando os dados retornados"
+      },
+      
+      "3_selecionar_assuntos": {
+        "descricao": "Na página de criação de gráfico, listar assuntos disponíveis",
+        "endpoint": "GET /api/dashboard/assuntos",
+        "acao": "Renderizar checkboxes para seleção de múltiplos assuntos"
+      },
+      
+      "4_criar_grafico": {
+        "descricao": "Após selecionar assuntos e clicar em 'Criar Gráfico'",
+        "endpoint": "POST /api/dashboard/graficos",
+        "body": {
+          "titulo": "Meu Gráfico",
+          "tipo_grafico": "line",
+          "assuntos": ["perdas_clientes_fidelizados", "leads_recuperadas"]
+        },
+        "acao": "Redirecionar para página de gráficos com o novo gráfico renderizado"
+      },
+      
+      "5_listar_graficos_salvos": {
+        "descricao": "Ao clicar no botão 'Gráficos' no dashboard",
+        "endpoint": "GET /api/dashboard/graficos",
+        "acao": "Renderizar lista de gráficos salvos pelo usuário"
+      },
+      
+      "6_visualizar_grafico_salvo": {
+        "descricao": "Ao clicar em um gráfico salvo",
+        "endpoint": "GET /api/dashboard/graficos/{id}/dados",
+        "acao": "Renderizar gráfico com Chart.js combinando múltiplos assuntos no mesmo gráfico"
+      }
+    },
+    
+    "exemplo_integracao_chartjs": {
+      "descricao": "Exemplo de código JavaScript para integrar com Chart.js",
+      "codigo": "async function renderizarGrafico(graficoId) {\n  const response = await fetch(`http://localhost:5004/api/dashboard/graficos/${graficoId}/dados`);\n  const result = await response.json();\n  \n  if (result.success) {\n    const chartData = result.data;\n    const ctx = document.getElementById('myChart').getContext('2d');\n    \n    new Chart(ctx, {\n      type: chartData.tipo_grafico,\n      data: {\n        labels: chartData.labels,\n        datasets: chartData.datasets.map((dataset, index) => ({\n          label: dataset.label,\n          data: dataset.data,\n          backgroundColor: chartData.configuracoes?.colors?.[index] || 'rgba(75, 192, 192, 0.2)',\n          borderColor: chartData.configuracoes?.colors?.[index] || 'rgba(75, 192, 192, 1)',\n          borderWidth: chartData.configuracoes?.borderWidth || 1\n        }))\n      },\n      options: {\n        responsive: true,\n        plugins: {\n          title: {\n            display: true,\n            text: chartData.titulo\n          },\n          subtitle: {\n            display: true,\n            text: chartData.descricao\n          }\n        }\n      }\n    });\n  }\n}"
+    },
+    
+    "exemplo_criar_grafico_frontend": {
+      "descricao": "Exemplo de formulário HTML + JavaScript para criar gráfico",
+      "html": "<form id=\"form-criar-grafico\">\n  <input type=\"text\" name=\"titulo\" placeholder=\"Título do gráfico\" required>\n  <textarea name=\"descricao\" placeholder=\"Descrição\"></textarea>\n  <select name=\"tipo_grafico\">\n    <option value=\"bar\">Barras</option>\n    <option value=\"line\">Linhas</option>\n    <option value=\"pie\">Pizza</option>\n    <option value=\"doughnut\">Rosca</option>\n  </select>\n  <div id=\"assuntos-checkboxes\"></div>\n  <button type=\"submit\">Criar Gráfico</button>\n</form>",
+      "javascript": "document.getElementById('form-criar-grafico').addEventListener('submit', async (e) => {\n  e.preventDefault();\n  const formData = new FormData(e.target);\n  const assuntosSelecionados = Array.from(document.querySelectorAll('input[name=\"assuntos\"]:checked')).map(cb => cb.value);\n  \n  const body = {\n    titulo: formData.get('titulo'),\n    descricao: formData.get('descricao'),\n    tipo_grafico: formData.get('tipo_grafico'),\n    assuntos: assuntosSelecionados\n  };\n  \n  const response = await fetch('http://localhost:5004/api/dashboard/graficos', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify(body)\n  });\n  \n  const result = await response.json();\n  if (result.success) {\n    alert('Gráfico criado com sucesso!');\n    window.location.href = `/graficos?id=${result.data.id}`;\n  }\n});"
+    }
+  }
+}

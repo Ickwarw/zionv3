@@ -1,0 +1,694 @@
+{
+  "_comment": "Configurações e opções do Sistema de Dashboard - Frontend",
+  "_version": "1.0",
+  "_date": "2026-02-16",
+  
+  "tiposGraficos": [
+    {
+      "value": "bar",
+      "label": "Barras Verticais",
+      "icon": "📊",
+      "descricao": "Ideal para comparar categorias discretas",
+      "usos": ["Contagens", "Distribuições", "Comparações"]
+    },
+    {
+      "value": "line",
+      "label": "Linhas",
+      "icon": "📈",
+      "descricao": "Ideal para tendências ao longo do tempo",
+      "usos": ["Séries temporais", "Evolução", "Crescimento"]
+    },
+    {
+      "value": "pie",
+      "label": "Pizza",
+      "icon": "🥧",
+      "descricao": "Ideal para proporções e percentuais",
+      "usos": ["Distribuições", "Composições", "Partes do todo"]
+    },
+    {
+      "value": "doughnut",
+      "label": "Rosca",
+      "icon": "🍩",
+      "descricao": "Similar à pizza, visualmente mais moderno",
+      "usos": ["Distribuições", "Proporções", "Percentuais"]
+    },
+    {
+      "value": "radar",
+      "label": "Radar/Aranha",
+      "icon": "🕸️",
+      "descricao": "Ideal para análises multidimensionais",
+      "usos": ["Múltiplas variáveis", "Perfis", "Comparações complexas"]
+    },
+    {
+      "value": "polarArea",
+      "label": "Área Polar",
+      "icon": "⭕",
+      "descricao": "Combina características de pizza e radar",
+      "usos": ["Magnitudes", "Proporções", "Distribuições"]
+    }
+  ],
+  
+  "categorias": [
+    {
+      "key": "basicas",
+      "label": "Informações Básicas",
+      "icon": "📋",
+      "color": "#3b82f6",
+      "descricao": "Análise de dados cadastrais básicos",
+      "totalAssuntos": 20
+    },
+    {
+      "key": "contato",
+      "label": "Contatos",
+      "icon": "📞",
+      "color": "#10b981",
+      "descricao": "Análise de canais de contato",
+      "totalAssuntos": 15
+    },
+    {
+      "key": "endereco",
+      "label": "Endereços",
+      "icon": "📍",
+      "color": "#f59e0b",
+      "descricao": "Análise geográfica e distribuição regional",
+      "totalAssuntos": 25
+    },
+    {
+      "key": "classificacao",
+      "label": "Classificação",
+      "icon": "🎯",
+      "color": "#8b5cf6",
+      "descricao": "Prioridades, status, departamentos e scores",
+      "totalAssuntos": 35
+    },
+    {
+      "key": "financeiro",
+      "label": "Financeiro",
+      "icon": "💰",
+      "color": "#10b981",
+      "descricao": "Análise financeira e débitos",
+      "totalAssuntos": 25
+    },
+    {
+      "key": "datas",
+      "label": "Datas e Temporalidade",
+      "icon": "📅",
+      "color": "#06b6d4",
+      "descricao": "Análise temporal e histórico",
+      "totalAssuntos": 30
+    },
+    {
+      "key": "atividade",
+      "label": "Atividade e Suporte",
+      "icon": "🔄",
+      "color": "#f97316",
+      "descricao": "Chamados, interações e atendimento",
+      "totalAssuntos": 20
+    },
+    {
+      "key": "performance",
+      "label": "Performance e Conversão",
+      "icon": "📈",
+      "color": "#10b981",
+      "descricao": "Taxas de conversão e funil de vendas",
+      "totalAssuntos": 20
+    },
+    {
+      "key": "satisfacao",
+      "label": "Satisfação e NPS",
+      "icon": "😊",
+      "color": "#fbbf24",
+      "descricao": "Análise de satisfação e NPS",
+      "totalAssuntos": 15
+    },
+    {
+      "key": "avancadas",
+      "label": "Análises Avançadas",
+      "icon": "🔬",
+      "color": "#8b5cf6",
+      "descricao": "Análises combinadas e insights profundos",
+      "totalAssuntos": 30
+    },
+    {
+      "key": "contratos",
+      "label": "Contratos",
+      "icon": "📝",
+      "color": "#6366f1",
+      "descricao": "Análise de contratos ativos, cancelados e renovações",
+      "totalAssuntos": 10
+    },
+    {
+      "key": "servicos",
+      "label": "Serviços",
+      "icon": "🛠️",
+      "color": "#14b8a6",
+      "descricao": "Serviços contratados, receita e velocidades",
+      "totalAssuntos": 8
+    },
+    {
+      "key": "alteracoes",
+      "label": "Alterações de Plano",
+      "icon": "🔄",
+      "color": "#a855f7",
+      "descricao": "Upgrades, downgrades e impacto financeiro",
+      "totalAssuntos": 6
+    },
+    {
+      "key": "historico",
+      "label": "Histórico",
+      "icon": "📜",
+      "color": "#64748b",
+      "descricao": "Histórico de mudanças e eventos",
+      "totalAssuntos": 4
+    },
+    {
+      "key": "arquivos",
+      "label": "Arquivos",
+      "icon": "📎",
+      "color": "#ec4899",
+      "descricao": "Uploads, tipos de arquivo e documentação",
+      "totalAssuntos": 4
+    },
+    {
+      "key": "chamados",
+      "label": "Chamados/OSS",
+      "icon": "🎫",
+      "color": "#ef4444",
+      "descricao": "Chamados de suporte, SLA e atendimentos",
+      "totalAssuntos": 15
+    },
+    {
+      "key": "historico_chamados",
+      "label": "Histórico Chamados",
+      "icon": "📋",
+      "color": "#f97316",
+      "descricao": "Histórico de alterações em chamados",
+      "totalAssuntos": 5
+    },
+    {
+      "key": "mensagens",
+      "label": "Mensagens",
+      "icon": "💬",
+      "color": "#06b6d4",
+      "descricao": "Comunicação e interações nos chamados",
+      "totalAssuntos": 5
+    },
+    {
+      "key": "arquivos_chamados",
+      "label": "Arquivos Chamados",
+      "icon": "📁",
+      "color": "#84cc16",
+      "descricao": "Anexos e documentos em chamados",
+      "totalAssuntos": 3
+    },
+    {
+      "key": "eventos",
+      "label": "Eventos Sistema",
+      "icon": "⚡",
+      "color": "#eab308",
+      "descricao": "Eventos e logs do sistema",
+      "totalAssuntos": 3
+    },
+    {
+      "key": "usuarios",
+      "label": "Usuários",
+      "icon": "👥",
+      "color": "#3b82f6",
+      "descricao": "Usuários do sistema, perfis e acessos",
+      "totalAssuntos": 8
+    }
+  ],
+  
+  "graficosPredefinidos": [
+    {
+      "id": "predefinido-1",
+      "titulo": "Perdas de Clientes Fidelizados",
+      "descricao": "Clientes com contratos cancelados que tinham boa satisfação (alta prioridade para recuperação!)",
+      "tipo_grafico": "bar",
+      "assunto": "perdas_clientes_fidelizados",
+      "icon": "📉",
+      "color": "#EF4444",
+      "categoria": "avancadas",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-2",
+      "titulo": "Perdas de Leads Ruins",
+      "descricao": "Leads perdidas com baixa qualidade (fria ou ruim)",
+      "tipo_grafico": "pie",
+      "assunto": "perdas_leads_ruins",
+      "icon": "❌",
+      "color": "#9CA3AF",
+      "categoria": "avancadas",
+      "prioridade": "media"
+    },
+    {
+      "id": "predefinido-3",
+      "titulo": "Leads Recuperadas",
+      "descricao": "Taxa de sucesso em recuperar leads inativas",
+      "tipo_grafico": "doughnut",
+      "assunto": "leads_recuperadas",
+      "icon": "♻️",
+      "color": "#10B981",
+      "categoria": "performance",
+      "prioridade": "media"
+    },
+    {
+      "id": "predefinido-4",
+      "titulo": "Leads Queimando Perdidas",
+      "descricao": "Oportunidades urgentes que foram perdidas (análise crítica)",
+      "tipo_grafico": "bar",
+      "assunto": "leads_queimando_perdidas",
+      "icon": "🔥",
+      "color": "#DC2626",
+      "categoria": "avancadas",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-5",
+      "titulo": "Tempo de Atendimento por Funcionário",
+      "descricao": "Performance da equipe em tempo de resposta",
+      "tipo_grafico": "bar",
+      "assunto": "tempo_ordem_servico_funcionario",
+      "icon": "👥",
+      "color": "#3B82F6",
+      "categoria": "atividade",
+      "prioridade": "media"
+    },
+    {
+      "id": "predefinido-6",
+      "titulo": "Distribuição por Prioridade",
+      "descricao": "Temperatura das leads (Queimando, Quente, Morna, Fria, etc.)",
+      "tipo_grafico": "bar",
+      "assunto": "distribuicao_prioridade",
+      "icon": "🎯",
+      "color": "#F59E0B",
+      "categoria": "classificacao",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-7",
+      "titulo": "Leads por Departamento",
+      "descricao": "Vendas vs Pós-Venda",
+      "tipo_grafico": "pie",
+      "assunto": "distribuicao_departamento",
+      "icon": "🏢",
+      "color": "#8B5CF6",
+      "categoria": "classificacao",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-8",
+      "titulo": "Taxa de Conversão de Vendas",
+      "descricao": "Percentual de leads que viram clientes",
+      "tipo_grafico": "line",
+      "assunto": "taxa_conversao_vendas",
+      "icon": "📈",
+      "color": "#10B981",
+      "categoria": "performance",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-9",
+      "titulo": "Satisfação do Cliente",
+      "descricao": "Níveis de contentamento (Excelente, Bom, Regular, Ruim, Péssimo)",
+      "tipo_grafico": "doughnut",
+      "assunto": "satisfacao_cliente",
+      "icon": "😊",
+      "color": "#FBBF24",
+      "categoria": "satisfacao",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-10",
+      "titulo": "Origem das Leads",
+      "descricao": "De onde vêm as leads (Facebook, WhatsApp, Telefone, etc.)",
+      "tipo_grafico": "pie",
+      "assunto": "origem_leads",
+      "icon": "🌐",
+      "color": "#3B82F6",
+      "categoria": "classificacao",
+      "prioridade": "media"
+    },
+    {
+      "id": "predefinido-11",
+      "titulo": "Status Financeiro",
+      "descricao": "Clientes em dia vs em atraso",
+      "tipo_grafico": "doughnut",
+      "assunto": "status_financeiro",
+      "icon": "💰",
+      "color": "#10B981",
+      "categoria": "financeiro",
+      "prioridade": "alta"
+    },
+    {
+      "id": "predefinido-12",
+      "titulo": "Evolução do Score Médio",
+      "descricao": "Score médio das leads ao longo do tempo",
+      "tipo_grafico": "line",
+      "assunto": "score_medio_periodo",
+      "icon": "📊",
+      "color": "#3B82F6",
+      "categoria": "classificacao",
+      "prioridade": "media"
+    }
+  ],
+  
+  "assuntosExemplo": [
+    {
+      "key": "distribuicao_prioridade",
+      "label": "Distribuição por Prioridade",
+      "descricao": "Mostra distribuição de leads por nível de prioridade (Queimando, Muito Quente, Quente, Morna, Fria, Ruim, Nova Lead)",
+      "categoria": "classificacao",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "bar"
+    },
+    {
+      "key": "distribuicao_cidade",
+      "label": "Distribuição por Cidade",
+      "descricao": "Leads agrupadas por cidade (top 50)",
+      "categoria": "endereco",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "bar"
+    },
+    {
+      "key": "distribuicao_uf",
+      "label": "Distribuição por Estado",
+      "descricao": "Leads por UF",
+      "categoria": "endereco",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "pie"
+    },
+    {
+      "key": "distribuicao_departamento",
+      "label": "Leads por Departamento",
+      "descricao": "Vendas vs Pós-Venda",
+      "categoria": "classificacao",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "pie"
+    },
+    {
+      "key": "distribuicao_status_vendas",
+      "label": "Status do Funil de Vendas",
+      "descricao": "Todos os estágios do funil com contagens",
+      "categoria": "classificacao",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "bar"
+    },
+    {
+      "key": "distribuicao_origem",
+      "label": "Canais de Origem",
+      "descricao": "De onde vêm as leads (Facebook, WhatsApp, Telefone, etc.)",
+      "categoria": "classificacao",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "pie"
+    },
+    {
+      "key": "taxa_conversao_vendas",
+      "label": "Taxa de Conversão de Vendas",
+      "descricao": "Percentual de leads que viraram clientes",
+      "categoria": "performance",
+      "tipo_dados": "percentual",
+      "grafico_recomendado": "line"
+    },
+    {
+      "key": "satisfacao_cliente",
+      "label": "Satisfação Geral dos Clientes",
+      "descricao": "Níveis de contentamento distribuídos",
+      "categoria": "satisfacao",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "doughnut"
+    },
+    {
+      "key": "leads_por_mes_cadastro",
+      "label": "Cadastros por Mês",
+      "descricao": "Evolução de cadastros mensais",
+      "categoria": "datas",
+      "tipo_dados": "temporal",
+      "grafico_recomendado": "line"
+    },
+    {
+      "key": "status_debito_distribuicao",
+      "label": "Status de Débito",
+      "descricao": "Em Dia vs Em Atraso",
+      "categoria": "financeiro",
+      "tipo_dados": "categorico",
+      "grafico_recomendado": "doughnut"
+    }
+  ],
+  
+  "paletaCores": {
+    "primarias": [
+      "#3B82F6",
+      "#10B981",
+      "#F59E0B",
+      "#EF4444",
+      "#8B5CF6",
+      "#06B6D4",
+      "#F97316",
+      "#FBBF24"
+    ],
+    "prioridades": [
+      {"nome": "NovaLead", "cor": "#dcfce7"},
+      {"nome": "Ruim", "cor": "#d1d5db"},
+      {"nome": "Fria", "cor": "#dbeafe"},
+      {"nome": "Morna", "cor": "#fed7aa"},
+      {"nome": "Quente", "cor": "#fdba74"},
+      {"nome": "MuitoQuente", "cor": "#fb923c"},
+      {"nome": "Queimando", "cor": "#dc2626"}
+    ],
+    "gradientes": [
+      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+      "linear-gradient(135deg, #10b981 0%, #047857 100%)",
+      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+      "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+    ],
+    "chartjs": [
+      "#FF6384",
+      "#36A2EB",
+      "#FFCE56",
+      "#4BC0C0",
+      "#9966FF",
+      "#FF9F40",
+      "#FF6384",
+      "#C9CBCF"
+    ]
+  },
+  
+  "configuracoesChartJS": {
+    "default": {
+      "responsive": true,
+      "maintainAspectRatio": false,
+      "animation": {
+        "duration": 1000,
+        "easing": "easeInOutQuart"
+      },
+      "plugins": {
+        "legend": {
+          "display": true,
+          "position": "top",
+          "labels": {
+            "font": {
+              "size": 14
+            },
+            "color": "#333"
+          }
+        },
+        "tooltip": {
+          "enabled": true,
+          "mode": "index",
+          "intersect": false
+        }
+      }
+    },
+    "bar": {
+      "scales": {
+        "y": {
+          "beginAtZero": true,
+          "title": {
+            "display": true,
+            "text": "Quantidade"
+          }
+        }
+      }
+    },
+    "line": {
+      "elements": {
+        "line": {
+          "tension": 0.4,
+          "borderWidth": 3
+        },
+        "point": {
+          "radius": 5,
+          "hoverRadius": 7
+        }
+      }
+    },
+    "pie": {
+      "plugins": {
+        "legend": {
+          "position": "right"
+        }
+      }
+    },
+    "doughnut": {
+      "cutout": "70%",
+      "plugins": {
+        "legend": {
+          "position": "right"
+        }
+      }
+    },
+    "radar": {
+      "scales": {
+        "r": {
+          "beginAtZero": true,
+          "max": 100
+        }
+      }
+    }
+  },
+  
+  "apiEndpoints": {
+    "base": "http://localhost:5004",
+    "endpoints": {
+      "assuntos": "/api/dashboard/assuntos",
+      "assuntoData": "/api/dashboard/assuntos/:key",
+      "estatisticas": "/api/dashboard/estatisticas",
+      "graficos": "/api/dashboard/graficos",
+      "criarGrafico": "/api/dashboard/graficos",
+      "grafico": "/api/dashboard/graficos/:id",
+      "atualizarGrafico": "/api/dashboard/graficos/:id",
+      "deletarGrafico": "/api/dashboard/graficos/:id",
+      "dadosGrafico": "/api/dashboard/graficos/:id/dados",
+      "predefinidos": "/api/dashboard/graficos-predefinidos",
+      "health": "/health"
+    }
+  },
+  
+  "validacoes": {
+    "titulo": {
+      "required": true,
+      "minLength": 3,
+      "maxLength": 200
+    },
+    "tipo_grafico": {
+      "required": true,
+      "enum": ["bar", "line", "pie", "doughnut", "radar", "polarArea"]
+    },
+    "assuntos": {
+      "required": true,
+      "minItems": 1,
+      "maxItems": 10
+    }
+  },
+  
+  "limites": {
+    "maxAssuntosPorGrafico": 10,
+    "maxGraficosSalvos": 100,
+    "maxResultadosQuery": 1000,
+    "cacheTimeout": 300
+  },
+  
+  "mensagens": {
+    "sucesso": {
+      "criar": "Gráfico criado com sucesso!",
+      "atualizar": "Gráfico atualizado com sucesso!",
+      "deletar": "Gráfico deletado com sucesso!",
+      "carregar": "Dados carregados com sucesso!"
+    },
+    "erro": {
+      "criar": "Erro ao criar gráfico. Verifique os dados e tente novamente.",
+      "atualizar": "Erro ao atualizar gráfico.",
+      "deletar": "Erro ao deletar gráfico.",
+      "carregar": "Erro ao carregar dados. Tente novamente.",
+      "naoEncontrado": "Gráfico não encontrado.",
+      "semDados": "Nenhum dado disponível para este assunto.",
+      "conexao": "Erro de conexão com o servidor."
+    },
+    "confirmacao": {
+      "deletar": "Tem certeza que deseja deletar este gráfico?"
+    }
+  },
+  
+  "tooltips": {
+    "titulo": "Título que aparecerá no topo do gráfico",
+    "descricao": "Descrição detalhada para ajudar outros usuários",
+    "tipo_grafico": "Escolha o tipo de visualização mais adequado",
+    "assuntos": "Selecione um ou mais assuntos para analisar juntos",
+    "cores": "Personalize as cores do gráfico (opcional)"
+  },
+  
+  "exemplosUso": [
+    {
+      "titulo": "Análise de Vendas Regional",
+      "descricao": "Compare leads por cidade e prioridade",
+      "tipo_grafico": "bar",
+      "assuntos": ["distribuicao_cidade", "distribuicao_prioridade"],
+      "uso": "Identifique quais regiões têm leads mais quentes"
+    },
+    {
+      "titulo": "Funil de Conversão Completo",
+      "descricao": "Acompanhe todas as etapas do funil",
+      "tipo_grafico": "line",
+      "assuntos": ["distribuicao_status_vendas", "taxa_conversao_vendas"],
+      "uso": "Visualize onde as leads estão travando no funil"
+    },
+    {
+      "titulo": "Performance por Canal",
+      "descricao": "Compare efetividade de cada canal",
+      "tipo_grafico": "bar",
+      "assuntos": ["distribuicao_origem", "taxa_conversao_vendas"],
+      "uso": "Descubra qual canal traz melhores resultados"
+    },
+    {
+      "titulo": "Saúde do Pós-Venda",
+      "descricao": "Monitore satisfação e débitos",
+      "tipo_grafico": "doughnut",
+      "assuntos": ["satisfacao_cliente", "status_debito_distribuicao"],
+      "uso": "Identifique clientes em risco de churn"
+    }
+  ],
+  
+  "atalhosTeclado": {
+    "n": "Novo Gráfico",
+    "r": "Recarregar Dados",
+    "p": "Ver Predefinidos",
+    "esc": "Fechar Modal",
+    "enter": "Salvar (quando em modal)"
+  },
+  
+  "tutorialSteps": [
+    {
+      "step": 1,
+      "titulo": "Explore os Predefinidos",
+      "descricao": "Clique em 'Predefinidos' para ver 12 gráficos prontos",
+      "elemento": "#btn-predefinidos"
+    },
+    {
+      "step": 2,
+      "titulo": "Crie seu Primeiro Gráfico",
+      "descricao": "Clique em 'Novo Gráfico' para começar",
+      "elemento": "#btn-novo-grafico"
+    },
+    {
+      "step": 3,
+      "titulo": "Escolha os Assuntos",
+      "descricao": "Selecione 1 ou mais assuntos para combinar no mesmo gráfico",
+      "elemento": "#assuntos-checkboxes"
+    },
+    {
+      "step": 4,
+      "titulo": "Selecione o Tipo",
+      "descricao": "Escolha entre barras, linhas, pizza, rosca, radar ou área polar",
+      "elemento": "#input-tipo"
+    },
+    {
+      "step": 5,
+      "titulo": "Salve e Visualize",
+      "descricao": "Seu gráfico será salvo e poderá ser acessado a qualquer momento",
+      "elemento": "#btn-salvar"
+    }
+  ]
+}

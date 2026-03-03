@@ -1,0 +1,27 @@
+{
+  "flow_id": "uuid",
+  "name": "Fluxo de Atendimento",
+  "start_node": "node0",
+  "nodes": {
+    "node0": {
+      "text": "Pergunta",
+      "position": { "x": 120, "y": 80 },
+      "answers": {
+        "1": {
+          "number": 1,
+          "text": "Resposta 1",
+          "next": "node1"
+        },
+        "2": {
+          "number": 2,
+          "text": "Resposta 2",
+          "next": "node2"
+        }
+      }
+    }
+  },
+  "created_at": "2026-01-01T10:00:00",
+  "updated_at": "2026-01-01T10:10:00",
+  "created_by": null,
+  "updated_by": null
+}

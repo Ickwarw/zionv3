@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logs - ZION CRM</title>
+    <meta name="description" content="Logs de atividades e auditoria do sistema" />
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 font-inter">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ZION CRM
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="sobre-nos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Sobre Nós</a>
+                            <a href="contato.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Contato</a>
+                            <a href="produtos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Produtos</a>
+                            <a href="agenda.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Agenda</a>
+                            <a href="financeiro.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Financeiro</a>
+                            <a href="leads.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Leads</a>
+                            <a href="chat-voip.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Chat & VoIP</a>
+                            <a href="tarefas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Tarefas</a>
+                            <a href="relatorios.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Relatórios</a>
+                            <a href="estatisticas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="assistentes-ia.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Assistentes IA</a>
+                            <a href="grupos-permissoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Grupos e Permissões</a>
+                            <a href="logs.html" class="text-purple-600 border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                            <a href="configuracoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Configurações</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    Logs do Sistema
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Histórico de atividades e auditoria completa
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Total de Logs</p>
+                            <p class="text-2xl font-bold text-gray-900">12,457</p>
+                            <p class="text-sm text-gray-500">Última hora: 234</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-list text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Logins Hoje</p>
+                            <p class="text-2xl font-bold text-green-600">89</p>
+                            <p class="text-sm text-green-600">+12% vs. ontem</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-sign-in-alt text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Erros</p>
+                            <p class="text-2xl font-bold text-red-600">5</p>
+                            <p class="text-sm text-red-600">Últimas 24h</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Warnings</p>
+                            <p class="text-2xl font-bold text-yellow-600">23</p>
+                            <p class="text-sm text-yellow-600">Últimas 24h</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-exclamation text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Atividades Recentes</h2>
+                    <div class="flex space-x-4">
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>Todos os tipos</option>
+                            <option>Login</option>
+                            <option>Logout</option>
+                            <option>Criação</option>
+                            <option>Edição</option>
+                            <option>Exclusão</option>
+                            <option>Erro</option>
+                        </select>
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>Últimas 24h</option>
+                            <option>Última semana</option>
+                            <option>Último mês</option>
+                            <option>Personalizado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Timestamp</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Usuário</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Ação</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Módulo</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:32:15</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">JS</span>
+                                        </div>
+                                        <span class="text-gray-900">João Silva</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Login realizado</td>
+                                <td class="py-4 px-4 text-gray-600">Autenticação</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Sucesso</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">192.168.1.10</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:28:42</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">MS</span>
+                                        </div>
+                                        <span class="text-gray-900">Maria Santos</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Lead criado</td>
+                                <td class="py-4 px-4 text-gray-600">CRM</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Sucesso</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">192.168.1.25</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:25:18</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">PC</span>
+                                        </div>
+                                        <span class="text-gray-900">Pedro Costa</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Relatório gerado</td>
+                                <td class="py-4 px-4 text-gray-600">Relatórios</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Sucesso</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">192.168.1.15</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:20:33</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">SY</span>
+                                        </div>
+                                        <span class="text-gray-900">Sistema</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Backup automático</td>
+                                <td class="py-4 px-4 text-gray-600">Sistema</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Sucesso</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">127.0.0.1</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:15:27</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">AO</span>
+                                        </div>
+                                        <span class="text-gray-900">Ana Oliveira</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Tentativa de login</td>
+                                <td class="py-4 px-4 text-gray-600">Autenticação</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Falha</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">203.0.113.45</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-4 px-4 text-gray-900">2024-01-15 14:10:12</td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">JS</span>
+                                        </div>
+                                        <span class="text-gray-900">João Silva</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-gray-900">Configuração alterada</td>
+                                <td class="py-4 px-4 text-gray-600">Configurações</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Warning</span>
+                                </td>
+                                <td class="py-4 px-4 text-gray-600">192.168.1.10</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center mt-6">
+                    <p class="text-sm text-gray-600">Mostrando 1-10 de 12,457 registros</p>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">Anterior</button>
+                        <button class="px-3 py-1 bg-purple-500 text-white rounded-lg">1</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">2</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">3</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">Próximo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 ZION CRM. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

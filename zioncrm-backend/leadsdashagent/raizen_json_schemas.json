@@ -1,0 +1,545 @@
+{
+  "comment": "JSON Schemas para comunicação Python <-> Frontend <-> Banco de Dados",
+  "version": "1.0.0",
+  
+  "schemas": {
+    
+    "chat_message": {
+      "description": "Mensagem de chat enviada/recebida",
+      "python_to_frontend": {
+        "message_id": "string (UUID)",
+        "conversation_id": "string (UUID)",
+        "role": "string (system|user|assistant)",
+        "content": "string",
+        "timestamp": "string (ISO 8601)",
+        "tokens": {
+          "input": "integer",
+          "output": "integer",
+          "total": "integer"
+        },
+        "cost": "float",
+        "response_time_ms": "integer",
+        "model_info": {
+          "provider": "string",
+          "model_id": "string",
+          "model_name": "string"
+        }
+      },
+      "frontend_to_python": {
+        "conversation_id": "string (UUID) (opcional se nova conversa)",
+        "message": "string (required)",
+        "provider": "string (openai|google|anthropic)",
+        "model_id": "string (required)",
+        "prompt_type": "string (opcional)",
+        "temperature": "float (0.0-2.0) (opcional)",
+        "max_tokens": "integer (opcional)",
+        "user_id": "integer (required)",
+        "user_name": "string (required)"
+      },
+      "python_to_database": {
+        "message_id": "UUID",
+        "conversation_id": "UUID",
+        "role": "ENUM",
+        "content": "TEXT",
+        "tokens_input": "INT",
+        "tokens_output": "INT",
+        "tokens_total": "INT",
+        "cost": "DECIMAL(10,6)",
+        "temperature": "DECIMAL(3,2)",
+        "max_tokens": "INT",
+        "response_time_ms": "INT",
+        "timestamp": "TIMESTAMP"
+      }
+    },
+    
+    "popup": {
+      "description": "Popup exibido ao usuário",
+      "python_to_frontend": {
+        "popup_id": "string (UUID)",
+        "title": "string",
+        "message": "string",
+        "popup_type": "string (info|warning|success|error|question|training_approval)",
+        "priority": "string (low|medium|high|urgent)",
+        "requires_action": "boolean",
+        "action_type": "string (opcional)",
+        "action_data": "object (opcional)",
+        "buttons": [
+          {
+            "label": "string",
+            "action": "string",
+            "style": "string (primary|secondary|danger)"
+          }
+        ],
+        "created_at": "string (ISO 8601)",
+        "expires_at": "string (ISO 8601)"
+      },
+      "frontend_to_python": {
+        "popup_id": "string (UUID) (required)",
+        "action": "string (approve|reject|dismiss|confirm)",
+        "response": "string (opcional)",
+        "data": "object (opcional)"
+      },
+      "python_to_database": {
+        "popup_id": "UUID",
+        "user_id": "INT",
+        "title": "VARCHAR(255)",
+        "message": "TEXT",
+        "popup_type": "ENUM",
+        "priority": "ENUM",
+        "requires_action": "BOOLEAN",
+        "action_type": "VARCHAR(50)",
+        "action_data": "JSON",
+        "status": "ENUM",
+        "user_response": "TEXT",
+        "user_action": "VARCHAR(50)",
+        "created_at": "TIMESTAMP",
+        "expires_at": "TIMESTAMP"
+      }
+    },
+    
+    "training_submission": {
+      "description": "Submissão de dados de treinamento",
+      "python_to_frontend": {
+        "training_id": "string (UUID)",
+        "category": "string",
+        "subcategory": "string (opcional)",
+        "status": "string (pending_approval|approved|rejected)",
+        "created_at": "string (ISO 8601)",
+        "input_preview": "string",
+        "confidence": "float (0-1)",
+        "needs_approval": "boolean"
+      },
+      "frontend_to_python_approval": {
+        "training_id": "string (UUID) (required)",
+        "action": "string (approve|reject) (required)",
+        "feedback_score": "float (0-1) (opcional para approve)",
+        "rejection_reason": "string (required para reject)",
+        "deprecation_type": "string (opcional para reject)"
+      },
+      "python_to_database": {
+        "training_id": "UUID",
+        "category": "VARCHAR(100)",
+        "subcategory": "VARCHAR(100)",
+        "input_data": "JSON",
+        "expected_output": "JSON",
+        "model_output": "JSON",
+        "feedback_score": "DECIMAL(3,2)",
+        "is_approved": "BOOLEAN",
+        "approved_by": "INT",
+        "approved_at": "TIMESTAMP",
+        "effectiveness_score": "DECIMAL(5,2)",
+        "usage_count": "INT"
+      }
+    },
+    
+    "ml_prediction": {
+      "description": "Predição de ML",
+      "python_to_frontend": {
+        "prediction_id": "string (UUID)",
+        "prediction_type": "string",
+        "result": "object",
+        "confidence_score": "float (0-1)",
+        "recommendations": "array",
+        "supporting_data": "object",
+        "created_at": "string (ISO 8601)",
+        "explainability": {
+          "top_features": "array",
+          "reasoning": "string"
+        }
+      },
+      "frontend_to_python_request": {
+        "prediction_type": "string (churn|sales_forecast|lead_score|campaign_performance)",
+        "input_features": "object (required)",
+        "related_entity_type": "string (opcional)",
+        "related_entity_id": "integer (opcional)"
+      },
+      "frontend_to_python_feedback": {
+        "prediction_id": "string (UUID) (required)",
+        "actual_outcome": "object (required)",
+        "is_accurate": "boolean (required)",
+        "error_margin": "float (opcional)",
+        "notes": "string (opcional)"
+      },
+      "python_to_database": {
+        "prediction_id": "UUID",
+        "session_id": "VARCHAR(100)",
+        "prediction_type": "VARCHAR(100)",
+        "input_features": "JSON",
+        "prediction_result": "JSON",
+        "confidence_score": "DECIMAL(5,4)",
+        "actual_outcome": "JSON",
+        "is_accurate": "BOOLEAN",
+        "error_margin": "DECIMAL(10,2)",
+        "user_id": "INT",
+        "related_entity_type": "VARCHAR(50)",
+        "related_entity_id": "INT"
+      }
+    },
+    
+    "insight": {
+      "description": "Insight gerado pelo assistente",
+      "python_to_frontend": {
+        "insight_id": "string (UUID)",
+        "insight_type": "string",
+        "title": "string",
+        "description": "string",
+        "priority": "string (low|medium|high|critical)",
+        "confidence_level": "float (0-100)",
+        "supporting_data": "object",
+        "recommendations": [
+          {
+            "action": "string",
+            "description": "string",
+            "priority": "integer (1-10)",
+            "estimated_impact": "string",
+            "effort_level": "string (low|medium|high)"
+          }
+        ],
+        "predicted_impact": {
+          "metric": "string",
+          "current_value": "number",
+          "predicted_value": "number",
+          "improvement_percentage": "number"
+        },
+        "status": "string (new|reviewed|implemented|dismissed)",
+        "created_at": "string (ISO 8601)",
+        "expires_at": "string (ISO 8601)"
+      },
+      "frontend_to_python": {
+        "insight_id": "string (UUID) (required)",
+        "action": "string (review|implement|dismiss)",
+        "feedback": "string (opcional)",
+        "implementation_result": "object (opcional para implement)"
+      },
+      "python_to_database": {
+        "insight_id": "UUID",
+        "insight_type": "VARCHAR(100)",
+        "title": "VARCHAR(255)",
+        "description": "TEXT",
+        "priority": "ENUM",
+        "confidence_level": "DECIMAL(5,2)",
+        "supporting_data": "JSON",
+        "recommendations": "JSON",
+        "predicted_impact": "JSON",
+        "status": "ENUM",
+        "reviewed_by": "INT",
+        "feedback": "TEXT",
+        "implementation_result": "JSON"
+      }
+    },
+    
+    "customer_analysis": {
+      "description": "Análise de cliente",
+      "python_to_frontend": {
+        "analysis_id": "string (UUID)",
+        "customer_id": "integer",
+        "analysis_type": "string",
+        "score": "float (0-100)",
+        "risk_level": "string (very_low|low|medium|high|very_high)",
+        "segments": "array",
+        "behavioral_patterns": {
+          "purchase_frequency": "string",
+          "engagement_level": "string",
+          "response_rate": "number",
+          "lifetime_value": "number",
+          "days_since_last_interaction": "integer"
+        },
+        "recommendations": "array",
+        "predicted_actions": {
+          "next_purchase_probability": "float (0-1)",
+          "churn_probability": "float (0-1)",
+          "optimal_contact_time": "string",
+          "preferred_channel": "string"
+        },
+        "intervention_priority": "integer (1-10)",
+        "engagement_trend": "string (increasing|stable|decreasing)",
+        "analyzed_at": "string (ISO 8601)"
+      },
+      "frontend_to_python_request": {
+        "customer_id": "integer (required)",
+        "analysis_types": "array (opcional - se vazio, faz todos)"
+      },
+      "python_to_database": {
+        "analysis_id": "UUID",
+        "customer_id": "INT",
+        "analysis_type": "VARCHAR(100)",
+        "score": "DECIMAL(5,2)",
+        "risk_level": "ENUM",
+        "segments": "JSON",
+        "behavioral_patterns": "JSON",
+        "recommendations": "JSON",
+        "predicted_actions": "JSON",
+        "intervention_priority": "INT",
+        "engagement_trend": "VARCHAR(50)",
+        "is_current": "BOOLEAN"
+      }
+    },
+    
+    "activity_log": {
+      "description": "Log de atividade",
+      "python_to_frontend": {
+        "log_id": "string (UUID)",
+        "activity_type": "string",
+        "action": "string",
+        "description": "string",
+        "status": "string (success|error|warning|info)",
+        "execution_time_ms": "integer",
+        "created_at": "string (ISO 8601)"
+      },
+      "python_to_database": {
+        "log_id": "UUID",
+        "activity_type": "VARCHAR(100)",
+        "user_id": "INT",
+        "action": "VARCHAR(255)",
+        "description": "TEXT",
+        "input_data": "JSON",
+        "output_data": "JSON",
+        "status": "ENUM",
+        "error_message": "TEXT",
+        "execution_time_ms": "INT"
+      }
+    },
+    
+    "feedback": {
+      "description": "Feedback do usuário",
+      "frontend_to_python": {
+        "feedback_type": "string (message|insight|prediction|popup|training) (required)",
+        "related_id": "string (UUID) (required)",
+        "rating": "integer (1-5) (opcional)",
+        "sentiment": "string (positive|neutral|negative) (opcional)",
+        "feedback_text": "string (opcional)",
+        "useful": "boolean (opcional)",
+        "accurate": "boolean (opcional)",
+        "actionable": "boolean (opcional)",
+        "tags": "array (opcional)"
+      },
+      "python_to_frontend": {
+        "feedback_id": "string (UUID)",
+        "status": "string (received|processed)",
+        "message": "string"
+      },
+      "python_to_database": {
+        "feedback_id": "UUID",
+        "feedback_type": "ENUM",
+        "related_id": "VARCHAR(100)",
+        "user_id": "INT",
+        "rating": "INT",
+        "sentiment": "ENUM",
+        "feedback_text": "TEXT",
+        "useful": "BOOLEAN",
+        "accurate": "BOOLEAN",
+        "actionable": "BOOLEAN",
+        "tags": "JSON"
+      }
+    },
+    
+    "statistics": {
+      "description": "Estatísticas do sistema",
+      "python_to_frontend": {
+        "stat_type": "string (daily|weekly|monthly|realtime)",
+        "category": "string",
+        "metrics": [
+          {
+            "metric_name": "string",
+            "metric_value": "number",
+            "metric_unit": "string",
+            "comparison_previous": "number",
+            "percentage_change": "number",
+            "trend": "string (up|down|stable)"
+          }
+        ],
+        "period": {
+          "start": "string (ISO 8601)",
+          "end": "string (ISO 8601)"
+        },
+        "breakdown": "object"
+      },
+      "python_to_database": {
+        "stat_id": "UUID",
+        "stat_type": "VARCHAR(100)",
+        "category": "VARCHAR(100)",
+        "metric_name": "VARCHAR(255)",
+        "metric_value": "DECIMAL(15,2)",
+        "metric_unit": "VARCHAR(50)",
+        "period_start": "TIMESTAMP",
+        "period_end": "TIMESTAMP",
+        "comparison_previous": "DECIMAL(15,2)",
+        "percentage_change": "DECIMAL(7,2)",
+        "trend": "VARCHAR(50)",
+        "breakdown": "JSON"
+      }
+    },
+    
+    "dashboard_data": {
+      "description": "Dados completos para dashboard",
+      "python_to_frontend": {
+        "dashboard_type": "string",
+        "generated_at": "string (ISO 8601)",
+        "summary": {
+          "total_conversations": "integer",
+          "active_insights": "integer",
+          "pending_approvals": "integer",
+          "high_risk_customers": "integer",
+          "ml_accuracy": "float (0-100)",
+          "total_cost": "float",
+          "total_tokens": "integer"
+        },
+        "recent_activity": "array",
+        "top_insights": "array",
+        "pending_popups": "array",
+        "statistics": "object",
+        "trends": {
+          "conversations": "object",
+          "predictions": "object",
+          "customer_engagement": "object"
+        },
+        "alerts": [
+          {
+            "type": "string",
+            "severity": "string",
+            "message": "string",
+            "action_required": "boolean"
+          }
+        ]
+      }
+    },
+    
+    "bulk_operations": {
+      "description": "Operações em lote",
+      "frontend_to_python": {
+        "operation_type": "string (approve_multiple|reject_multiple|export_data)",
+        "entity_type": "string (trainings|insights|predictions)",
+        "entity_ids": "array (UUIDs)",
+        "parameters": "object (opcional)"
+      },
+      "python_to_frontend": {
+        "operation_id": "string (UUID)",
+        "status": "string (processing|completed|failed)",
+        "total_items": "integer",
+        "processed_items": "integer",
+        "success_count": "integer",
+        "error_count": "integer",
+        "errors": "array",
+        "completed_at": "string (ISO 8601)"
+      }
+    }
+  },
+  
+  "api_endpoints": {
+    "chat": {
+      "send_message": "POST /api/raizen/chat/message",
+      "get_history": "GET /api/raizen/chat/history/{conversation_id}",
+      "end_conversation": "POST /api/raizen/chat/end/{conversation_id}"
+    },
+    "popups": {
+      "get_pending": "GET /api/raizen/popups/pending",
+      "respond": "POST /api/raizen/popups/respond",
+      "dismiss": "POST /api/raizen/popups/dismiss/{popup_id}"
+    },
+    "training": {
+      "approve": "POST /api/raizen/training/approve",
+      "reject": "POST /api/raizen/training/reject",
+      "list_pending": "GET /api/raizen/training/pending",
+      "get_approved": "GET /api/raizen/training/approved"
+    },
+    "predictions": {
+      "request": "POST /api/raizen/ml/predict",
+      "feedback": "POST /api/raizen/ml/prediction/feedback",
+      "get_history": "GET /api/raizen/ml/predictions"
+    },
+    "insights": {
+      "get_active": "GET /api/raizen/insights/active",
+      "review": "POST /api/raizen/insights/review",
+      "implement": "POST /api/raizen/insights/implement"
+    },
+    "customers": {
+      "analyze": "POST /api/raizen/customers/analyze",
+      "get_analysis": "GET /api/raizen/customers/analysis/{customer_id}",
+      "get_high_risk": "GET /api/raizen/customers/high-risk"
+    },
+    "logs": {
+      "get_activity": "GET /api/raizen/logs/activity",
+      "export": "GET /api/raizen/logs/export"
+    },
+    "feedback": {
+      "submit": "POST /api/raizen/feedback"
+    },
+    "statistics": {
+      "get_dashboard": "GET /api/raizen/statistics/dashboard",
+      "get_metrics": "GET /api/raizen/statistics/metrics"
+    }
+  },
+  
+  "websocket_events": {
+    "description": "Eventos em tempo real via WebSocket",
+    "client_to_server": {
+      "subscribe": {
+        "event": "subscribe",
+        "channels": ["popups", "insights", "chat"]
+      },
+      "unsubscribe": {
+        "event": "unsubscribe",
+        "channels": ["channel_name"]
+      }
+    },
+    "server_to_client": {
+      "new_popup": {
+        "event": "new_popup",
+        "data": "popup_object"
+      },
+      "new_insight": {
+        "event": "new_insight",
+        "data": "insight_object"
+      },
+      "chat_message": {
+        "event": "chat_message",
+        "data": "message_object"
+      },
+      "training_ready": {
+        "event": "training_ready",
+        "data": "training_object"
+      },
+      "alert": {
+        "event": "alert",
+        "data": {
+          "type": "string",
+          "message": "string",
+          "severity": "string"
+        }
+      }
+    }
+  },
+  
+  "error_responses": {
+    "standard_error": {
+      "error": "boolean (true)",
+      "error_code": "string",
+      "message": "string",
+      "details": "object (opcional)",
+      "timestamp": "string (ISO 8601)"
+    },
+    "validation_error": {
+      "error": true,
+      "error_code": "VALIDATION_ERROR",
+      "message": "Validation failed",
+      "validation_errors": [
+        {
+          "field": "string",
+          "message": "string",
+          "code": "string"
+        }
+      ]
+    }
+  },
+  
+  "status_codes": {
+    "200": "Success",
+    "201": "Created",
+    "400": "Bad Request",
+    "401": "Unauthorized",
+    "403": "Forbidden",
+    "404": "Not Found",
+    "422": "Validation Error",
+    "500": "Internal Server Error"
+  }
+}

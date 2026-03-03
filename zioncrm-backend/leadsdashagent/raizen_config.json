@@ -1,0 +1,526 @@
+{
+  "assistente": {
+    "nome": "Raizen",
+    "versao": "1.0.0",
+    "descricao": "Assistente virtual especializado em técnicas de marketing, análises de marketing e estratégia comercial para recuperação e captação de clientes",
+    "especialidades": [
+      "Análise de Marketing",
+      "Estratégia Comercial",
+      "Recuperação de Clientes",
+      "Captação de Clientes",
+      "Identificação de Falhas",
+      "Sugestões de Melhorias",
+      "Dashboards e Previsões",
+      "Provisionamento Estratégico"
+    ]
+  },
+  "modelos_ia": {
+    "openai": {
+      "provider": "OpenAI",
+      "api_endpoint": "https://api.openai.com/v1/chat/completions",
+      "requer_api_key": true,
+      "modelos_gratuitos": [],
+      "modelos_pagos": [
+        {
+          "id": "gpt-4o",
+          "nome": "GPT-4o",
+          "descricao": "Modelo mais avançado, multimodal, rápido e eficiente",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4o-2024-11-20",
+          "nome": "GPT-4o (Nov 2024)",
+          "descricao": "Versão específica do GPT-4o",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4o-2024-08-06",
+          "nome": "GPT-4o (Aug 2024)",
+          "descricao": "Versão de agosto do GPT-4o",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4o-mini",
+          "nome": "GPT-4o Mini",
+          "descricao": "Versão compacta e econômica do GPT-4o",
+          "contexto": 128000,
+          "preco_input": 0.15,
+          "preco_output": 0.60,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-4o-mini-2024-07-18",
+          "nome": "GPT-4o Mini (Jul 2024)",
+          "descricao": "Versão específica do GPT-4o Mini",
+          "contexto": 128000,
+          "preco_input": 0.15,
+          "preco_output": 0.60,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-4-turbo",
+          "nome": "GPT-4 Turbo",
+          "descricao": "GPT-4 otimizado para velocidade",
+          "contexto": 128000,
+          "preco_input": 10.00,
+          "preco_output": 30.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-turbo-2024-04-09",
+          "nome": "GPT-4 Turbo (Apr 2024)",
+          "descricao": "Versão de abril do GPT-4 Turbo",
+          "contexto": 128000,
+          "preco_input": 10.00,
+          "preco_output": 30.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-turbo-preview",
+          "nome": "GPT-4 Turbo Preview",
+          "descricao": "Versão preview do GPT-4 Turbo",
+          "contexto": 128000,
+          "preco_input": 10.00,
+          "preco_output": 30.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-0125-preview",
+          "nome": "GPT-4 (Jan 2024 Preview)",
+          "descricao": "Preview de janeiro 2024",
+          "contexto": 128000,
+          "preco_input": 10.00,
+          "preco_output": 30.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-1106-preview",
+          "nome": "GPT-4 (Nov 2023 Preview)",
+          "descricao": "Preview de novembro 2023",
+          "contexto": 128000,
+          "preco_input": 10.00,
+          "preco_output": 30.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4",
+          "nome": "GPT-4",
+          "descricao": "Modelo GPT-4 padrão",
+          "contexto": 8192,
+          "preco_input": 30.00,
+          "preco_output": 60.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-0613",
+          "nome": "GPT-4 (Jun 2023)",
+          "descricao": "Versão de junho 2023",
+          "contexto": 8192,
+          "preco_input": 30.00,
+          "preco_output": 60.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-32k",
+          "nome": "GPT-4 32K",
+          "descricao": "GPT-4 com contexto estendido",
+          "contexto": 32768,
+          "preco_input": 60.00,
+          "preco_output": 120.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4-32k-0613",
+          "nome": "GPT-4 32K (Jun 2023)",
+          "descricao": "Versão 32K de junho 2023",
+          "contexto": 32768,
+          "preco_input": 60.00,
+          "preco_output": 120.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-3.5-turbo",
+          "nome": "GPT-3.5 Turbo",
+          "descricao": "Modelo econômico e rápido",
+          "contexto": 16385,
+          "preco_input": 0.50,
+          "preco_output": 1.50,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-3.5-turbo-0125",
+          "nome": "GPT-3.5 Turbo (Jan 2024)",
+          "descricao": "Versão de janeiro 2024",
+          "contexto": 16385,
+          "preco_input": 0.50,
+          "preco_output": 1.50,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-3.5-turbo-1106",
+          "nome": "GPT-3.5 Turbo (Nov 2023)",
+          "descricao": "Versão de novembro 2023",
+          "contexto": 16385,
+          "preco_input": 1.00,
+          "preco_output": 2.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-3.5-turbo-16k",
+          "nome": "GPT-3.5 Turbo 16K",
+          "descricao": "Versão com contexto estendido",
+          "contexto": 16385,
+          "preco_input": 3.00,
+          "preco_output": 4.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-3.5-turbo-instruct",
+          "nome": "GPT-3.5 Turbo Instruct",
+          "descricao": "Modelo otimizado para instruções",
+          "contexto": 4096,
+          "preco_input": 1.50,
+          "preco_output": 2.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "o1-preview",
+          "nome": "O1 Preview",
+          "descricao": "Modelo de raciocínio avançado",
+          "contexto": 128000,
+          "preco_input": 15.00,
+          "preco_output": 60.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "o1-preview-2024-09-12",
+          "nome": "O1 Preview (Sep 2024)",
+          "descricao": "Versão de setembro 2024",
+          "contexto": 128000,
+          "preco_input": 15.00,
+          "preco_output": 60.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "o1-mini",
+          "nome": "O1 Mini",
+          "descricao": "Versão compacta do modelo O1",
+          "contexto": 128000,
+          "preco_input": 3.00,
+          "preco_output": 12.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "o1-mini-2024-09-12",
+          "nome": "O1 Mini (Sep 2024)",
+          "descricao": "Versão de setembro 2024",
+          "contexto": 128000,
+          "preco_input": 3.00,
+          "preco_output": 12.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "o3-mini",
+          "nome": "O3 Mini",
+          "descricao": "Modelo O3 compacto",
+          "contexto": 128000,
+          "preco_input": 1.10,
+          "preco_output": 4.40,
+          "categoria": "standard"
+        },
+        {
+          "id": "gpt-4o-realtime-preview",
+          "nome": "GPT-4o Realtime Preview",
+          "descricao": "Modelo em tempo real preview",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 20.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gpt-4o-audio-preview",
+          "nome": "GPT-4o Audio Preview",
+          "descricao": "Modelo com suporte a áudio",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 20.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "chatgpt-4o-latest",
+          "nome": "ChatGPT-4o Latest",
+          "descricao": "Última versão do ChatGPT-4o",
+          "contexto": 128000,
+          "preco_input": 5.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        }
+      ]
+    },
+    "google": {
+      "provider": "Google",
+      "api_endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
+      "requer_api_key": true,
+      "modelos_gratuitos": [
+        {
+          "id": "gemini-1.5-flash",
+          "nome": "Gemini 1.5 Flash (Free)",
+          "descricao": "Modelo rápido e eficiente com tier gratuito",
+          "contexto": 1000000,
+          "preco_input": 0.00,
+          "preco_output": 0.00,
+          "limite_gratuito": "15 RPM, 1M tokens/dia",
+          "categoria": "gratuito"
+        },
+        {
+          "id": "gemini-1.5-flash-8b",
+          "nome": "Gemini 1.5 Flash-8B (Free)",
+          "descricao": "Modelo compacto com tier gratuito",
+          "contexto": 1000000,
+          "preco_input": 0.00,
+          "preco_output": 0.00,
+          "limite_gratuito": "15 RPM, 4M tokens/dia",
+          "categoria": "gratuito"
+        },
+        {
+          "id": "gemini-1.0-pro",
+          "nome": "Gemini 1.0 Pro (Free)",
+          "descricao": "Modelo Pro com tier gratuito",
+          "contexto": 32760,
+          "preco_input": 0.00,
+          "preco_output": 0.00,
+          "limite_gratuito": "15 RPM",
+          "categoria": "gratuito"
+        }
+      ],
+      "modelos_pagos": [
+        {
+          "id": "gemini-2.0-flash-exp",
+          "nome": "Gemini 2.0 Flash Experimental",
+          "descricao": "Modelo experimental de próxima geração",
+          "contexto": 1000000,
+          "preco_input": 0.00,
+          "preco_output": 0.00,
+          "categoria": "experimental"
+        },
+        {
+          "id": "gemini-exp-1206",
+          "nome": "Gemini Experimental 1206",
+          "descricao": "Versão experimental de dezembro",
+          "contexto": 2000000,
+          "preco_input": 0.00,
+          "preco_output": 0.00,
+          "categoria": "experimental"
+        },
+        {
+          "id": "gemini-1.5-pro",
+          "nome": "Gemini 1.5 Pro",
+          "descricao": "Modelo Pro avançado",
+          "contexto": 2000000,
+          "preco_input": 1.25,
+          "preco_output": 5.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gemini-1.5-pro-002",
+          "nome": "Gemini 1.5 Pro-002",
+          "descricao": "Versão atualizada do Pro",
+          "contexto": 2000000,
+          "preco_input": 1.25,
+          "preco_output": 5.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "gemini-1.5-flash",
+          "nome": "Gemini 1.5 Flash (Paid)",
+          "descricao": "Versão paga com mais capacidade",
+          "contexto": 1000000,
+          "preco_input": 0.075,
+          "preco_output": 0.30,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-1.5-flash-002",
+          "nome": "Gemini 1.5 Flash-002",
+          "descricao": "Versão atualizada do Flash",
+          "contexto": 1000000,
+          "preco_input": 0.075,
+          "preco_output": 0.30,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-1.5-flash-8b",
+          "nome": "Gemini 1.5 Flash-8B (Paid)",
+          "descricao": "Versão paga 8B",
+          "contexto": 1000000,
+          "preco_input": 0.0375,
+          "preco_output": 0.15,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-1.0-pro",
+          "nome": "Gemini 1.0 Pro (Paid)",
+          "descricao": "Versão paga do Pro 1.0",
+          "contexto": 32760,
+          "preco_input": 0.50,
+          "preco_output": 1.50,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-1.0-pro-vision",
+          "nome": "Gemini 1.0 Pro Vision",
+          "descricao": "Modelo com capacidade visual",
+          "contexto": 16384,
+          "preco_input": 0.25,
+          "preco_output": 0.50,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-pro",
+          "nome": "Gemini Pro",
+          "descricao": "Modelo Gemini Pro padrão",
+          "contexto": 32760,
+          "preco_input": 0.50,
+          "preco_output": 1.50,
+          "categoria": "standard"
+        },
+        {
+          "id": "gemini-pro-vision",
+          "nome": "Gemini Pro Vision",
+          "descricao": "Modelo Pro com visão",
+          "contexto": 16384,
+          "preco_input": 0.25,
+          "preco_output": 0.50,
+          "categoria": "standard"
+        }
+      ]
+    },
+    "anthropic": {
+      "provider": "Anthropic",
+      "api_endpoint": "https://api.anthropic.com/v1/messages",
+      "requer_api_key": true,
+      "modelos_gratuitos": [],
+      "modelos_pagos": [
+        {
+          "id": "claude-3-5-sonnet-20241022",
+          "nome": "Claude 3.5 Sonnet (Oct 2024)",
+          "descricao": "Modelo mais avançado e recente",
+          "contexto": 200000,
+          "preco_input": 3.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-3-5-sonnet-20240620",
+          "nome": "Claude 3.5 Sonnet (Jun 2024)",
+          "descricao": "Versão de junho 2024",
+          "contexto": 200000,
+          "preco_input": 3.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-3-5-haiku-20241022",
+          "nome": "Claude 3.5 Haiku (Oct 2024)",
+          "descricao": "Modelo rápido e econômico",
+          "contexto": 200000,
+          "preco_input": 0.80,
+          "preco_output": 4.00,
+          "categoria": "standard"
+        },
+        {
+          "id": "claude-3-opus-20240229",
+          "nome": "Claude 3 Opus",
+          "descricao": "Modelo mais poderoso da série 3",
+          "contexto": 200000,
+          "preco_input": 15.00,
+          "preco_output": 75.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-3-sonnet-20240229",
+          "nome": "Claude 3 Sonnet",
+          "descricao": "Equilíbrio entre performance e custo",
+          "contexto": 200000,
+          "preco_input": 3.00,
+          "preco_output": 15.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-3-haiku-20240307",
+          "nome": "Claude 3 Haiku",
+          "descricao": "Modelo rápido e acessível",
+          "contexto": 200000,
+          "preco_input": 0.25,
+          "preco_output": 1.25,
+          "categoria": "standard"
+        },
+        {
+          "id": "claude-2.1",
+          "nome": "Claude 2.1",
+          "descricao": "Versão melhorada do Claude 2",
+          "contexto": 200000,
+          "preco_input": 8.00,
+          "preco_output": 24.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-2.0",
+          "nome": "Claude 2.0",
+          "descricao": "Versão 2 do Claude",
+          "contexto": 100000,
+          "preco_input": 8.00,
+          "preco_output": 24.00,
+          "categoria": "premium"
+        },
+        {
+          "id": "claude-instant-1.2",
+          "nome": "Claude Instant 1.2",
+          "descricao": "Modelo instant otimizado",
+          "contexto": 100000,
+          "preco_input": 0.80,
+          "preco_output": 2.40,
+          "categoria": "standard"
+        }
+      ]
+    }
+  },
+  "prompts_sistema": {
+    "analise_marketing": "Você é Raizen, um assistente especializado em análise de marketing. Analise dados, identifique tendências e forneça insights acionáveis para melhorar estratégias de marketing.",
+    "estrategia_comercial": "Você é Raizen, especialista em estratégia comercial. Desenvolva estratégias comerciais baseadas em dados, focando em crescimento sustentável e maximização de ROI.",
+    "recuperacao_clientes": "Você é Raizen, especialista em recuperação de clientes. Analise padrões de churn, identifique clientes em risco e desenvolva estratégias de retenção personalizadas.",
+    "captacao_clientes": "Você é Raizen, especialista em captação de clientes. Desenvolva estratégias de aquisição, identifique públicos-alvo e otimize funis de conversão.",
+    "analise_falhas": "Você é Raizen, analista de processos comerciais. Identifique gargalos, falhas operacionais e pontos de melhoria nos processos de marketing e vendas.",
+    "dashboard_previsoes": "Você é Raizen, analista de dados e previsões. Crie análises preditivas, dashboards interativos e visualizações de dados para suportar decisões estratégicas."
+  },
+  "configuracoes": {
+    "temperatura_padrao": 0.7,
+    "max_tokens_padrao": 2000,
+    "timeout_segundos": 60,
+    "retry_attempts": 3,
+    "streaming": false,
+    "log_conversas": true,
+    "salvar_metricas": true
+  },
+  "capacidades": {
+    "analise_sentimento": true,
+    "predicao_churn": true,
+    "segmentacao_clientes": true,
+    "analise_competitiva": true,
+    "otimizacao_campanhas": true,
+    "previsao_vendas": true,
+    "analise_roi": true,
+    "recomendacao_acoes": true,
+    "geracao_dashboards": true,
+    "analise_funil": true
+  }
+}

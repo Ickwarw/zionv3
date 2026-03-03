@@ -1,0 +1,323 @@
+{
+  "interface": {
+    "titulo": "Raizen - Assistente de Marketing IA",
+    "subtitulo": "Escolha o modelo de IA para sua análise",
+    "versao": "1.0.0"
+  },
+  "providers": [
+    {
+      "id": "openai",
+      "nome": "ChatGPT (OpenAI)",
+      "icone": "🤖",
+      "cor": "#10A37F",
+      "descricao": "Modelos GPT da OpenAI - Líderes em compreensão de contexto",
+      "total_modelos": 27,
+      "requer_api_key": true,
+      "grupos": [
+        {
+          "nome": "GPT-4o Series (Mais Recente)",
+          "modelos": [
+            "gpt-4o",
+            "gpt-4o-2024-11-20",
+            "gpt-4o-2024-08-06",
+            "gpt-4o-mini",
+            "gpt-4o-mini-2024-07-18",
+            "chatgpt-4o-latest",
+            "gpt-4o-realtime-preview",
+            "gpt-4o-audio-preview"
+          ]
+        },
+        {
+          "nome": "GPT-4 Turbo Series",
+          "modelos": [
+            "gpt-4-turbo",
+            "gpt-4-turbo-2024-04-09",
+            "gpt-4-turbo-preview",
+            "gpt-4-0125-preview",
+            "gpt-4-1106-preview"
+          ]
+        },
+        {
+          "nome": "GPT-4 Classic",
+          "modelos": [
+            "gpt-4",
+            "gpt-4-0613",
+            "gpt-4-32k",
+            "gpt-4-32k-0613"
+          ]
+        },
+        {
+          "nome": "GPT-3.5 Series",
+          "modelos": [
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-0125",
+            "gpt-3.5-turbo-1106",
+            "gpt-3.5-turbo-16k",
+            "gpt-3.5-turbo-instruct"
+          ]
+        },
+        {
+          "nome": "O Series (Reasoning)",
+          "modelos": [
+            "o1-preview",
+            "o1-preview-2024-09-12",
+            "o1-mini",
+            "o1-mini-2024-09-12",
+            "o3-mini"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "google",
+      "nome": "Gemini (Google)",
+      "icone": "✨",
+      "cor": "#4285F4",
+      "descricao": "Modelos Gemini do Google - Grande contexto e multimodal",
+      "total_modelos": 14,
+      "requer_api_key": true,
+      "tem_tier_gratuito": true,
+      "grupos": [
+        {
+          "nome": "Modelos Gratuitos",
+          "tipo": "gratuito",
+          "modelos": [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-1.0-pro"
+          ]
+        },
+        {
+          "nome": "Gemini 2.0 (Experimental)",
+          "modelos": [
+            "gemini-2.0-flash-exp",
+            "gemini-exp-1206"
+          ]
+        },
+        {
+          "nome": "Gemini 1.5 Pro",
+          "modelos": [
+            "gemini-1.5-pro",
+            "gemini-1.5-pro-002"
+          ]
+        },
+        {
+          "nome": "Gemini 1.5 Flash (Paid)",
+          "modelos": [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-002",
+            "gemini-1.5-flash-8b"
+          ]
+        },
+        {
+          "nome": "Gemini 1.0",
+          "modelos": [
+            "gemini-1.0-pro",
+            "gemini-1.0-pro-vision",
+            "gemini-pro",
+            "gemini-pro-vision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "nome": "Claude (Anthropic)",
+      "icone": "🧠",
+      "cor": "#D4726C",
+      "descricao": "Modelos Claude da Anthropic - Análise profunda e segura",
+      "total_modelos": 9,
+      "requer_api_key": true,
+      "grupos": [
+        {
+          "nome": "Claude 3.5 (Mais Recente)",
+          "modelos": [
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-sonnet-20240620",
+            "claude-3-5-haiku-20241022"
+          ]
+        },
+        {
+          "nome": "Claude 3 Series",
+          "modelos": [
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307"
+          ]
+        },
+        {
+          "nome": "Claude 2 Series",
+          "modelos": [
+            "claude-2.1",
+            "claude-2.0"
+          ]
+        },
+        {
+          "nome": "Claude Instant",
+          "modelos": [
+            "claude-instant-1.2"
+          ]
+        }
+      ]
+    }
+  ],
+  "tipos_analise": [
+    {
+      "id": "analise_marketing",
+      "nome": "Análise de Marketing",
+      "icone": "📊",
+      "descricao": "Análise de campanhas, métricas e performance de marketing",
+      "recomendado_para": ["openai:gpt-4o", "google:gemini-1.5-pro", "anthropic:claude-3-5-sonnet-20241022"]
+    },
+    {
+      "id": "estrategia_comercial",
+      "nome": "Estratégia Comercial",
+      "icone": "🎯",
+      "descricao": "Desenvolvimento de estratégias comerciais e planos de ação",
+      "recomendado_para": ["openai:o1-preview", "anthropic:claude-3-opus-20240229", "google:gemini-1.5-pro"]
+    },
+    {
+      "id": "recuperacao_clientes",
+      "nome": "Recuperação de Clientes",
+      "icone": "🔄",
+      "descricao": "Análise de churn e estratégias de retenção",
+      "recomendado_para": ["openai:gpt-4o", "anthropic:claude-3-5-sonnet-20241022", "google:gemini-1.5-flash"]
+    },
+    {
+      "id": "captacao_clientes",
+      "nome": "Captação de Clientes",
+      "icone": "🎣",
+      "descricao": "Estratégias de aquisição e otimização de funil",
+      "recomendado_para": ["openai:gpt-4-turbo", "google:gemini-1.5-pro", "anthropic:claude-3-sonnet-20240229"]
+    },
+    {
+      "id": "analise_falhas",
+      "nome": "Identificação de Falhas",
+      "icone": "🔍",
+      "descricao": "Análise de processos e identificação de gargalos",
+      "recomendado_para": ["anthropic:claude-3-5-sonnet-20241022", "openai:o1-preview", "google:gemini-1.5-pro"]
+    },
+    {
+      "id": "dashboard_previsoes",
+      "nome": "Dashboards e Previsões",
+      "icone": "📈",
+      "descricao": "Criação de dashboards e análises preditivas",
+      "recomendado_para": ["openai:gpt-4o", "anthropic:claude-3-5-sonnet-20241022", "google:gemini-1.5-pro"]
+    }
+  ],
+  "configuracoes_interface": {
+    "permitir_temperatura": true,
+    "temperatura_min": 0.0,
+    "temperatura_max": 2.0,
+    "temperatura_padrao": 0.7,
+    "permitir_max_tokens": true,
+    "max_tokens_min": 100,
+    "max_tokens_max": 4000,
+    "max_tokens_padrao": 2000,
+    "mostrar_custos": true,
+    "mostrar_tokens": true,
+    "salvar_historico": true,
+    "modo_streaming": false
+  },
+  "categorias_custo": {
+    "economico": {
+      "nome": "Econômico",
+      "cor": "#4CAF50",
+      "max_custo_por_1k_tokens": 1.0,
+      "modelos": [
+        "gpt-4o-mini",
+        "gpt-3.5-turbo",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "claude-3-haiku-20240307",
+        "claude-3-5-haiku-20241022"
+      ]
+    },
+    "balanceado": {
+      "nome": "Balanceado",
+      "cor": "#2196F3",
+      "max_custo_por_1k_tokens": 10.0,
+      "modelos": [
+        "gpt-4o",
+        "gpt-4-turbo",
+        "gemini-1.5-pro",
+        "claude-3-sonnet-20240229",
+        "claude-3-5-sonnet-20241022"
+      ]
+    },
+    "premium": {
+      "nome": "Premium",
+      "cor": "#9C27B0",
+      "max_custo_por_1k_tokens": 100.0,
+      "modelos": [
+        "gpt-4",
+        "gpt-4-32k",
+        "o1-preview",
+        "claude-3-opus-20240229",
+        "claude-2.1"
+      ]
+    }
+  },
+  "exemplos_uso": [
+    {
+      "titulo": "Análise de Campanha",
+      "tipo": "analise_marketing",
+      "provider": "openai",
+      "modelo": "gpt-4o-mini",
+      "exemplo_input": "Analise os resultados da nossa campanha de email marketing: 10000 envios, 2500 aberturas, 500 cliques, 50 conversões, R$15000 de receita"
+    },
+    {
+      "titulo": "Previsão de Vendas",
+      "tipo": "dashboard_previsoes",
+      "provider": "anthropic",
+      "modelo": "claude-3-5-sonnet-20241022",
+      "exemplo_input": "Com base nas vendas dos últimos 12 meses, preveja os próximos 3 meses considerando sazonalidade"
+    },
+    {
+      "titulo": "Estratégia de Captação",
+      "tipo": "captacao_clientes",
+      "provider": "google",
+      "modelo": "gemini-1.5-pro",
+      "exemplo_input": "Crie uma estratégia de captação para público B2B, orçamento de R$50000, foco em empresas de tecnologia"
+    }
+  ],
+  "filtros_disponíveis": [
+    {
+      "id": "provider",
+      "nome": "Provider",
+      "tipo": "select_multiple",
+      "opcoes": ["openai", "google", "anthropic"]
+    },
+    {
+      "id": "categoria",
+      "nome": "Categoria de Custo",
+      "tipo": "select_multiple",
+      "opcoes": ["economico", "balanceado", "premium"]
+    },
+    {
+      "id": "contexto",
+      "nome": "Tamanho de Contexto",
+      "tipo": "range",
+      "min": 0,
+      "max": 2000000,
+      "step": 10000
+    },
+    {
+      "id": "gratuito",
+      "nome": "Apenas Gratuitos",
+      "tipo": "checkbox"
+    },
+    {
+      "id": "experimental",
+      "nome": "Incluir Experimentais",
+      "tipo": "checkbox"
+    }
+  ],
+  "mensagens_sistema": {
+    "api_key_faltando": "Configure sua API Key nas variáveis de ambiente para usar este provider",
+    "modelo_indisponivel": "Este modelo está temporariamente indisponível. Tente outro modelo.",
+    "erro_requisicao": "Erro na requisição. Verifique sua conexão e tente novamente.",
+    "limite_excedido": "Limite de requisições excedido. Aguarde alguns minutos.",
+    "sucesso": "Análise concluída com sucesso!"
+  }
+}

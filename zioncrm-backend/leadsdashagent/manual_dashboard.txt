@@ -1,0 +1,2890 @@
+================================================================================
+                 MANUAL COMPLETO DO SISTEMA DE DASHBOARD
+                        VERSÃO 1.0 - 16/02/2026
+================================================================================
+
+================================================================================
+ÍNDICE
+================================================================================
+1. VISÃO GERAL DO SISTEMA
+2. ARQUITETURA E COMPONENTES
+3. BANCO DE DADOS - ESTRUTURA COMPLETA
+4. BACKEND - APIs E ENDPOINTS
+5. FRONTEND - INTERFACE E FUNCIONALIDADES
+6. FLUXO DE DADOS (BACKEND ↔ FRONTEND ↔ BANCO)
+7. ASSUNTOS DISPONÍVEIS (220+ ANÁLISES)
+8. TIPOS DE GRÁFICOS E CHART.JS
+9. FORMATOS JSON - COMUNICAÇÃO FRONTEND/BACKEND
+10. LISTA COMPLETA DE RECURSOS
+
+================================================================================
+1. VISÃO GERAL DO SISTEMA
+================================================================================
+
+O Sistema de Dashboard é uma plataforma de business intelligence (BI) que 
+permite criar visualizações interativas de dados para análise de leads e 
+métricas de negócio.
+
+PRINCIPAIS FUNCIONALIDADES:
+✓ Criação de dashboards personalizados
+✓ 220+ assuntos de análise disponíveis (1 por coluna da tabela lead)
+✓ 6 tipos de gráficos (bar, line, pie, doughnut, radar, polarArea)
+✓ Combinação de múltiplos assuntos em um único gráfico
+✓ Salvamento de configurações de gráficos
+✓ 12 gráficos predefinidos prontos para uso
+✓ Formato compatível com Chart.js
+✓ API REST completa para integração
+✓ Atualização automática de dados
+✓ Estatísticas gerais do sistema
+
+USUÁRIOS DO SISTEMA:
+- Gerentes e Diretores (visão estratégica)
+- Analistas de BI (análise profunda)
+- Equipe de Vendas (métricas de performance)
+- Equipe de Pós-Venda (satisfação e retenção)
+- Administradores (monitoramento geral)
+
+CATEGORIAS DE ANÁLISE:
+📊 Informações Básicas: Análise de razão social, fantasia, tipo pessoa
+📞 Contatos: Distribuição de canais de contato (email, telefone, celular)
+📍 Endereços: Análise geográfica (cidade, UF, bairro, região)
+🎯 Classificação: Prioridades, status, departamentos, scores
+💰 Financeiro: Status de débito, valores, formas de pagamento
+📅 Temporalidade: Análise de datas de cadastro, ativação, cancelamento
+🔄 Atividade: Chamados, interações, histórico
+📈 Performance: Conversões, taxas, funil de vendas
+😊 Satisfação: NPS, CSAT, contentamento
+🌐 Origem: Canais de captação, campanhas, mídias
+
+================================================================================
+2. ARQUITETURA E COMPONENTES
+================================================================================
+
+ESTRUTURA DE ARQUIVOS:
+├── models.py                         # Modelos e lógica de negócio
+├── routes.py                         # API REST Flask (porta 5004)
+├── migration_dashboard.sql           # Migração do banco de dados
+├── dashboard_api_docs.json           # Documentação da API
+├── README_DASHBOARD.md               # Documentação principal
+├── QUICKSTART_DASHBOARD.md           # Guia rápido de início
+├── test_dashboard_api.py             # Testes automatizados
+└── static/dashboard.html             # Interface web (a criar)
+
+TECNOLOGIAS UTILIZADAS:
+- Backend: Python 3.8+ com Flask 2.3+
+- Frontend: HTML5, CSS3, JavaScript + Chart.js 4.x
+- Banco de Dados: PostgreSQL 12+ com JSONB
+- Comunicação: REST API com JSON
+- CORS: flask-cors para requisições cross-origin
+- ORM: psycopg2-binary para PostgreSQL
+- Visualização: Chart.js para renderização de gráficos
+
+SERVIDOR:
+- PostgreSQL: 45.160.180.34:5432 (zioncrm)
+- Tabelas: lead (dados) + dashboard_graficos (configurações)
+
+PORTA DA API:
+- API Dashboard: 5004
+
+DEPENDÊNCIAS DO SISTEMA:
+- Sistema de Leads (tabela lead com 220+ colunas)
+- Dados devem estar sincronizados via zionexport.py
+
+================================================================================
+3. BANCO DE DADOS - ESTRUTURA COMPLETA
+================================================================================
+
+TABELA: dashboard_graficos
+Localização: PostgreSQL zioncrm.dashboard_graficos
+
+Propósito: Armazenar configurações de gráficos personalizados criados pelos 
+           usuários
+
+ESTRUTURA:
+
+CREATE TABLE dashboard_graficos (
+    id                  SERIAL PRIMARY KEY,
+    titulo              VARCHAR(200) NOT NULL,
+    descricao           TEXT,
+    tipo_grafico        VARCHAR(50) NOT NULL,
+    assuntos            JSONB NOT NULL,
+    configuracoes       JSONB,
+    data_criacao        TIMESTAMP DEFAULT NOW(),
+    data_atualizacao    TIMESTAMP DEFAULT NOW(),
+    ativo               BOOLEAN DEFAULT TRUE
+);
+
+COLUNAS DETALHADAS:
+
+id (SERIAL PRIMARY KEY)
+    - Identificador único do gráfico
+    - Auto-incremento
+    - Usado nas referências da API
+
+titulo (VARCHAR(200) NOT NULL)
+    - Título do gráfico
+    - Exibido no topo da visualização
+    - Obrigatório
+    - Exemplo: "Leads por Cidade - São Paulo"
+
+descricao (TEXT)
+    - Descrição detalhada do gráfico
+    - Opcional
+    - Ajuda outros usuários a entender o propósito
+    - Exemplo: "Análise das leads da cidade de São Paulo por prioridade"
+
+tipo_grafico (VARCHAR(50) NOT NULL)
+    - Tipo de visualização
+    - Obrigatório
+    - Valores aceitos:
+        * "bar" - Gráfico de barras verticais
+        * "line" - Gráfico de linhas
+        * "pie" - Gráfico de pizza
+        * "doughnut" - Gráfico de rosca
+        * "radar" - Gráfico radar/aranha
+        * "polarArea" - Gráfico de área polar
+    - Constraint: CHECK (tipo_grafico IN (...))
+
+assuntos (JSONB NOT NULL)
+    - Array JSON com lista de assuntos a exibir
+    - Obrigatório (mínimo 1 assunto)
+    - Formato: ["prioridade", "status_vendas", "cidade"]
+    - Cada assunto corresponde a uma coluna da tabela lead
+    - Permite análise combinada de múltiplas dimensões
+    - Exemplo: ["distribuicao_prioridade", "distribuicao_cidade"]
+
+configuracoes (JSONB)
+    - Configurações adicionais do gráfico
+    - Opcional
+    - Estrutura:
+        {
+            "colors": ["#FF6384", "#36A2EB", "#FFCE56"],
+            "showLegend": true,
+            "animation": true,
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "scales": {...},
+            "plugins": {...}
+        }
+    - Compatível com opções do Chart.js
+
+data_criacao (TIMESTAMP DEFAULT NOW())
+    - Data e hora de criação do gráfico
+    - Preenchido automaticamente
+    - Não é alterado
+
+data_atualizacao (TIMESTAMP DEFAULT NOW())
+    - Data e hora da última modificação
+    - Atualizado automaticamente via trigger
+    - Usado para cache e sincronização
+
+ativo (BOOLEAN DEFAULT TRUE)
+    - Status do gráfico
+    - TRUE = ativo (exibir)
+    - FALSE = inativo/arquivado (soft delete)
+    - Permite desativar sem deletar dados
+
+ÍNDICES:
+
+CREATE INDEX idx_dashboard_graficos_ativo
+    ON dashboard_graficos(ativo);
+    -- Acelera busca de gráficos ativos
+
+CREATE INDEX idx_dashboard_graficos_tipo
+    ON dashboard_graficos(tipo_grafico);
+    -- Filtra por tipo de gráfico
+
+CREATE INDEX idx_dashboard_graficos_data_criacao
+    ON dashboard_graficos(data_criacao DESC);
+    -- Ordena por mais recentes
+
+CREATE INDEX idx_dashboard_graficos_assuntos
+    ON dashboard_graficos USING GIN(assuntos);
+    -- Busca por assuntos específicos (GIN index para JSONB)
+
+TRIGGER:
+
+CREATE OR REPLACE FUNCTION update_dashboard_graficos_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.data_atualizacao = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_dashboard_graficos_timestamp
+    BEFORE UPDATE ON dashboard_graficos
+    FOR EACH ROW
+    EXECUTE FUNCTION update_dashboard_graficos_timestamp();
+
+Propósito: Atualiza automaticamente data_atualizacao em cada UPDATE
+
+CONSTRAINTS:
+
+ALTER TABLE dashboard_graficos
+    ADD CONSTRAINT check_tipo_grafico
+    CHECK (tipo_grafico IN ('bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'));
+
+ALTER TABLE dashboard_graficos
+    ADD CONSTRAINT check_assuntos_not_empty
+    CHECK (jsonb_array_length(assuntos) > 0);
+
+EXEMPLO DE DADOS:
+
+INSERT INTO dashboard_graficos (titulo, descricao, tipo_grafico, assuntos, configuracoes)
+VALUES (
+    'Dashboard de Vendas Geral',
+    'Visão geral das métricas de vendas',
+    'bar',
+    '["distribuicao_prioridade", "distribuicao_departamento"]'::jsonb,
+    '{"colors": ["#3B82F6", "#10B981"], "showLegend": true}'::jsonb
+);
+
+INSERT INTO dashboard_graficos (titulo, tipo_grafico, assuntos)
+VALUES (
+    'Análise Geográfica',
+    'pie',
+    '["distribuicao_cidade", "distribuicao_uf"]'::jsonb
+);
+
+INSERT INTO dashboard_graficos (titulo, tipo_grafico, assuntos)
+VALUES (
+    'Funil de Conversão',
+    'line',
+    '["taxa_conversao_vendas", "leads_por_status"]'::jsonb
+);
+
+RELACIONAMENTO COM TABELA LEAD:
+
+dashboard_graficos.assuntos → Referencia colunas da tabela lead
+    - Não há FK física (relação conceitual)
+    - Assuntos são chaves que mapeiam para queries SQL em models.py
+    - Dados são buscados dinamicamente da tabela lead quando gráfico é renderizado
+
+TABELA: lead (REFERÊNCIA)
+Localização: PostgreSQL zioncrm.lead
+
+Propósito: Fonte de dados para os dashboards
+
+220+ COLUNAS incluindo:
+- id, razao, fantasia, cnpj_cpf, email, fone, cidade, uf
+- prioridade, status_vendas, status_pos_venda, nivel_contentamento
+- score, origem, departamento, data_criacao, data_atualizacao
+- ... (ver manual_leads.txt para lista completa)
+
+Cada coluna pode ser um "assunto" no dashboard.
+
+================================================================================
+4. BACKEND - APIs E ENDPOINTS
+================================================================================
+
+ARQUIVO: routes.py (Flask API - Porta 5004)
+
+--- ENDPOINT 1: LISTAR ASSUNTOS DISPONÍVEIS ---
+
+GET /api/dashboard/assuntos
+
+Descrição: Retorna lista de todos os assuntos disponíveis para análise
+
+Query Params:
+    - categoria (string, opcional): Filtra por categoria
+        Valores: "basicas", "contato", "endereco", "classificacao", 
+                 "financeiro", "datas", "atividade"
+
+Request:
+    GET http://localhost:5004/api/dashboard/assuntos
+    GET http://localhost:5004/api/dashboard/assuntos?categoria=classificacao
+
+Response:
+    HTTP 200 OK
+    Content-Type: application/json
+    
+    {
+        "success": true,
+        "data": [
+            {
+                "key": "distribuicao_prioridade",
+                "label": "Distribuição por Prioridade",
+                "descricao": "Mostra distribuição de leads por nível de prioridade",
+                "categoria": "classificacao",
+                "tipo_dados": "categorico"
+            },
+            {
+                "key": "distribuicao_cidade",
+                "label": "Distribuição por Cidade",
+                "descricao": "Leads agrupadas por cidade",
+                "categoria": "endereco",
+                "tipo_dados": "categorico"
+            },
+            ... (220+ assuntos)
+        ],
+        "total": 220
+    }
+
+Erros:
+    400 Bad Request: Categoria inválida
+    500 Internal Server Error: Erro no servidor
+
+--- ENDPOINT 2: OBTER DADOS DE UM ASSUNTO ---
+
+GET /api/dashboard/assuntos/:key
+
+Descrição: Retorna dados de um assunto específico em formato Chart.js
+
+Parâmetros:
+    - key (string): Chave do assunto (ex: "distribuicao_prioridade")
+
+Query Params:
+    - limit (integer, opcional): Limita número de resultados (padrão: 50)
+    - filtro (JSON, opcional): Filtros adicionais
+
+Request:
+    GET http://localhost:5004/api/dashboard/assuntos/distribuicao_prioridade
+    GET http://localhost:5004/api/dashboard/assuntos/distribuicao_cidade?limit=10
+
+Response:
+    HTTP 200 OK
+    Content-Type: application/json
+    
+    {
+        "success": true,
+        "key": "distribuicao_prioridade",
+        "data": {
+            "labels": ["NovaLead", "Fria", "Morna", "Quente", "MuitoQuente", "Queimando"],
+            "datasets": [{
+                "label": "Distribuição por Prioridade",
+                "data": [50, 120, 80, 150, 70, 30],
+                "backgroundColor": [
+                    "#dcfce7", "#dbeafe", "#fed7aa", 
+                    "#fb923c", "#fb923c", "#dc2626"
+                ],
+                "borderColor": "#ffffff",
+                "borderWidth": 2
+            }]
+        }
+    }
+
+Erros:
+    404 Not Found: Assunto não encontrado
+    500 Internal Server Error: Erro na query
+
+--- ENDPOINT 3: ESTATÍSTICAS GERAIS ---
+
+GET /api/dashboard/estatisticas
+
+Descrição: Retorna estatísticas gerais do sistema
+
+Request:
+    GET http://localhost:5004/api/dashboard/estatisticas
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": {
+            "total_leads": 500,
+            "leads_ativas": 450,
+            "leads_vendas": 300,
+            "leads_pos_venda": 200,
+            "leads_prioritarias": 100,
+            "score_medio": 65.5,
+            "conversao_mes": 15.5,
+            "satisfacao_media": 4.2,
+            "total_graficos": 25,
+            "graficos_ativos": 20
+        }
+    }
+
+--- ENDPOINT 4: LISTAR GRÁFICOS SALVOS ---
+
+GET /api/dashboard/graficos
+
+Descrição: Lista todos os gráficos salvos
+
+Query Params:
+    - ativo (boolean, opcional): Filtra por status (default: true)
+    - tipo_grafico (string, opcional): Filtra por tipo
+    - page (integer, opcional): Número da página (default: 1)
+    - per_page (integer, opcional): Itens por página (default: 20)
+
+Request:
+    GET http://localhost:5004/api/dashboard/graficos
+    GET http://localhost:5004/api/dashboard/graficos?ativo=true&tipo_grafico=bar
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": [
+            {
+                "id": 1,
+                "titulo": "Dashboard de Vendas",
+                "descricao": "Visão geral de vendas",
+                "tipo_grafico": "bar",
+                "assuntos": ["distribuicao_prioridade", "distribuicao_departamento"],
+                "configuracoes": {"colors": ["#FF6384", "#36A2EB"]},
+                "data_criacao": "2026-02-16T10:00:00",
+                "data_atualizacao": "2026-02-16T10:00:00",
+                "ativo": true
+            },
+            ... (mais gráficos)
+        ],
+        "total": 25,
+        "page": 1,
+        "per_page": 20
+    }
+
+--- ENDPOINT 5: CRIAR NOVO GRÁFICO ---
+
+POST /api/dashboard/graficos
+
+Descrição: Cria uma nova configuração de gráfico
+
+Content-Type: application/json
+
+Request Body:
+    {
+        "titulo": "Meu Dashboard Personalizado",
+        "descricao": "Análise de leads por região e prioridade",
+        "tipo_grafico": "bar",
+        "assuntos": ["distribuicao_cidade", "distribuicao_prioridade"],
+        "configuracoes": {
+            "colors": ["#FF6384", "#36A2EB"],
+            "showLegend": true
+        }
+    }
+
+- titulo (string, obrigatório): Título do gráfico
+- descricao (string, opcional): Descrição detalhada
+- tipo_grafico (string, obrigatório): Tipo (bar|line|pie|doughnut|radar|polarArea)
+- assuntos (array, obrigatório): Lista de assuntos (mínimo 1)
+- configuracoes (object, opcional): Configurações Chart.js
+
+Response:
+    HTTP 201 Created
+    {
+        "success": true,
+        "data": {
+            "id": 26,
+            "titulo": "Meu Dashboard Personalizado",
+            "descricao": "Análise de leads por região e prioridade",
+            "tipo_grafico": "bar",
+            "assuntos": ["distribuicao_cidade", "distribuicao_prioridade"],
+            "configuracoes": {"colors": ["#FF6384", "#36A2EB"]},
+            "data_criacao": "2026-02-16T14:30:00",
+            "data_atualizacao": "2026-02-16T14:30:00",
+            "ativo": true
+        },
+        "message": "Gráfico criado com sucesso"
+    }
+
+Erros:
+    400 Bad Request: Validação falhou (campos obrigatórios, tipo inválido, etc.)
+    500 Internal Server Error: Erro ao salvar
+
+--- ENDPOINT 6: OBTER GRÁFICO ESPECÍFICO ---
+
+GET /api/dashboard/graficos/:id
+
+Descrição: Retorna detalhes de um gráfico específico
+
+Parâmetros:
+    - id (integer): ID do gráfico
+
+Request:
+    GET http://localhost:5004/api/dashboard/graficos/26
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": {
+            "id": 26,
+            "titulo": "Meu Dashboard Personalizado",
+            "descricao": "Análise de leads por região e prioridade",
+            "tipo_grafico": "bar",
+            "assuntos": ["distribuicao_cidade", "distribuicao_prioridade"],
+            "configuracoes": {"colors": ["#FF6384", "#36A2EB"]},
+            "data_criacao": "2026-02-16T14:30:00",
+            "data_atualizacao": "2026-02-16T14:30:00",
+            "ativo": true
+        }
+    }
+
+Erros:
+    404 Not Found: Gráfico não encontrado
+
+--- ENDPOINT 7: ATUALIZAR GRÁFICO ---
+
+PUT /api/dashboard/graficos/:id
+
+Descrição: Atualiza configuração de um gráfico existente
+
+Parâmetros:
+    - id (integer): ID do gráfico
+
+Content-Type: application/json
+
+Request Body (todos os campos opcionais):
+    {
+        "titulo": "Novo Título",
+        "descricao": "Nova descrição",
+        "tipo_grafico": "pie",
+        "assuntos": ["nova_lista", "de_assuntos"],
+        "configuracoes": {...}
+    }
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": {
+            "id": 26,
+            ... (gráfico atualizado)
+        },
+        "message": "Gráfico atualizado com sucesso"
+    }
+
+Erros:
+    400 Bad Request: Validação falhou
+    404 Not Found: Gráfico não encontrado
+    500 Internal Server Error: Erro ao atualizar
+
+--- ENDPOINT 8: DELETAR GRÁFICO (SOFT DELETE) ---
+
+DELETE /api/dashboard/graficos/:id
+
+Descrição: Desativa um gráfico (soft delete - ativo = false)
+
+Parâmetros:
+    - id (integer): ID do gráfico
+
+Request:
+    DELETE http://localhost:5004/api/dashboard/graficos/26
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "message": "Gráfico deletado com sucesso"
+    }
+
+Erros:
+    404 Not Found: Gráfico não encontrado
+    500 Internal Server Error: Erro ao deletar
+
+Nota: Dados não são removidos fisicamente, apenas marcados como inativo
+
+--- ENDPOINT 9: OBTER DADOS DO GRÁFICO PARA RENDERIZAÇÃO ---
+
+GET /api/dashboard/graficos/:id/dados
+
+Descrição: Retorna dados do gráfico prontos para Chart.js
+
+Parâmetros:
+    - id (integer): ID do gráfico
+
+Request:
+    GET http://localhost:5004/api/dashboard/graficos/26/dados
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "grafico": {
+            "id": 26,
+            "titulo": "Meu Dashboard Personalizado",
+            "tipo_grafico": "bar"
+        },
+        "data": [
+            {
+                "assunto": "distribuicao_cidade",
+                "label": "Distribuição por Cidade",
+                "chartData": {
+                    "labels": ["São Paulo", "Rio de Janeiro", "Belo Horizonte"],
+                    "datasets": [{
+                        "label": "Distribuição por Cidade",
+                        "data": [150, 80, 60],
+                        "backgroundColor": ["#FF6384", "#36A2EB", "#FFCE56"]
+                    }]
+                }
+            },
+            {
+                "assunto": "distribuicao_prioridade",
+                "label": "Distribuição por Prioridade",
+                "chartData": {
+                    "labels": ["NovaLead", "Fria", "Morna", "Quente"],
+                    "datasets": [{
+                        "label": "Distribuição por Prioridade",
+                        "data": [50, 120, 80, 150],
+                        "backgroundColor": ["#dcfce7", "#dbeafe", "#fed7aa", "#fb923c"]
+                    }]
+                }
+            }
+        ]
+    }
+
+Uso: Renderizar diretamente com Chart.js
+
+Erros:
+    404 Not Found: Gráfico não encontrado
+    500 Internal Server Error: Erro ao buscar dados
+
+--- ENDPOINT 10: GRÁFICOS PREDEFINIDOS ---
+
+GET /api/dashboard/graficos-predefinidos
+
+Descrição: Retorna 12 gráficos predefinidos prontos para uso
+
+Request:
+    GET http://localhost:5004/api/dashboard/graficos-predefinidos
+
+Response:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": [
+            {
+                "id": "predefinido-1",
+                "titulo": "Perdas de Clientes Fidelizados",
+                "descricao": "Clientes com contratos cancelados que tinham boa satisfação",
+                "tipo_grafico": "bar",
+                "assunto": "perdas_clientes_fidelizados",
+                "icon": "📉",
+                "color": "#EF4444"
+            },
+            {
+                "id": "predefinido-2",
+                "titulo": "Perdas de Leads Ruins",
+                "descricao": "Leads perdidas com baixa qualidade",
+                "tipo_grafico": "pie",
+                "assunto": "perdas_leads_ruins",
+                "icon": "❌",
+                "color": "#9CA3AF"
+            },
+            ... (10 mais gráficos predefinidos)
+        ]
+    }
+
+--- ENDPOINT 11: HEALTH CHECK ---
+
+GET /health
+
+Descrição: Verifica se API está funcionando
+
+Request:
+    GET http://localhost:5004/health
+
+Response:
+    HTTP 200 OK
+    {
+        "status": "healthy",
+        "service": "Dashboard API",
+        "version": "1.0",
+        "timestamp": "2026-02-16T14:30:00"
+    }
+
+================================================================================
+5. FRONTEND - INTERFACE E FUNCIONALIDADES
+================================================================================
+
+ARQUIVO: static/dashboard.html (A CRIAR)
+
+ESTRUTURA DA PÁGINA:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Zion CRM</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+    <!-- 1. HEADER -->
+    <header>
+        <h1>📊 Dashboard Zion CRM</h1>
+        <div class="stats-cards">
+            <div class="card">Total de Leads: <span id="total-leads">0</span></div>
+            <div class="card">Score Médio: <span id="score-medio">0</span></div>
+            <div class="card">Conversão: <span id="taxa-conversao">0%</span></div>
+        </div>
+    </header>
+
+    <!-- 2. BOTÕES DE AÇÃO -->
+    <div class="actions">
+        <button onclick="abrirModalNovoGrafico()">➕ Novo Gráfico</button>
+        <button onclick="carregarGraficosPredefinidos()">📋 Predefinidos</button>
+        <button onclick="recarregarDados()">🔄 Atualizar</button>
+    </div>
+
+    <!-- 3. SELETOR DE GRÁFICOS SALVOS -->
+    <div class="saved-charts">
+        <h2>Meus Gráficos Salvos</h2>
+        <div id="cards-graficos">
+            <!-- Cards gerados dinamicamente -->
+        </div>
+    </div>
+
+    <!-- 4. ÁREA DE VISUALIZAÇÃO -->
+    <div class="chart-container">
+        <h2 id="chart-title">Selecione um gráfico</h2>
+        <canvas id="main-chart"></canvas>
+    </div>
+
+    <!-- 5. MODAL DE CRIAÇÃO/EDIÇÃO -->
+    <div id="modal-grafico" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <h2>Criar Novo Gráfico</h2>
+            
+            <form id="form-grafico">
+                <label>Título:</label>
+                <input type="text" id="input-titulo" required>
+                
+                <label>Descrição:</label>
+                <textarea id="input-descricao"></textarea>
+                
+                <label>Tipo de Gráfico:</label>
+                <select id="input-tipo">
+                    <option value="bar">📊 Barras</option>
+                    <option value="line">📈 Linhas</option>
+                    <option value="pie">🥧 Pizza</option>
+                    <option value="doughnut">🍩 Rosca</option>
+                    <option value="radar">🕸️ Radar</option>
+                    <option value="polarArea">⭕ Área Polar</option>
+                </select>
+                
+                <label>Assuntos (selecione múltiplos):</label>
+                <div id="assuntos-checkboxes">
+                    <!-- Gerado dinamicamente -->
+                </div>
+                
+                <button type="submit">💾 Salvar Gráfico</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
+
+FUNCIONALIDADES JAVASCRIPT (dashboard.js):
+
+1. INICIALIZAÇÃO
+    window.onload = async () => {
+        await carregarEstatisticas();
+        await carregarGraficosSalvos();
+        await carregarAssuntosDisponiveis();
+    };
+
+2. CARREGAR ESTATÍSTICAS
+    async function carregarEstatisticas() {
+        const response = await fetch('http://localhost:5004/api/dashboard/estatisticas');
+        const data = await response.json();
+        document.getElementById('total-leads').textContent = data.data.total_leads;
+        document.getElementById('score-medio').textContent = data.data.score_medio;
+        document.getElementById('taxa-conversao').textContent = data.data.conversao_mes + '%';
+    }
+
+3. CARREGAR GRÁFICOS SALVOS
+    async function carregarGraficosSalvos() {
+        const response = await fetch('http://localhost:5004/api/dashboard/graficos');
+        const data = await response.json();
+        
+        const container = document.getElementById('cards-graficos');
+        container.innerHTML = '';
+        
+        data.data.forEach(grafico => {
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `
+                <h3>${grafico.titulo}</h3>
+                <p>${grafico.descricao}</p>
+                <small>${grafico.tipo_grafico} | ${grafico.assuntos.length} assunto(s)</small>
+                <div class="card-actions">
+                    <button onclick="renderizarGrafico(${grafico.id})">📊 Ver</button>
+                    <button onclick="editarGrafico(${grafico.id})">✏️ Editar</button>
+                    <button onclick="deletarGrafico(${grafico.id})">🗑️ Deletar</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+4. RENDERIZAR GRÁFICO
+    let chartInstance = null;
+    
+    async function renderizarGrafico(id) {
+        const response = await fetch(`http://localhost:5004/api/dashboard/graficos/${id}/dados`);
+        const data = await response.json();
+        
+        document.getElementById('chart-title').textContent = data.grafico.titulo;
+        
+        // Limpar gráfico anterior
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        // Combinar datasets de todos os assuntos
+        const labels = data.data[0].chartData.labels;
+        const datasets = data.data.map((assunto, index) => ({
+            label: assunto.label,
+            data: assunto.chartData.datasets[0].data,
+            backgroundColor: assunto.chartData.datasets[0].backgroundColor,
+            borderColor: '#ffffff',
+            borderWidth: 2
+        }));
+        
+        // Criar novo gráfico
+        const ctx = document.getElementById('main-chart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: data.grafico.tipo_grafico,
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: data.grafico.titulo
+                    }
+                }
+            }
+        });
+    }
+
+5. CRIAR NOVO GRÁFICO
+    async function salvarNovoGrafico(event) {
+        event.preventDefault();
+        
+        const titulo = document.getElementById('input-titulo').value;
+        const descricao = document.getElementById('input-descricao').value;
+        const tipo_grafico = document.getElementById('input-tipo').value;
+        
+        const assuntosSelecionados = [];
+        document.querySelectorAll('#assuntos-checkboxes input:checked').forEach(cb => {
+            assuntosSelecionados.push(cb.value);
+        });
+        
+        const response = await fetch('http://localhost:5004/api/dashboard/graficos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                titulo: titulo,
+                descricao: descricao,
+                tipo_grafico: tipo_grafico,
+                assuntos: assuntosSelecionados
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Gráfico criado com sucesso!');
+            fecharModal();
+            await carregarGraficosSalvos();
+        } else {
+            alert('Erro ao criar gráfico: ' + data.error);
+        }
+    }
+
+6. CARREGAR ASSUNTOS DISPONÍVEIS
+    async function carregarAssuntosDisponiveis() {
+        const response = await fetch('http://localhost:5004/api/dashboard/assuntos');
+        const data = await response.json();
+        
+        const container = document.getElementById('assuntos-checkboxes');
+        container.innerHTML = '';
+        
+        // Agrupar por categoria
+        const categorias = {};
+        data.data.forEach(assunto => {
+            if (!categorias[assunto.categoria]) {
+                categorias[assunto.categoria] = [];
+            }
+            categorias[assunto.categoria].push(assunto);
+        });
+        
+        // Renderizar por categoria
+        Object.keys(categorias).forEach(categoria => {
+            const section = document.createElement('div');
+            section.className = 'categoria-section';
+            section.innerHTML = `<h4>${categoria}</h4>`;
+            
+            categorias[categoria].forEach(assunto => {
+                const checkbox = document.createElement('label');
+                checkbox.innerHTML = `
+                    <input type="checkbox" value="${assunto.key}">
+                    ${assunto.label}
+                    <small>${assunto.descricao}</small>
+                `;
+                section.appendChild(checkbox);
+            });
+            
+            container.appendChild(section);
+        });
+    }
+
+7. DELETAR GRÁFICO
+    async function deletarGrafico(id) {
+        if (!confirm('Tem certeza que deseja deletar este gráfico?')) {
+            return;
+        }
+        
+        const response = await fetch(
+            `http://localhost:5004/api/dashboard/graficos/${id}`,
+            { method: 'DELETE' }
+        );
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Gráfico deletado!');
+            await carregarGraficosSalvos();
+        }
+    }
+
+8. GRÁFICOS PREDEFINIDOS
+    async function carregarGraficosPredefinidos() {
+        const response = await fetch('http://localhost:5004/api/dashboard/graficos-predefinidos');
+        const data = await response.json();
+        
+        // Exibir em modal ou sidebar
+        const container = document.createElement('div');
+        container.className = 'predefinidos-grid';
+        
+        data.data.forEach(grafico => {
+            const card = document.createElement('div');
+            card.className = 'predefined-card';
+            card.style.borderLeft = `4px solid ${grafico.color}`;
+            card.innerHTML = `
+                <div class="icon">${grafico.icon}</div>
+                <h3>${grafico.titulo}</h3>
+                <p>${grafico.descricao}</p>
+                <button onclick="renderizarAssunto('${grafico.assunto}')">
+                    📊 Visualizar
+                </button>
+            `;
+            container.appendChild(card);
+        });
+        
+        // Exibir
+        document.body.appendChild(container);
+    }
+
+ESTILOS CSS (dashboard.css):
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+header {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.chart-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    margin: 20px 0;
+    height: 500px;
+}
+
+#main-chart {
+    max-height: 400px;
+}
+
+.chart-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+}
+
+button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+================================================================================
+6. FLUXO DE DADOS (BACKEND ↔ FRONTEND ↔ BANCO)
+================================================================================
+
+FLUXO 1: CARREGAR PÁGINA DO DASHBOARD
+
+1. Usuário acessa http://localhost:5004/ ou dashboard.html
+
+2. Frontend → Backend: GET /api/dashboard/estatisticas
+   Backend → Banco: SELECT COUNT(*), AVG(score), ... FROM lead
+   Backend → Frontend: JSON com estatísticas
+   Frontend: Renderiza cards do header
+
+3. Frontend → Backend: GET /api/dashboard/graficos
+   Backend → Banco: SELECT * FROM dashboard_graficos WHERE ativo = true
+   Backend → Frontend: Array de gráficos salvos
+   Frontend: Renderiza cards de gráficos salvos
+
+4. Frontend → Backend: GET /api/dashboard/assuntos
+   Backend: Retorna ASSUNTOS_DISPONIVEIS do models.py (220+ assuntos)
+   Frontend: Carrega lista de assuntos para seleção
+
+Página pronta para uso!
+
+FLUXO 2: CRIAR NOVO GRÁFICO PERSONALIZADO
+
+1. Usuário clica em "➕ Novo Gráfico"
+
+2. Frontend: Abre modal com formulário
+
+3. Usuário preenche:
+   - Título: "Análise Regional SP"
+   - Descrição: "Leads do estado de São Paulo"
+   - Tipo: bar (barras)
+   - Assuntos: [distribuicao_cidade, distribuicao_prioridade]
+
+4. Usuário clica em "💾 Salvar Gráfico"
+
+5. Frontend → Backend:
+   POST http://localhost:5004/api/dashboard/graficos
+   Content-Type: application/json
+   Body: {
+       "titulo": "Análise Regional SP",
+       "descricao": "Leads do estado de São Paulo",
+       "tipo_grafico": "bar",
+       "assuntos": ["distribuicao_cidade", "distribuicao_prioridade"],
+       "configuracoes": {"colors": ["#FF6384", "#36A2EB"]}
+   }
+
+6. Backend: Valida dados
+
+7. Backend → Banco:
+   INSERT INTO dashboard_graficos (
+       titulo, descricao, tipo_grafico, assuntos, configuracoes,
+       data_criacao, data_atualizacao, ativo
+   ) VALUES (
+       'Análise Regional SP',
+       'Leads do estado de São Paulo',
+       'bar',
+       '["distribuicao_cidade", "distribuicao_prioridade"]'::jsonb,
+       '{"colors": ["#FF6384", "#36A2EB"]}'::jsonb,
+       NOW(), NOW(), true
+   )
+   RETURNING id
+
+8. Banco → Backend: id=27
+
+9. Backend → Frontend:
+   HTTP 201 Created
+   {
+       "success": true,
+       "data": {
+           "id": 27,
+           "titulo": "Análise Regional SP",
+           ...
+       },
+       "message": "Gráfico criado com sucesso"
+   }
+
+10. Frontend: 
+    - Fecha modal
+    - Exibe mensagem de sucesso
+    - Recarrega lista de gráficos salvos
+    - Novo card aparece na lista
+
+FLUXO 3: VISUALIZAR UM GRÁFICO
+
+1. Usuário clica em "📊 Ver" no card de um gráfico (ID 27)
+
+2. Frontend → Backend:
+   GET http://localhost:5004/api/dashboard/graficos/27/dados
+
+3. Backend → Banco:
+   SELECT * FROM dashboard_graficos WHERE id = 27
+
+4. Banco → Backend: Retorna configuração do gráfico
+
+5. Backend: Para cada assunto no array "assuntos":
+   
+   Assunto 1: "distribuicao_cidade"
+   Backend: Busca query SQL em ASSUNTOS_DISPONIVEIS
+   Backend → Banco:
+       SELECT cidade, COUNT(*) as total
+       FROM lead
+       WHERE ativo = 'S' AND uf = 'SP'
+       GROUP BY cidade
+       ORDER BY total DESC
+       LIMIT 10
+   
+   Banco → Backend: [
+       {"cidade": "São Paulo", "total": 150},
+       {"cidade": "Campinas", "total": 80},
+       {"cidade": "Santos", "total": 60},
+       ...
+   ]
+   
+   Backend: Transforma em formato Chart.js:
+   {
+       "labels": ["São Paulo", "Campinas", "Santos"],
+       "datasets": [{
+           "label": "Distribuição por Cidade",
+           "data": [150, 80, 60],
+           "backgroundColor": ["#FF6384", "#36A2EB", "#FFCE56"]
+       }]
+   }
+   
+   Assunto 2: "distribuicao_prioridade"
+   Backend → Banco:
+       SELECT prioridade, COUNT(*) as total
+       FROM lead
+       WHERE ativo = 'S'
+       GROUP BY prioridade
+   
+   Banco → Backend: [
+       {"prioridade": "NovaLead", "total": 50},
+       {"prioridade": "Quente", "total": 150},
+       ...
+   ]
+   
+   Backend: Transforma em formato Chart.js
+
+6. Backend → Frontend:
+   HTTP 200 OK
+   {
+       "success": true,
+       "grafico": {
+           "id": 27,
+           "titulo": "Análise Regional SP",
+           "tipo_grafico": "bar"
+       },
+       "data": [
+           {
+               "assunto": "distribuicao_cidade",
+               "label": "Distribuição por Cidade",
+               "chartData": {
+                   "labels": ["São Paulo", "Campinas", "Santos"],
+                   "datasets": [{
+                       "label": "Distribuição por Cidade",
+                       "data": [150, 80, 60],
+                       "backgroundColor": ["#FF6384", "#36A2EB", "#FFCE56"]
+                   }]
+               }
+           },
+           {
+               "assunto": "distribuicao_prioridade",
+               "label": "Distribuição por Prioridade",
+               "chartData": {
+                   "labels": ["NovaLead", "Fria", "Quente"],
+                   "datasets": [{
+                       "label": "Distribuição por Prioridade",
+                       "data": [50, 120, 150],
+                       "backgroundColor": ["#dcfce7", "#dbeafe", "#fb923c"]
+                   }]
+               }
+           }
+       ]
+   }
+
+7. Frontend: Combina os dois datasets
+
+8. Frontend: Renderiza com Chart.js:
+   new Chart(ctx, {
+       type: 'bar',
+       data: {
+           labels: ["São Paulo", "Campinas", "Santos"],
+           datasets: [
+               {
+                   label: "Distribuição por Cidade",
+                   data: [150, 80, 60],
+                   backgroundColor: "#FF6384"
+               },
+               {
+                   label: "Distribuição por Prioridade",
+                   data: [50, 120, 150],
+                   backgroundColor: "#36A2EB"
+               }
+           ]
+       }
+   });
+
+9. Usuário vê gráfico de barras com 2 datasets sobrepostos!
+
+FLUXO 4: ATUALIZAR GRÁFICO
+
+1. Usuário clica em "✏️ Editar" no card do gráfico (ID 27)
+
+2. Frontend → Backend:
+   GET http://localhost:5004/api/dashboard/graficos/27
+
+3. Backend → Banco:
+   SELECT * FROM dashboard_graficos WHERE id = 27
+
+4. Backend → Frontend: Dados do gráfico
+
+5. Frontend: Preenche formulário com dados atuais
+
+6. Usuário altera título para "Análise Regional SP - Atualizado"
+
+7. Usuário clica em "💾 Salvar"
+
+8. Frontend → Backend:
+   PUT http://localhost:5004/api/dashboard/graficos/27
+   Body: {
+       "titulo": "Análise Regional SP - Atualizado"
+   }
+
+9. Backend → Banco:
+   UPDATE dashboard_graficos
+   SET titulo = 'Análise Regional SP - Atualizado',
+       data_atualizacao = NOW()
+   WHERE id = 27
+
+10. Trigger: Atualiza automaticamente data_atualizacao
+
+11. Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "message": "Gráfico atualizado com sucesso"
+    }
+
+12. Frontend: Recarrega lista de gráficos
+
+FLUXO 5: DELETAR GRÁFICO (SOFT DELETE)
+
+1. Usuário clica em "🗑️ Deletar" no card do gráfico (ID 27)
+
+2. Frontend: Exibe confirmação "Tem certeza?"
+
+3. Usuário confirma
+
+4. Frontend → Backend:
+   DELETE http://localhost:5004/api/dashboard/graficos/27
+
+5. Backend → Banco:
+   UPDATE dashboard_graficos
+   SET ativo = false,
+       data_atualizacao = NOW()
+   WHERE id = 27
+
+6. Backend → Frontend:
+   HTTP 200 OK
+   {
+       "success": true,
+       "message": "Gráfico deletado com sucesso"
+   }
+
+7. Frontend: Remove card da lista
+
+Nota: Gráfico não é deletado fisicamente, apenas marcado como inativo
+
+FLUXO 6: VISUALIZAR GRÁFICO PREDEFINIDO
+
+1. Usuário clica em "📋 Predefinidos"
+
+2. Frontend → Backend:
+   GET http://localhost:5004/api/dashboard/graficos-predefinidos
+
+3. Backend: Retorna lista dos 12 gráficos predefinidos (de models.py)
+
+4. Backend → Frontend:
+   HTTP 200 OK
+   {
+       "success": true,
+       "data": [
+           {
+               "id": "predefinido-1",
+               "titulo": "Perdas de Clientes Fidelizados",
+               "assunto": "perdas_clientes_fidelizados",
+               "tipo_grafico": "bar",
+               "icon": "📉",
+               "color": "#EF4444"
+           },
+           ...
+       ]
+   }
+
+5. Frontend: Renderiza grid de 12 cards
+
+6. Usuário clica em "📊 Visualizar" no card "Perdas de Clientes Fidelizados"
+
+7. Frontend → Backend:
+   GET http://localhost:5004/api/dashboard/assuntos/perdas_clientes_fidelizados
+
+8. Backend: Executa query predefinida:
+   Backend → Banco:
+       SELECT 
+           CASE 
+               WHEN nivel_contentamento IN ('Excelente', 'Bom') 
+                   THEN 'Clientes Satisfeitos'
+               ELSE 'Clientes Insatisfeitos'
+           END as grupo,
+           COUNT(*) as total
+       FROM lead
+       WHERE contrato_status = 'C'
+       GROUP BY grupo
+
+9. Banco → Backend: [
+       {"grupo": "Clientes Satisfeitos", "total": 45},
+       {"grupo": "Clientes Insatisfeitos", "total": 15}
+   ]
+
+10. Backend: Formata para Chart.js
+
+11. Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "key": "perdas_clientes_fidelizados",
+        "data": {
+            "labels": ["Clientes Satisfeitos", "Clientes Insatisfeitos"],
+            "datasets": [{
+                "label": "Perdas de Clientes Fidelizados",
+                "data": [45, 15],
+                "backgroundColor": ["#EF4444", "#9CA3AF"]
+            }]
+        }
+    }
+
+12. Frontend: Renderiza gráfico
+
+================================================================================
+7. ASSUNTOS DISPONÍVEIS (220+ ANÁLISES)
+================================================================================
+
+Total: 220+ assuntos (1 por coluna da tabela lead)
+
+Os assuntos são organizados em 10 categorias:
+
+--- CATEGORIA 1: INFORMAÇÕES BÁSICAS (20 assuntos) ---
+
+1. distribuicao_tipo_pessoa
+   Label: "Distribuição por Tipo de Pessoa"
+   Descrição: "Jurídica vs Física"
+   Query: SELECT tipo_pessoa, COUNT(*) FROM lead GROUP BY tipo_pessoa
+
+2. distribuicao_ativo
+   Label: "Leads Ativas vs Inativas"
+   Descrição: "Status de ativação"
+   Query: SELECT ativo, COUNT(*) FROM lead GROUP BY ativo
+
+3. leads_por_fantasia
+   Label: "Top Nomes Fantasia"
+   Descrição: "Nomes fantasia mais comuns"
+   Query: SELECT fantasia, COUNT(*) FROM lead GROUP BY fantasia LIMIT 20
+
+4. leads_por_razao_social
+   Label: "Top Razões Sociais"
+   Query: SELECT razao, COUNT(*) FROM lead GROUP BY razao LIMIT 20
+
+... (e mais 16 assuntos de informações básicas)
+
+--- CATEGORIA 2: CONTATOS (15 assuntos) ---
+
+5. leads_com_email
+   Label: "Leads com Email"
+   Descrição: "Percentual de leads com email cadastrado"
+   Query: SELECT 
+              CASE WHEN email IS NOT NULL THEN 'Com Email' ELSE 'Sem Email' END,
+              COUNT(*)
+          FROM lead GROUP BY 1
+
+6. leads_com_telefone
+   Label: "Leads com Telefone"
+   Query: Similar ao email
+
+7. leads_com_celular
+   Label: "Leads com Celular"
+   Query: Similar ao email
+
+8. canais_contato_disponiveis
+   Label: "Canais de Contato Disponíveis"
+   Descrição: "Quantos canais cada lead tem"
+   Query: SELECT 
+              CASE 
+                  WHEN email IS NOT NULL AND fone IS NOT NULL 
+                      AND fone_celular IS NOT NULL THEN '3 canais'
+                  WHEN (email IS NOT NULL AND fone IS NOT NULL) 
+                      OR (email IS NOT NULL AND fone_celular IS NOT NULL)
+                      OR (fone IS NOT NULL AND fone_celular IS NOT NULL) THEN '2 canais'
+                  WHEN email IS NOT NULL OR fone IS NOT NULL 
+                      OR fone_celular IS NOT NULL THEN '1 canal'
+                  ELSE 'Nenhum canal'
+              END as canais,
+              COUNT(*)
+          FROM lead
+          GROUP BY 1
+
+... (e mais 11 assuntos de contato)
+
+--- CATEGORIA 3: ENDEREÇOS (25 assuntos) ---
+
+9. distribuicao_cidade
+   Label: "Distribuição por Cidade"
+   Descrição: "Top 50 cidades com mais leads"
+   Query: SELECT cidade, COUNT(*) as total
+          FROM lead
+          WHERE ativo = 'S'
+          GROUP BY cidade
+          ORDER BY total DESC
+          LIMIT 50
+
+10. distribuicao_uf
+    Label: "Distribuição por Estado"
+    Descrição: "Leads por UF"
+    Query: SELECT uf, COUNT(*) FROM lead GROUP BY uf ORDER BY COUNT(*) DESC
+
+11. distribuicao_bairro
+    Label: "Distribuição por Bairro"
+    Query: SELECT bairro, COUNT(*) FROM lead GROUP BY bairro LIMIT 50
+
+12. mapa_sp
+    Label: "Mapa de São Paulo"
+    Descrição: "Leads em cidades do estado de SP"
+    Query: SELECT cidade, COUNT(*) FROM lead WHERE uf = 'SP' GROUP BY cidade
+
+13. mapa_rj
+    Label: "Mapa do Rio de Janeiro"
+    Query: SELECT cidade, COUNT(*) FROM lead WHERE uf = 'RJ' GROUP BY cidade
+
+14. leads_zona_leste
+    Label: "Leads Zona Leste SP"
+    Query: SELECT COUNT(*) FROM lead 
+           WHERE cidade = 'São Paulo' 
+           AND bairro IN ('Tatuapé', 'Penha', 'Vila Matilde', ...)
+
+... (e mais 19 assuntos geográficos)
+
+--- CATEGORIA 4: CLASSIFICAÇÃO (35 assuntos) ---
+
+15. distribuicao_prioridade
+    Label: "Distribuição por Prioridade"
+    Descrição: "Mostra distribuição de leads por nível de prioridade"
+    Query: SELECT prioridade, COUNT(*) as total
+           FROM lead
+           WHERE ativo = 'S'
+           GROUP BY prioridade
+           ORDER BY 
+               CASE prioridade
+                   WHEN 'Queimando' THEN 1
+                   WHEN 'MuitoQuente' THEN 2
+                   WHEN 'Quente' THEN 3
+                   WHEN 'Morna' THEN 4
+                   WHEN 'Fria' THEN 5
+                   WHEN 'Ruim' THEN 6
+                   WHEN 'NovaLead' THEN 7
+               END
+
+16. distribuicao_departamento
+    Label: "Leads por Departamento"
+    Descrição: "Vendas vs Pós-Venda"
+    Query: SELECT departamento, COUNT(*) FROM lead GROUP BY departamento
+
+17. distribuicao_status_vendas
+    Label: "Status do Funil de Vendas"
+    Query: SELECT status_vendas, COUNT(*) FROM lead 
+           WHERE departamento = 'vendas'
+           GROUP BY status_vendas
+
+18. distribuicao_status_pos_venda
+    Label: "Status Pós-Venda"
+    Query: SELECT status_pos_venda, COUNT(*) FROM lead 
+           WHERE departamento = 'pos_venda'
+           GROUP BY status_pos_venda
+
+19. distribuicao_origem
+    Label: "Canais de Origem"
+    Descrição: "De onde vêm as leads"
+    Query: SELECT origem, COUNT(*) FROM lead GROUP BY origem
+
+20. distribuicao_score
+    Label: "Distribuição de Score"
+    Descrição: "Faixas de pontuação"
+    Query: SELECT 
+               CASE 
+                   WHEN score >= 80 THEN '80-100 (Excelente)'
+                   WHEN score >= 60 THEN '60-79 (Bom)'
+                   WHEN score >= 40 THEN '40-59 (Médio)'
+                   WHEN score >= 20 THEN '20-39 (Baixo)'
+                   ELSE '0-19 (Muito Baixo)'
+               END as faixa,
+               COUNT(*)
+           FROM lead
+           GROUP BY 1
+
+21. nivel_contentamento_distribuicao
+    Label: "Níveis de Satisfação"
+    Query: SELECT nivel_contentamento, COUNT(*) 
+           FROM lead 
+           GROUP BY nivel_contentamento
+
+... (e mais 28 assuntos de classificação)
+
+--- CATEGORIA 5: FINANCEIRO (25 assuntos) ---
+
+22. status_debito_distribuicao
+    Label: "Status de Débito"
+    Descrição: "Em Dia vs Em Atraso"
+    Query: SELECT status_debito, COUNT(*) FROM lead GROUP BY status_debito
+
+23. valor_mensalidade_medio
+    Label: "Ticket Médio"
+    Descrição: "Valor médio de mensalidade"
+    Query: SELECT AVG(valor_mensalidade) FROM lead
+
+24. valor_mensalidade_faixas
+    Label: "Faixas de Valor"
+    Query: SELECT 
+               CASE 
+                   WHEN valor_mensalidade < 50 THEN 'Até R$ 50'
+                   WHEN valor_mensalidade < 100 THEN 'R$ 50-100'
+                   WHEN valor_mensalidade < 200 THEN 'R$ 100-200'
+                   ELSE 'Acima de R$ 200'
+               END as faixa,
+               COUNT(*)
+           FROM lead
+           GROUP BY 1
+
+25. receita_total
+    Label: "Receita Total (MRR)"
+    Query: SELECT SUM(valor_mensalidade) FROM lead 
+           WHERE contrato_status = 'A'
+
+... (e mais 21 assuntos financeiros)
+
+--- CATEGORIA 6: DATAS E TEMPORALIDADE (30 assuntos) ---
+
+26. leads_por_mes_cadastro
+    Label: "Cadastros por Mês"
+    Query: SELECT 
+               TO_CHAR(data_cadastro, 'YYYY-MM') as mes,
+               COUNT(*)
+           FROM lead
+           GROUP BY 1
+           ORDER BY 1 DESC
+           LIMIT 12
+
+27. leads_por_ano
+    Label: "Cadastros por Ano"
+    Query: SELECT EXTRACT(YEAR FROM data_cadastro) as ano, COUNT(*)
+           FROM lead
+           GROUP BY 1
+
+28. tempo_medio_cliente
+    Label: "Tempo Médio de Relacionamento"
+    Query: SELECT AVG(
+               EXTRACT(EPOCH FROM (NOW() - data_cadastro)) / 86400
+           ) as dias_medio
+           FROM lead
+
+29. data_ultima_classificacao_distribuicao
+    Label: "Última Classificação"
+    Descrição: "Quando as leads foram classificadas pela última vez"
+    Query: SELECT 
+               CASE 
+                   WHEN data_ultima_classificacao > NOW() - INTERVAL '7 days' 
+                       THEN 'Última semana'
+                   WHEN data_ultima_classificacao > NOW() - INTERVAL '30 days' 
+                       THEN 'Último mês'
+                   WHEN data_ultima_classificacao > NOW() - INTERVAL '90 days' 
+                       THEN 'Últimos 3 meses'
+                   ELSE 'Mais de 3 meses'
+               END as periodo,
+               COUNT(*)
+           FROM lead
+           GROUP BY 1
+
+... (e mais 26 assuntos temporais)
+
+--- CATEGORIA 7: ATIVIDADE E SUPORTE (20 assuntos) ---
+
+30. total_chamados_distribuicao
+    Label: "Distribuição de Chamados"
+    Query: SELECT 
+               CASE 
+                   WHEN total_chamados = 0 THEN '0 chamados'
+                   WHEN total_chamados <= 5 THEN '1-5 chamados'
+                   WHEN total_chamados <= 10 THEN '6-10 chamados'
+                   ELSE 'Mais de 10 chamados'
+               END as faixa,
+               COUNT(*)
+           FROM lead
+           GROUP BY 1
+
+31. chamados_abertos_vs_fechados
+    Label: "Chamados Abertos vs Fechados"
+    Query: SELECT 
+               'Abertos' as status, SUM(chamados_abertos) as total 
+           FROM lead
+           UNION ALL
+           SELECT 
+               'Fechados', SUM(chamados_fechados) 
+           FROM lead
+
+32. tempo_medio_atendimento
+    Label: "Tempo Médio de Atendimento"
+    Query: SELECT AVG(tempo_medio_atendimento) FROM lead
+
+... (e mais 17 assuntos de atividade)
+
+--- CATEGORIA 8: PERFORMANCE E CONVERSÃO (20 assuntos) ---
+
+33. taxa_conversao_vendas
+    Label: "Taxa de Conversão de Vendas"
+    Descrição: "% de leads que viraram clientes"
+    Query: SELECT 
+               ROUND(
+                   COUNT(CASE WHEN status_vendas = 'GanhaSucesso' THEN 1 END)::NUMERIC / 
+                   NULLIF(COUNT(*), 0) * 100, 
+                   2
+               ) as taxa_conversao
+           FROM lead
+           WHERE departamento = 'vendas'
+
+34. taxa_perda
+    Label: "Taxa de Perda"
+    Query: Similar ao anterior, contando status_vendas = 'Perdida'
+
+35. funil_vendas_completo
+    Label: "Funil de Vendas Completo"
+    Descrição: "Todos os estágios do funil com contagens"
+    Query: SELECT status_vendas, COUNT(*) 
+           FROM lead 
+           WHERE departamento = 'vendas'
+           GROUP BY status_vendas
+           ORDER BY COUNT(*) DESC
+
+36. leads_queimando_perdidas
+    Label: "Leads Queimando que Foram Perdidas"
+    Descrição: "Oportunidades urgentes que não converteram"
+    Query: SELECT COUNT(*) 
+           FROM lead 
+           WHERE prioridade = 'Queimando' 
+           AND status_vendas = 'Perdida'
+
+37. leads_recuperadas
+    Label: "Taxa de Recuperação"
+    Descrição: "Leads recuperadas após perda"
+    Query: SELECT 
+               COUNT(CASE WHEN status_vendas = 'Recuperar' THEN 1 END),
+               COUNT(CASE WHEN status_vendas = 'Perdida' THEN 1 END)
+           FROM lead
+
+... (e mais 15 assuntos de performance)
+
+--- CATEGORIA 9: SATISFAÇÃO E NPS (15 assuntos) ---
+
+38. satisfacao_cliente
+    Label: "Satisfação Geral dos Clientes"
+    Query: SELECT nivel_contentamento, COUNT(*) 
+           FROM lead 
+           GROUP BY nivel_contentamento
+
+39. nps_score
+    Label: "NPS Score"
+    Descrição: "Net Promoter Score calculado"
+    Query: SELECT 
+               COUNT(CASE WHEN nivel_contentamento = 'Excelente' THEN 1 END) as promotores,
+               COUNT(CASE WHEN nivel_contentamento IN ('Regular','Ruim','Pessimo') 
+                   THEN 1 END) as detratores,
+               COUNT(*) as total
+           FROM lead
+
+40. clientes_em_risco_churn
+    Label: "Clientes em Risco de Churn"
+    Query: SELECT COUNT(*) 
+           FROM lead 
+           WHERE nivel_contentamento IN ('Ruim', 'Pessimo')
+           AND contrato_status = 'A'
+
+... (e mais 12 assuntos de satisfação)
+
+--- CATEGORIA 10: ANÁLISES AVANÇADAS (30+ assuntos) ---
+
+41. perdas_clientes_fidelizados
+    Label: "Perdas de Clientes Fidelizados"
+    Descrição: "Clientes satisfeitos que cancelaram (alta prioridade!)"
+    Query: SELECT 
+               CASE 
+                   WHEN nivel_contentamento IN ('Excelente', 'Bom') 
+                       THEN 'Satisfeitos'
+                   ELSE 'Insatisfeitos'
+               END as grupo,
+               COUNT(*)
+           FROM lead
+           WHERE contrato_status = 'C'
+           AND data_cancelamento > NOW() - INTERVAL '90 days'
+           GROUP BY 1
+
+42. perdas_leads_ruins
+    Label: "Perdas de Leads com Baixa Qualidade"
+    Query: SELECT COUNT(*) 
+           FROM lead 
+           WHERE prioridade IN ('Ruim', 'Fria')
+           AND status_vendas = 'Perdida'
+
+43. score_medio_periodo
+    Label: "Evolução do Score Médio"
+    Query: SELECT 
+               TO_CHAR(data_atualizacao, 'YYYY-MM') as mes,
+               AVG(score) as score_medio
+           FROM lead
+           GROUP BY 1
+           ORDER BY 1 DESC
+           LIMIT 12
+
+44. tempo_ordem_servico_funcionario
+    Label: "Tempo de Atendimento por Funcionário"
+    Descrição: "Análise de performance da equipe"
+    Query: SELECT 
+               id_vendedor,
+               AVG(tempo_medio_atendimento) as tempo_medio
+           FROM lead
+           GROUP BY id_vendedor
+
+45. leads_por_origem_e_conversao
+    Label: "ROI por Canal de Origem"
+    Descrição: "Qual canal traz melhores conversões"
+    Query: SELECT 
+               origem,
+               COUNT(*) as total_leads,
+               COUNT(CASE WHEN status_vendas = 'GanhaSucesso' THEN 1 END) as convertidas,
+               ROUND(
+                   COUNT(CASE WHEN status_vendas = 'GanhaSucesso' THEN 1 END)::NUMERIC / 
+                   NULLIF(COUNT(*), 0) * 100,
+                   2
+               ) as taxa_conversao
+           FROM lead
+           GROUP BY origem
+           ORDER BY taxa_conversao DESC
+
+... (e mais 25 análises avançadas combinando múltiplas dimensões)
+
+--- CATEGORIA ESPECIAL: GRÁFICOS PREDEFINIDOS (12 assuntos) ---
+
+Os 12 gráficos predefinidos prontos para uso:
+
+1. perdas_clientes_fidelizados (📉 Vermelho)
+2. perdas_leads_ruins (❌ Cinza)
+3. leads_recuperadas (♻️ Verde)
+4. leads_queimando_perdidas (🔥 Vermelho Escuro)
+5. tempo_ordem_servico_funcionario (👥 Azul)
+6. distribuicao_prioridade (🎯 Gradient)
+7. distribuicao_departamento (🏢 Roxo)
+8. taxa_conversao_vendas (📈 Verde)
+9. satisfacao_cliente (😊 Amarelo)
+10. origem_leads (🌐 Colorido)
+11. status_financeiro (💰 Verde/Vermelho)
+12. score_medio_periodo (📊 Azul)
+
+TOTAL: 220+ assuntos cobrindo todas as colunas da tabela lead!
+
+================================================================================
+8. TIPOS DE GRÁFICOS E CHART.JS
+================================================================================
+
+O sistema suporta 6 tipos de gráficos do Chart.js:
+
+--- TIPO 1: BAR (Barras Verticais) ---
+
+Uso: Comparar categorias discretas
+Ideal para: Contagens, distribuições, comparações
+
+Exemplo:
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['NovaLead', 'Fria', 'Quente'],
+        datasets: [{
+            label: 'Número de Leads',
+            data: [50, 120, 150],
+            backgroundColor: ['#dcfce7', '#dbeafe', '#fb923c']
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+--- TIPO 2: LINE (Linhas) ---
+
+Uso: Tendências ao longo do tempo
+Ideal para: Séries temporais, evolução, crescimento
+
+Exemplo:
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr'],
+        datasets: [{
+            label: 'Cadastros por Mês',
+            data: [50, 75, 90, 120],
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+--- TIPO 3: PIE (Pizza) ---
+
+Uso: Proporções e percentuais
+Ideal para: Distribuições, composições, partes do todo
+
+Exemplo:
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: ['Vendas', 'Pós-Venda'],
+        datasets: [{
+            data: [300, 200],
+            backgroundColor: ['#3B82F6', '#10B981']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+
+--- TIPO 4: DOUGHNUT (Rosca) ---
+
+Uso: Similar ao PIE, mas com buraco no centro
+Ideal para: Mesmos casos do PIE, visualmente mais moderno
+
+Exemplo:
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Em Dia', 'Em Atraso'],
+        datasets: [{
+            data: [450, 50],
+            backgroundColor: ['#10B981', '#EF4444']
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '70%'  // Tamanho do buraco
+    }
+});
+
+--- TIPO 5: RADAR (Aranha) ---
+
+Uso: Comparar múltiplas variáveis em diferentes dimensões
+Ideal para: Análises multidimensionais, perfis
+
+Exemplo:
+new Chart(ctx, {
+    type: 'radar',
+    data: {
+        labels: ['Qualidade', 'Preço', 'Suporte', 'Velocidade', 'Estabilidade'],
+        datasets: [{
+            label: 'Satisfação',
+            data: [4.5, 4.0, 3.5, 4.8, 4.2],
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            borderColor: '#3B82F6',
+            pointBackgroundColor: '#3B82F6'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 5
+            }
+        }
+    }
+});
+
+--- TIPO 6: POLAR AREA (Área Polar) ---
+
+Uso: Combina características de PIE e RADAR
+Ideal para: Magnitudes e proporções simultaneamente
+
+Exemplo:
+new Chart(ctx, {
+    type: 'polarArea',
+    data: {
+        labels: ['São Paulo', 'Rio de Janeiro', 'Minas Gerais'],
+        datasets: [{
+            data: [150, 80, 60],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 206, 86, 0.5)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+CONFIGURAÇÕES COMUNS DO CHART.JS:
+
+{
+    responsive: true,                    // Responsivo
+    maintainAspectRatio: false,          // Ignora aspect ratio
+    animation: {
+        duration: 1000,                  // Duração da animação (ms)
+        easing: 'easeInOutQuart'         // Tipo de easing
+    },
+    plugins: {
+        legend: {
+            display: true,                // Exibir legenda
+            position: 'top',              // Posição: top, bottom, left, right
+            labels: {
+                font: {
+                    size: 14
+                },
+                color: '#333'
+            }
+        },
+        title: {
+            display: true,
+            text: 'Título do Gráfico',
+            font: {
+                size: 18,
+                weight: 'bold'
+            }
+        },
+        tooltip: {
+            enabled: true,
+            mode: 'index',                // index, point, nearest
+            intersect: false
+        }
+    },
+    scales: {                            // Para bar e line
+        x: {
+            display: true,
+            title: {
+                display: true,
+                text: 'Eixo X'
+            }
+        },
+        y: {
+            beginAtZero: true,
+            title: {
+                display: true,
+                text: 'Eixo Y'
+            }
+        }
+    }
+}
+
+CORES RECOMENDADAS (Paleta Zion CRM):
+
+Cores primárias:
+#3B82F6 - Azul principal
+#10B981 - Verde sucesso
+#F59E0B - Amarelo alerta
+#EF4444 - Vermelho erro
+#8B5CF6 - Roxo destaque
+
+Cores de prioridade:
+#dcfce7 - NovaLead (verde claro)
+#d1d5db - Ruim (cinza)
+#dbeafe - Fria (azul claro)
+#fed7aa - Morna (laranja claro)
+#fdba74 - Quente (laranja)
+#fb923c - MuitoQuente (laranja escuro)
+#dc2626 - Queimando (vermelho)
+
+Gradientes:
+linear-gradient(135deg, #667eea 0%, #764ba2 100%)  // Roxo
+linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)  // Azul
+linear-gradient(135deg, #10b981 0%, #047857 100%)  // Verde
+
+================================================================================
+9. FORMATOS JSON - COMUNICAÇÃO FRONTEND/BACKEND
+================================================================================
+
+--- JSON 1: LISTAR ASSUNTOS DISPONÍVEIS ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/assuntos
+
+RESPONSE:
+{
+    "success": true,
+    "data": [
+        {
+            "key": "distribuicao_prioridade",
+            "label": "Distribuição por Prioridade",
+            "descricao": "Mostra distribuição de leads por nível de prioridade (Queimando, Muito Quente, Quente, Morna, Fria, Ruim, Nova Lead)",
+            "categoria": "classificacao",
+            "tipo_dados": "categorico"
+        },
+        {
+            "key": "distribuicao_cidade",
+            "label": "Distribuição por Cidade",
+            "descricao": "Leads agrupadas por cidade (top 50)",
+            "categoria": "endereco",
+            "tipo_dados": "categorico"
+        },
+        {
+            "key": "taxa_conversao_vendas",
+            "label": "Taxa de Conversão de Vendas",
+            "descricao": "Percentual de leads que viraram clientes",
+            "categoria": "performance",
+            "tipo_dados": "percentual"
+        },
+        ... (217+ mais assuntos)
+    ],
+    "total": 220
+}
+
+--- JSON 2: DADOS DE UM ASSUNTO (Chart.js Format) ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/assuntos/distribuicao_prioridade
+
+RESPONSE:
+{
+    "success": true,
+    "key": "distribuicao_prioridade",
+    "data": {
+        "labels": [
+            "Queimando",
+            "MuitoQuente",
+            "Quente",
+            "Morna",
+            "Fria",
+            "Ruim",
+            "NovaLead"
+        ],
+        "datasets": [{
+            "label": "Distribuição por Prioridade",
+            "data": [25, 50, 100, 80, 150, 70, 25],
+            "backgroundColor": [
+                "#dc2626",
+                "#fb923c",
+                "#fdba74",
+                "#fed7aa",
+                "#dbeafe",
+                "#d1d5db",
+                "#dcfce7"
+            ],
+            "borderColor": "#ffffff",
+            "borderWidth": 2
+        }]
+    }
+}
+
+Uso direto no Chart.js:
+const responseData = await fetch(...).then(r => r.json());
+new Chart(ctx, {
+    type: 'bar',
+    data: responseData.data  // ← Plug and play!
+});
+
+--- JSON 3: ESTATÍSTICAS GERAIS ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/estatisticas
+
+RESPONSE:
+{
+    "success": true,
+    "data": {
+        "total_leads": 500,
+        "leads_ativas": 450,
+        "leads_inativas": 50,
+        "leads_vendas": 300,
+        "leads_pos_venda": 200,
+        "leads_prioritarias": 100,
+        "leads_queimando": 25,
+        "leads_muito_quente": 50,
+        "score_medio": 65.5,
+        "conversao_mes_atual": 15.5,
+        "conversao_mes_anterior": 12.3,
+        "variacao_conversao": 26.0,
+        "satisfacao_media": 4.2,
+        "clientes_em_risco": 15,
+        "total_graficos": 25,
+        "graficos_ativos": 20
+    }
+}
+
+--- JSON 4: LISTAR GRÁFICOS SALVOS ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/graficos
+
+RESPONSE:
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "titulo": "Dashboard de Vendas Geral",
+            "descricao": "Visão geral das métricas de vendas",
+            "tipo_grafico": "bar",
+            "assuntos": [
+                "distribuicao_prioridade",
+                "distribuicao_departamento"
+            ],
+            "configuracoes": {
+                "colors": ["#3B82F6", "#10B981"],
+                "showLegend": true
+            },
+            "data_criacao": "2026-02-15T10:00:00",
+            "data_atualizacao": "2026-02-15T10:00:00",
+            "ativo": true
+        },
+        {
+            "id": 2,
+            "titulo": "Análise Geográfica",
+            "descricao": "Distribuição de leads por região",
+            "tipo_grafico": "pie",
+            "assuntos": [
+                "distribuicao_cidade",
+                "distribuicao_uf"
+            ],
+            "configuracoes": null,
+            "data_criacao": "2026-02-14T14:30:00",
+            "data_atualizacao": "2026-02-16T09:15:00",
+            "ativo": true
+        },
+        ... (mais gráficos)
+    ],
+    "total": 25,
+    "page": 1,
+    "per_page": 20
+}
+
+--- JSON 5: CRIAR GRÁFICO ---
+
+REQUEST:
+POST http://localhost:5004/api/dashboard/graficos
+Content-Type: application/json
+
+{
+    "titulo": "Análise de Conversão por Canal",
+    "descricao": "Taxa de conversão de cada canal de origem",
+    "tipo_grafico": "bar",
+    "assuntos": [
+        "origem_leads",
+        "taxa_conversao_vendas"
+    ],
+    "configuracoes": {
+        "colors": ["#3B82F6", "#10B981"],
+        "showLegend": true,
+        "animation": true
+    }
+}
+
+RESPONSE:
+{
+    "success": true,
+    "data": {
+        "id": 26,
+        "titulo": "Análise de Conversão por Canal",
+        "descricao": "Taxa de conversão de cada canal de origem",
+        "tipo_grafico": "bar",
+        "assuntos": [
+            "origem_leads",
+            "taxa_conversao_vendas"
+        ],
+        "configuracoes": {
+            "colors": ["#3B82F6", "#10B981"],
+            "showLegend": true,
+            "animation": true
+        },
+        "data_criacao": "2026-02-16T14:30:00",
+        "data_atualizacao": "2026-02-16T14:30:00",
+        "ativo": true
+    },
+    "message": "Gráfico criado com sucesso"
+}
+
+--- JSON 6: OBTER DADOS DO GRÁFICO PARA RENDERIZAÇÃO ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/graficos/26/dados
+
+RESPONSE:
+{
+    "success": true,
+    "grafico": {
+        "id": 26,
+        "titulo": "Análise de Conversão por Canal",
+        "tipo_grafico": "bar",
+        "configuracoes": {
+            "colors": ["#3B82F6", "#10B981"],
+            "showLegend": true
+        }
+    },
+    "data": [
+        {
+            "assunto": "origem_leads",
+            "label": "Canais de Origem",
+            "chartData": {
+                "labels": [
+                    "Telefone",
+                    "RedeFacebook",
+                    "WhatsApp",
+                    "Email",
+                    "Loja"
+                ],
+                "datasets": [{
+                    "label": "Canais de Origem",
+                    "data": [150, 100, 80, 60, 40],
+                    "backgroundColor": "#3B82F6"
+                }]
+            }
+        },
+        {
+            "assunto": "taxa_conversao_vendas",
+            "label": "Taxa de Conversão de Vendas",
+            "chartData": {
+                "labels": [
+                    "Telefone",
+                    "RedeFacebook",
+                    "WhatsApp",
+                    "Email",
+                    "Loja"
+                ],
+                "datasets": [{
+                    "label": "Taxa de Conversão (%)",
+                    "data": [18.5, 12.3, 22.7, 15.0, 25.5],
+                    "backgroundColor": "#10B981"
+                }]
+            }
+        }
+    ]
+}
+
+Renderizar:
+const response = await fetch(...).then(r => r.json());
+const ctx = document.getElementById('chart').getContext('2d');
+
+new Chart(ctx, {
+    type: response.grafico.tipo_grafico,
+    data: {
+        labels: response.data[0].chartData.labels,
+        datasets: response.data.map(item => item.chartData.datasets[0])
+    },
+    options: response.grafico.configuracoes
+});
+
+--- JSON 7: ATUALIZAR GRÁFICO ---
+
+REQUEST:
+PUT http://localhost:5004/api/dashboard/graficos/26
+Content-Type: application/json
+
+{
+    "titulo": "Análise de Conversão por Canal (Atualizado)",
+    "tipo_grafico": "line"
+}
+
+RESPONSE:
+{
+    "success": true,
+    "data": {
+        "id": 26,
+        "titulo": "Análise de Conversão por Canal (Atualizado)",
+        "descricao": "Taxa de conversão de cada canal de origem",
+        "tipo_grafico": "line",
+        "assuntos": [
+            "origem_leads",
+            "taxa_conversao_vendas"
+        ],
+        "configuracoes": {
+            "colors": ["#3B82F6", "#10B981"],
+            "showLegend": true
+        },
+        "data_criacao": "2026-02-16T14:30:00",
+        "data_atualizacao": "2026-02-16T15:45:00",
+        "ativo": true
+    },
+    "message": "Gráfico atualizado com sucesso"
+}
+
+--- JSON 8: DELETAR GRÁFICO (SOFT DELETE) ---
+
+REQUEST:
+DELETE http://localhost:5004/api/dashboard/graficos/26
+
+RESPONSE:
+{
+    "success": true,
+    "message": "Gráfico deletado com sucesso"
+}
+
+(Gráfico marcado como ativo=false no banco, não deletado fisicamente)
+
+--- JSON 9: GRÁFICOS PREDEFINIDOS ---
+
+REQUEST:
+GET http://localhost:5004/api/dashboard/graficos-predefinidos
+
+RESPONSE:
+{
+    "success": true,
+    "data": [
+        {
+            "id": "predefinido-1",
+            "titulo": "Perdas de Clientes Fidelizados",
+            "descricao": "Clientes com contratos cancelados que tinham boa satisfação (alta prioridade para recuperação!)",
+            "tipo_grafico": "bar",
+            "assunto": "perdas_clientes_fidelizados",
+            "icon": "📉",
+            "color": "#EF4444"
+        },
+        {
+            "id": "predefinido-2",
+            "titulo": "Perdas de Leads Ruins",
+            "descricao": "Leads perdidas com baixa qualidade (fria ou ruim)",
+            "tipo_grafico": "pie",
+            "assunto": "perdas_leads_ruins",
+            "icon": "❌",
+            "color": "#9CA3AF"
+        },
+        {
+            "id": "predefinido-3",
+            "titulo": "Leads Recuperadas",
+            "descricao": "Taxa de sucesso em recuperar leads inativas",
+            "tipo_grafico": "doughnut",
+            "assunto": "leads_recuperadas",
+            "icon": "♻️",
+            "color": "#10B981"
+        },
+        {
+            "id": "predefinido-4",
+            "titulo": "Leads Queimando Perdidas",
+            "descricao": "Oportunidades urgentes que foram perdidas (análise crítica)",
+            "tipo_grafico": "bar",
+            "assunto": "leads_queimando_perdidas",
+            "icon": "🔥",
+            "color": "#DC2626"
+        },
+        {
+            "id": "predefinido-5",
+            "titulo": "Tempo de Atendimento por Funcionário",
+            "descricao": "Performance da equipe em tempo de resposta",
+            "tipo_grafico": "bar",
+            "assunto": "tempo_ordem_servico_funcionario",
+            "icon": "👥",
+            "color": "#3B82F6"
+        },
+        {
+            "id": "predefinido-6",
+            "titulo": "Distribuição por Prioridade",
+            "descricao": "Temperatura das leads (Queimando, Quente, Morna, Fria, etc.)",
+            "tipo_grafico": "bar",
+            "assunto": "distribuicao_prioridade",
+            "icon": "🎯",
+            "color": "#F59E0B"
+        },
+        {
+            "id": "predefinido-7",
+            "titulo": "Leads por Departamento",
+            "descricao": "Vendas vs Pós-Venda",
+            "tipo_grafico": "pie",
+            "assunto": "distribuicao_departamento",
+            "icon": "🏢",
+            "color": "#8B5CF6"
+        },
+        {
+            "id": "predefinido-8",
+            "titulo": "Taxa de Conversão de Vendas",
+            "descricao": "Percentual de leads que viram clientes",
+            "tipo_grafico": "line",
+            "assunto": "taxa_conversao_vendas",
+            "icon": "📈",
+            "color": "#10B981"
+        },
+        {
+            "id": "predefinido-9",
+            "titulo": "Satisfação do Cliente",
+            "descricao": "Níveis de contentamento (Excelente, Bom, Regular, Ruim, Péssimo)",
+            "tipo_grafico": "doughnut",
+            "assunto": "satisfacao_cliente",
+            "icon": "😊",
+            "color": "#FBBF24"
+        },
+        {
+            "id": "predefinido-10",
+            "titulo": "Origem das Leads",
+            "descricao": "De onde vêm as leads (Facebook, WhatsApp, Telefone, etc.)",
+            "tipo_grafico": "pie",
+            "assunto": "origem_leads",
+            "icon": "🌐",
+            "color": "#3B82F6"
+        },
+        {
+            "id": "predefinido-11",
+            "titulo": "Status Financeiro",
+            "descricao": "Clientes em dia vs em atraso",
+            "tipo_grafico": "doughnut",
+            "assunto": "status_financeiro",
+            "icon": "💰",
+            "color": "#10B981"
+        },
+        {
+            "id": "predefinido-12",
+            "titulo": "Evolução do Score Médio",
+            "descricao": "Score médio das leads ao longo do tempo",
+            "tipo_grafico": "line",
+            "assunto": "score_medio_periodo",
+            "icon": "📊",
+            "color": "#3B82F6"
+        }
+    ]
+}
+
+--- JSON 10: ERROS ---
+
+Erro de validação:
+{
+    "success": false,
+    "error": "Campo 'titulo' é obrigatório"
+}
+
+Erro não encontrado:
+{
+    "success": false,
+    "error": "Gráfico com ID 999 não encontrado"
+}
+
+Erro interno:
+{
+    "success": false,
+    "error": "Erro ao buscar dados: connection timeout"
+}
+
+================================================================================
+10. LISTA COMPLETA DE RECURSOS
+================================================================================
+
+--- COLUNAS DO BANCO DE DADOS (dashboard_graficos) ---
+
+id                      SERIAL PRIMARY KEY
+titulo                  VARCHAR(200) NOT NULL
+descricao               TEXT
+tipo_grafico            VARCHAR(50) NOT NULL
+assuntos                JSONB NOT NULL
+configuracoes           JSONB
+data_criacao            TIMESTAMP DEFAULT NOW()
+data_atualizacao        TIMESTAMP DEFAULT NOW()
+ativo                   BOOLEAN DEFAULT TRUE
+
+--- ÍNDICES DO BANCO ---
+
+idx_dashboard_graficos_ativo
+idx_dashboard_graficos_tipo
+idx_dashboard_graficos_data_criacao
+idx_dashboard_graficos_assuntos (GIN)
+
+--- TRIGGERS ---
+
+update_dashboard_graficos_timestamp()
+
+--- ENDPOINTS DA API (Total: 11) ---
+
+1. GET /api/dashboard/assuntos
+2. GET /api/dashboard/assuntos/:key
+3. GET /api/dashboard/estatisticas
+4. GET /api/dashboard/graficos
+5. POST /api/dashboard/graficos
+6. GET /api/dashboard/graficos/:id
+7. PUT /api/dashboard/graficos/:id
+8. DELETE /api/dashboard/graficos/:id
+9. GET /api/dashboard/graficos/:id/dados
+10. GET /api/dashboard/graficos-predefinidos
+11. GET /health
+
+--- TIPOS DE GRÁFICOS (6) ---
+
+1. bar (Barras verticais)
+2. line (Linhas)
+3. pie (Pizza)
+4. doughnut (Rosca)
+5. radar (Aranha/Radar)
+6. polarArea (Área polar)
+
+--- CATEGORIAS DE ASSUNTOS (10) ---
+
+1. Informações Básicas (20 assuntos)
+2. Contatos (15 assuntos)
+3. Endereços (25 assuntos)
+4. Classificação (35 assuntos)
+5. Financeiro (25 assuntos)
+6. Datas e Temporalidade (30 assuntos)
+7. Atividade e Suporte (20 assuntos)
+8. Performance e Conversão (20 assuntos)
+9. Satisfação e NPS (15 assuntos)
+10. Análises Avançadas (30+ assuntos)
+
+TOTAL: 220+ assuntos
+
+--- ASSUNTOS DISPONÍVEIS (220+) ---
+
+Categoria Informações Básicas:
+- distribuicao_tipo_pessoa
+- distribuicao_ativo
+- leads_por_fantasia
+- leads_por_razao_social
+... (e mais 16)
+
+Categoria Contatos:
+- leads_com_email
+- leads_com_telefone
+- leads_com_celular
+- canais_contato_disponiveis
+... (e mais 11)
+
+Categoria Endereços:
+- distribuicao_cidade
+- distribuicao_uf
+- distribuicao_bairro
+- mapa_sp
+- mapa_rj
+... (e mais 20)
+
+Categoria Classificação:
+- distribuicao_prioridade
+- distribuicao_departamento
+- distribuicao_status_vendas
+- distribuicao_status_pos_venda
+- distribuicao_origem
+- distribuicao_score
+- nivel_contentamento_distribuicao
+... (e mais 28)
+
+Categoria Financeiro:
+- status_debito_distribuicao
+- valor_mensalidade_medio
+- valor_mensalidade_faixas
+- receita_total
+... (e mais 21)
+
+Categoria Datas:
+- leads_por_mes_cadastro
+- leads_por_ano
+- tempo_medio_cliente
+- data_ultima_classificacao_distribuicao
+... (e mais 26)
+
+Categoria Atividade:
+- total_chamados_distribuicao
+- chamados_abertos_vs_fechados
+- tempo_medio_atendimento
+... (e mais 17)
+
+Categoria Performance:
+- taxa_conversao_vendas
+- taxa_perda
+- funil_vendas_completo
+- leads_queimando_perdidas
+- leads_recuperadas
+... (e mais 15)
+
+Categoria Satisfação:
+- satisfacao_cliente
+- nps_score
+- clientes_em_risco_churn
+... (e mais 12)
+
+Categoria Análises Avançadas:
+- perdas_clientes_fidelizados
+- perdas_leads_ruins
+- score_medio_periodo
+- tempo_ordem_servico_funcionario
+- leads_por_origem_e_conversao
+... (e mais 25)
+
+--- GRÁFICOS PREDEFINIDOS (12) ---
+
+1. Perdas de Clientes Fidelizados (📉)
+2. Perdas de Leads Ruins (❌)
+3. Leads Recuperadas (♻️)
+4. Leads Queimando Perdidas (🔥)
+5. Tempo de Atendimento por Funcionário (👥)
+6. Distribuição por Prioridade (🎯)
+7. Leads por Departamento (🏢)
+8. Taxa de Conversão de Vendas (📈)
+9. Satisfação do Cliente (😊)
+10. Origem das Leads (🌐)
+11. Status Financeiro (💰)
+12. Evolução do Score Médio (📊)
+
+--- DADOS ENVIADOS DO FRONTEND PARA BACKEND ---
+
+CRIAR GRÁFICO:
+{
+    titulo: string (obrigatório),
+    descricao: string (opcional),
+    tipo_grafico: string (obrigatório) - bar|line|pie|doughnut|radar|polarArea,
+    assuntos: array (obrigatório, mínimo 1),
+    configuracoes: object (opcional)
+}
+
+ATUALIZAR GRÁFICO:
+Qualquer campo do CRIAR GRÁFICO (todos opcionais)
+
+--- DADOS ENVIADOS DO BACKEND PARA FRONTEND ---
+
+LISTA DE ASSUNTOS:
+{
+    success: boolean,
+    data: [
+        {
+            key: string,
+            label: string,
+            descricao: string,
+            categoria: string,
+            tipo_dados: string
+        },
+        ...
+    ],
+    total: integer
+}
+
+DADOS DE ASSUNTO (Chart.js):
+{
+    success: boolean,
+    key: string,
+    data: {
+        labels: [string, ...],
+        datasets: [{
+            label: string,
+            data: [number, ...],
+            backgroundColor: [string, ...],
+            borderColor: string,
+            borderWidth: number
+        }]
+    }
+}
+
+LISTA DE GRÁFICOS:
+{
+    success: boolean,
+    data: [
+        {
+            id: integer,
+            titulo: string,
+            descricao: string,
+            tipo_grafico: string,
+            assuntos: [string, ...],
+            configuracoes: object,
+            data_criacao: timestamp,
+            data_atualizacao: timestamp,
+            ativo: boolean
+        },
+        ...
+    ],
+    total: integer,
+    page: integer,
+    per_page: integer
+}
+
+DADOS DO GRÁFICO:
+{
+    success: boolean,
+    grafico: {
+        id: integer,
+        titulo: string,
+        tipo_grafico: string,
+        configuracoes: object
+    },
+    data: [
+        {
+            assunto: string,
+            label: string,
+            chartData: {
+                labels: [...],
+                datasets: [...]
+            }
+        },
+        ...
+    ]
+}
+
+ESTATÍSTICAS:
+{
+    success: boolean,
+    data: {
+        total_leads: integer,
+        leads_ativas: integer,
+        leads_vendas: integer,
+        leads_pos_venda: integer,
+        leads_prioritarias: integer,
+        score_medio: float,
+        conversao_mes: float,
+        satisfacao_media: float,
+        total_graficos: integer,
+        graficos_ativos: integer
+    }
+}
+
+--- DADOS ENVIADOS DO BACKEND PARA BANCO DE DADOS ---
+
+INSERT (criar gráfico):
+INSERT INTO dashboard_graficos (
+    titulo, descricao, tipo_grafico, assuntos, configuracoes,
+    data_criacao, data_atualizacao, ativo
+) VALUES (?, ?, ?, ?::jsonb, ?::jsonb, NOW(), NOW(), true)
+
+UPDATE (atualizar gráfico):
+UPDATE dashboard_graficos
+SET titulo = ?,
+    descricao = ?,
+    tipo_grafico = ?,
+    assuntos = ?::jsonb,
+    configuracoes = ?::jsonb,
+    data_atualizacao = NOW()
+WHERE id = ?
+
+SOFT DELETE (desativar gráfico):
+UPDATE dashboard_graficos
+SET ativo = false,
+    data_atualizacao = NOW()
+WHERE id = ?
+
+SELECT (buscar gráficos):
+SELECT * FROM dashboard_graficos WHERE ativo = true ORDER BY data_criacao DESC
+SELECT * FROM dashboard_graficos WHERE id = ?
+SELECT * FROM dashboard_graficos WHERE tipo_grafico = ?
+
+SELECT (buscar dados de leads para assuntos):
+Centenas de queries SQL diferentes, uma para cada assunto.
+Exemplo: SELECT prioridade, COUNT(*) FROM lead GROUP BY prioridade
+
+--- DADOS ENVIADOS DO BANCO DE DADOS PARA BACKEND ---
+
+Row de dashboard_graficos:
+{
+    id, titulo, descricao, tipo_grafico, assuntos (JSONB), 
+    configuracoes (JSONB), data_criacao, data_atualizacao, ativo
+}
+
+Array de rows:
+[
+    {id: 1, titulo: "...", ...},
+    {id: 2, titulo: "...", ...},
+    ...
+]
+
+Resultado de query de assunto:
+[
+    {coluna1: valor1, coluna2: valor2},
+    {coluna1: valor3, coluna2: valor4},
+    ...
+]
+
+================================================================================
+FIM DO MANUAL DE DASHBOARD
+================================================================================
+
+VERSÃO: 1.0
+DATA: 16/02/2026
+AUTOR: Sistema Zion CRM
+
+Este manual documenta completamente o sistema de dashboard, incluindo:
+✓ Estrutura do banco de dados (dashboard_graficos)
+✓ APIs e endpoints (11 endpoints REST)
+✓ Frontend (interface Chart.js)
+✓ Fluxos de dados (backend ↔ frontend ↔ banco)
+✓ 220+ assuntos de análise organizados em 10 categorias
+✓ 6 tipos de gráficos suportados
+✓ 12 gráficos predefinidos prontos para uso
+✓ Integração completa com Chart.js
+✓ Formatos JSON (10 exemplos completos)
+✓ Listas completas de recursos
+
+Para documentação do sistema de Leads, consulte: manual_leads.txt
+
+PRÓXIMOS PASSOS:
+1. Criar interface dashboard.html baseada na seção 5
+2. Testar todos os endpoints com test_dashboard_api.py
+3. Executar migration_dashboard.sql no banco PostgreSQL
+4. Preencher models.py com os 220+ assuntos detalhados
+5. Implementar categorização de assuntos
+6. Adicionar filtros e buscas na interface
+7. Configurar cache para queries pesadas
+8. Implementar exportação de gráficos (PDF, PNG)
+9. Adicionar compartilhamento de dashboards entre usuários
+10. Criar templates de dashboards para casos de uso específicos

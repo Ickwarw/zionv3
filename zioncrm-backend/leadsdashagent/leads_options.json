@@ -1,0 +1,598 @@
+{
+  "_comment": "Configurações e opções do Sistema de Leads - Frontend",
+  "_version": "1.0",
+  "_date": "2026-02-16",
+  
+  "prioridades": [
+    {
+      "value": "NovaLead",
+      "label": "Nova Lead",
+      "icon": "🆕",
+      "color": "#dcfce7",
+      "textColor": "#166534",
+      "descricao": "Lead recém-cadastrada sem interação",
+      "scoreRange": [0, 0]
+    },
+    {
+      "value": "Ruim",
+      "label": "Ruim",
+      "icon": "⚫",
+      "color": "#d1d5db",
+      "textColor": "#374151",
+      "descricao": "Lead sem potencial identificado",
+      "scoreRange": [0, 20]
+    },
+    {
+      "value": "Fria",
+      "label": "Fria",
+      "icon": "❄️",
+      "color": "#dbeafe",
+      "textColor": "#1e40af",
+      "descricao": "Lead com baixo interesse",
+      "scoreRange": [20, 35]
+    },
+    {
+      "value": "Morna",
+      "label": "Morna",
+      "icon": "🌡️",
+      "color": "#fed7aa",
+      "textColor": "#9a3412",
+      "descricao": "Lead com interesse moderado",
+      "scoreRange": [35, 50]
+    },
+    {
+      "value": "Quente",
+      "label": "Quente",
+      "icon": "🔥",
+      "color": "#fdba74",
+      "textColor": "#9a3412",
+      "descricao": "Lead com alto interesse",
+      "scoreRange": [50, 70]
+    },
+    {
+      "value": "MuitoQuente",
+      "label": "Muito Quente",
+      "icon": "🔥🔥",
+      "color": "#fb923c",
+      "textColor": "#7c2d12",
+      "descricao": "Lead com altíssimo interesse",
+      "scoreRange": [70, 85]
+    },
+    {
+      "value": "Queimando",
+      "label": "Queimando",
+      "icon": "🔥🔥🔥",
+      "color": "#dc2626",
+      "textColor": "#ffffff",
+      "descricao": "Lead urgente - ação imediata",
+      "scoreRange": [85, 100]
+    }
+  ],
+  
+  "statusVendas": [
+    {
+      "value": "NovaLeadVendas",
+      "label": "Nova Lead Vendas",
+      "icon": "🆕",
+      "color": "#10b981",
+      "etapa": 1,
+      "descricao": "Lead no setor de vendas aguardando primeiro contato"
+    },
+    {
+      "value": "Contato",
+      "label": "Contato",
+      "icon": "📞",
+      "color": "#3b82f6",
+      "etapa": 2,
+      "descricao": "Primeiro contato realizado"
+    },
+    {
+      "value": "Qualificacao",
+      "label": "Qualificação",
+      "icon": "🎯",
+      "color": "#8b5cf6",
+      "etapa": 3,
+      "descricao": "Lead sendo qualificada (BANT)"
+    },
+    {
+      "value": "Proposta",
+      "label": "Proposta",
+      "icon": "📄",
+      "color": "#f59e0b",
+      "etapa": 4,
+      "descricao": "Proposta comercial enviada"
+    },
+    {
+      "value": "Negociacao",
+      "label": "Negociação",
+      "icon": "🤝",
+      "color": "#f97316",
+      "etapa": 5,
+      "descricao": "Negociando valores e condições"
+    },
+    {
+      "value": "AguardandoAssinatura",
+      "label": "Aguardando Assinatura",
+      "icon": "✍️",
+      "color": "#06b6d4",
+      "etapa": 6,
+      "descricao": "Aguardando assinatura do contrato"
+    },
+    {
+      "value": "GanhaSucesso",
+      "label": "Ganha - Sucesso",
+      "icon": "✅",
+      "color": "#10b981",
+      "etapa": 7,
+      "descricao": "Venda concretizada"
+    },
+    {
+      "value": "Perdida",
+      "label": "Perdida",
+      "icon": "❌",
+      "color": "#ef4444",
+      "etapa": -1,
+      "descricao": "Oportunidade perdida"
+    },
+    {
+      "value": "Recuperar",
+      "label": "Recuperar",
+      "icon": "♻️",
+      "color": "#f59e0b",
+      "etapa": -2,
+      "descricao": "Cliente inativo a ser recuperado"
+    },
+    {
+      "value": "SemInteresse",
+      "label": "Sem Interesse",
+      "icon": "⛔",
+      "color": "#6b7280",
+      "etapa": -3,
+      "descricao": "Lead desinteressada"
+    }
+  ],
+  
+  "statusPosVenda": [
+    {
+      "value": "AcompanhamentoPersonalizado",
+      "label": "Acompanhamento Personalizado",
+      "icon": "👤",
+      "color": "#8b5cf6",
+      "prioridade": "alta",
+      "descricao": "Cliente VIP com atendimento dedicado"
+    },
+    {
+      "value": "TreinamentoSuporte",
+      "label": "Treinamento e Suporte",
+      "icon": "📚",
+      "color": "#3b82f6",
+      "prioridade": "media",
+      "descricao": "Necessita treinamento sobre produto/serviço"
+    },
+    {
+      "value": "ProgramasDeFidelidade",
+      "label": "Programas de Fidelidade",
+      "icon": "🎁",
+      "color": "#f59e0b",
+      "prioridade": "media",
+      "descricao": "Participante de programa de fidelidade"
+    },
+    {
+      "value": "AcoesDeAgradecimento",
+      "label": "Ações de Agradecimento",
+      "icon": "🙏",
+      "color": "#10b981",
+      "prioridade": "baixa",
+      "descricao": "Ações de reconhecimento e gratidão"
+    },
+    {
+      "value": "AnaliseDeUsoEFeedback",
+      "label": "Análise de Uso e Feedback",
+      "icon": "📊",
+      "color": "#06b6d4",
+      "prioridade": "media",
+      "descricao": "Análise de uso e coleta de feedback"
+    },
+    {
+      "value": "AtivasSatisfeitas",
+      "label": "Ativas Satisfeitas",
+      "icon": "😊",
+      "color": "#10b981",
+      "prioridade": "baixa",
+      "descricao": "Clientes ativos e satisfeitos"
+    },
+    {
+      "value": "AtivasInsatisfeitas",
+      "label": "Ativas Insatisfeitas",
+      "icon": "😟",
+      "color": "#ef4444",
+      "prioridade": "alta",
+      "descricao": "Clientes ativos mas insatisfeitos"
+    },
+    {
+      "value": "RecuperarSatisfacao",
+      "label": "Recuperar Satisfação",
+      "icon": "🔧",
+      "color": "#f97316",
+      "prioridade": "alta",
+      "descricao": "Ação para recuperar satisfação"
+    },
+    {
+      "value": "UpsellCrossSell",
+      "label": "Upsell / Cross-sell",
+      "icon": "💰",
+      "color": "#8b5cf6",
+      "prioridade": "media",
+      "descricao": "Oferecer produtos/serviços adicionais"
+    },
+    {
+      "value": "AtendimentoRapido",
+      "label": "Atendimento Rápido",
+      "icon": "⚡",
+      "color": "#f59e0b",
+      "prioridade": "alta",
+      "descricao": "Prioridade no atendimento"
+    },
+    {
+      "value": "RelacionamentoDeLongoPrazo",
+      "label": "Relacionamento de Longo Prazo",
+      "icon": "🤝",
+      "color": "#3b82f6",
+      "prioridade": "media",
+      "descricao": "Foco em relacionamento duradouro"
+    }
+  ],
+  
+  "niveisContentamento": [
+    {
+      "value": "Excelente",
+      "label": "Excelente",
+      "icon": "⭐⭐⭐⭐⭐",
+      "rating": 5,
+      "color": "#10b981",
+      "descricao": "Cliente extremamente satisfeito"
+    },
+    {
+      "value": "Bom",
+      "label": "Bom",
+      "icon": "⭐⭐⭐⭐",
+      "rating": 4,
+      "color": "#059669",
+      "descricao": "Cliente satisfeito"
+    },
+    {
+      "value": "Regular",
+      "label": "Regular",
+      "icon": "⭐⭐⭐",
+      "rating": 3,
+      "color": "#f97316",
+      "descricao": "Cliente neutro"
+    },
+    {
+      "value": "Ruim",
+      "label": "Ruim",
+      "icon": "⭐⭐",
+      "rating": 2,
+      "color": "#ef4444",
+      "descricao": "Cliente insatisfeito"
+    },
+    {
+      "value": "Pessimo",
+      "label": "Péssimo",
+      "icon": "⭐",
+      "rating": 1,
+      "color": "#dc2626",
+      "descricao": "Cliente muito insatisfeito (risco de churn)"
+    }
+  ],
+  
+  "statusDebito": [
+    {
+      "value": "EmDia",
+      "label": "Em Dia",
+      "icon": "✅",
+      "color": "#10b981",
+      "descricao": "Pagamentos em dia"
+    },
+    {
+      "value": "EmAtraso",
+      "label": "Em Atraso",
+      "icon": "⚠️",
+      "color": "#ef4444",
+      "descricao": "Pagamentos atrasados"
+    }
+  ],
+  
+  "origens": [
+    {
+      "value": "Panfleto",
+      "label": "Panfleto",
+      "icon": "📄",
+      "color": "#6b7280",
+      "categoria": "offline",
+      "descricao": "Divulgação impressa"
+    },
+    {
+      "value": "Telefone",
+      "label": "Telefone",
+      "icon": "📞",
+      "color": "#3b82f6",
+      "categoria": "contato_direto",
+      "descricao": "Ligação ativa ou receptiva"
+    },
+    {
+      "value": "Email",
+      "label": "E-mail",
+      "icon": "📧",
+      "color": "#8b5cf6",
+      "categoria": "contato_direto",
+      "descricao": "E-mail marketing"
+    },
+    {
+      "value": "WhatsApp",
+      "label": "WhatsApp",
+      "icon": "💬",
+      "color": "#10b981",
+      "categoria": "mensageria",
+      "descricao": "Mensagem WhatsApp"
+    },
+    {
+      "value": "RedeInstagram",
+      "label": "Instagram",
+      "icon": "📷",
+      "color": "#e11d48",
+      "categoria": "social_media",
+      "descricao": "Rede social Instagram"
+    },
+    {
+      "value": "RedeFacebook",
+      "label": "Facebook",
+      "icon": "📘",
+      "color": "#3b82f6",
+      "categoria": "social_media",
+      "descricao": "Rede social Facebook"
+    },
+    {
+      "value": "RedeGoogle",
+      "label": "Google",
+      "icon": "🔍",
+      "color": "#f59e0b",
+      "categoria": "pesquisa",
+      "descricao": "Google Ads ou busca orgânica"
+    },
+    {
+      "value": "RedeTwiter",
+      "label": "Twitter",
+      "icon": "🐦",
+      "color": "#06b6d4",
+      "categoria": "social_media",
+      "descricao": "Rede social Twitter"
+    },
+    {
+      "value": "Loja",
+      "label": "Loja",
+      "icon": "🏪",
+      "color": "#f97316",
+      "categoria": "offline",
+      "descricao": "Visita presencial"
+    }
+  ],
+  
+  "departamentos": [
+    {
+      "value": "vendas",
+      "label": "Vendas",
+      "icon": "📈",
+      "color": "#3b82f6",
+      "gradient": "linear-gradient(135deg, #3b82f6, #1e40af)",
+      "descricao": "Equipe de vendas e prospecção"
+    },
+    {
+      "value": "pos_venda",
+      "label": "Pós-Venda",
+      "icon": "🤝",
+      "color": "#10b981",
+      "gradient": "linear-gradient(135deg, #10b981, #047857)",
+      "descricao": "Equipe de relacionamento e retenção"
+    }
+  ],
+  
+  "statusAtivo": [
+    {
+      "value": "S",
+      "label": "Ativo",
+      "icon": "✅",
+      "color": "#10b981",
+      "descricao": "Lead ativa no sistema"
+    },
+    {
+      "value": "I",
+      "label": "Inativo",
+      "icon": "⛔",
+      "color": "#6b7280",
+      "descricao": "Lead inativa/arquivada"
+    }
+  ],
+  
+  "tipoPessoa": [
+    {
+      "value": "J",
+      "label": "Jurídica",
+      "icon": "🏢",
+      "color": "#3b82f6",
+      "descricao": "Pessoa Jurídica (CNPJ)"
+    },
+    {
+      "value": "F",
+      "label": "Física",
+      "icon": "👤",
+      "color": "#10b981",
+      "descricao": "Pessoa Física (CPF)"
+    }
+  ],
+  
+  "faixasScore": [
+    {
+      "min": 0,
+      "max": 29,
+      "label": "Baixo",
+      "color": "#ef4444",
+      "descricao": "Score baixo - necessita atenção"
+    },
+    {
+      "min": 30,
+      "max": 59,
+      "label": "Médio",
+      "color": "#f59e0b",
+      "descricao": "Score médio - potencial moderado"
+    },
+    {
+      "min": 60,
+      "max": 100,
+      "label": "Alto",
+      "color": "#10b981",
+      "descricao": "Score alto - alta probabilidade de conversão"
+    }
+  ],
+  
+  "categoriasOrigem": [
+    {
+      "value": "offline",
+      "label": "Offline",
+      "descricao": "Canais físicos e impressos"
+    },
+    {
+      "value": "contato_direto",
+      "label": "Contato Direto",
+      "descricao": "Telefone e e-mail"
+    },
+    {
+      "value": "mensageria",
+      "label": "Mensageria",
+      "descricao": "WhatsApp e mensagens"
+    },
+    {
+      "value": "social_media",
+      "label": "Redes Sociais",
+      "descricao": "Facebook, Instagram, Twitter"
+    },
+    {
+      "value": "pesquisa",
+      "label": "Busca Online",
+      "descricao": "Google e mecanismos de busca"
+    }
+  ],
+  
+  "estadosBrasil": [
+    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+    "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+    "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+  ],
+  
+  "validacoes": {
+    "razao": {
+      "required": true,
+      "minLength": 3,
+      "maxLength": 200,
+      "regex": "^[A-Za-zÀ-ÿ0-9\\s\\-\\.]+$"
+    },
+    "cnpj": {
+      "required": true,
+      "unique": true,
+      "length": 14,
+      "regex": "^[0-9]{14}$"
+    },
+    "cpf": {
+      "required": true,
+      "unique": true,
+      "length": 11,
+      "regex": "^[0-9]{11}$"
+    },
+    "email": {
+      "required": false,
+      "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    },
+    "telefone": {
+      "required": false,
+      "minLength": 10,
+      "maxLength": 15,
+      "regex": "^[0-9]{10,15}$"
+    },
+    "cep": {
+      "required": false,
+      "length": 8,
+      "regex": "^[0-9]{8}$"
+    },
+    "uf": {
+      "required": false,
+      "length": 2,
+      "enum": "estadosBrasil"
+    },
+    "score": {
+      "required": false,
+      "type": "integer",
+      "min": 0,
+      "max": 100
+    }
+  },
+  
+  "camposObrigatorios": [
+    "razao",
+    "cnpj_cpf"
+  ],
+  
+  "camposUnicos": [
+    "cnpj_cpf",
+    "email"
+  ],
+  
+  "apiEndpoints": {
+    "base": "http://localhost:5001",
+    "endpoints": {
+      "list": "/api/leads",
+      "get": "/api/leads/:id",
+      "create": "/api/leads",
+      "update": "/api/leads/:id",
+      "delete": "/api/leads/:id",
+      "classify": "/api/leads/:id/classify",
+      "byDepartment": "/api/leads/by-department/:dept",
+      "byPriority": "/api/leads/by-priority/:priority",
+      "stats": "/api/leads/stats/advanced"
+    }
+  },
+  
+  "paginacao": {
+    "defaultPage": 1,
+    "defaultPerPage": 50,
+    "maxPerPage": 100,
+    "options": [10, 20, 50, 100]
+  },
+  
+  "classesCSS": {
+    "priority": {
+      "NovaLead": "priority-novalead",
+      "Ruim": "priority-ruim",
+      "Fria": "priority-fria",
+      "Morna": "priority-morna",
+      "Quente": "priority-quente",
+      "MuitoQuente": "priority-muitoquente",
+      "Queimando": "priority-queimando"
+    },
+    "department": {
+      "vendas": "dept-vendas",
+      "pos_venda": "dept-pos-venda"
+    },
+    "contentamento": {
+      "Excelente": "content-excelente",
+      "Bom": "content-bom",
+      "Regular": "content-regular",
+      "Ruim": "content-ruim",
+      "Pessimo": "content-pessimo"
+    },
+    "score": {
+      "low": "score-low",
+      "medium": "score-medium",
+      "high": "score-high"
+    }
+  }
+}

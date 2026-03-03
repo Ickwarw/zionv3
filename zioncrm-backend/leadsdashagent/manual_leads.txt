@@ -1,0 +1,1872 @@
+================================================================================
+                    MANUAL COMPLETO DO SISTEMA DE LEADS
+                        VERSÃO 1.0 - 16/02/2026
+================================================================================
+
+================================================================================
+ÍNDICE
+================================================================================
+1. VISÃO GERAL DO SISTEMA
+2. ARQUITETURA E COMPONENTES
+3. BANCO DE DADOS - ESTRUTURA COMPLETA
+4. BACKEND - APIs E ENDPOINTS
+5. FRONTEND - INTERFACE E FUNCIONALIDADES
+6. FLUXO DE DADOS (BACKEND ↔ FRONTEND ↔ BANCO)
+7. SISTEMA DE CLASSIFICAÇÃO
+8. INTEGRAÇÕES EXTERNAS
+9. FORMATOS JSON - COMUNICAÇÃO FRONTEND/BACKEND
+10. LISTA COMPLETA DE RECURSOS
+
+================================================================================
+1. VISÃO GERAL DO SISTEMA
+================================================================================
+
+O Sistema de Leads é uma plataforma completa de CRM (Customer Relationship 
+Management) que gerencia todo o ciclo de vida de clientes potenciais, desde 
+a captação inicial até o pós-venda.
+
+PRINCIPAIS FUNCIONALIDADES:
+✓ Gestão completa de leads (CRUD)
+✓ Classificação automática por temperatura (7 níveis)
+✓ Separação por departamentos (Vendas e Pós-Venda)
+✓ Rastreamento do funil de vendas (10 status)
+✓ Gestão de pós-venda (11 estratégias)
+✓ Avaliação de satisfação do cliente (5 níveis)
+✓ Monitoramento financeiro
+✓ Múltiplos canais de origem
+✓ Sistema de pontuação (score 0-100)
+✓ Integração com Facebook, WhatsApp, Telefone
+
+USUÁRIOS DO SISTEMA:
+- Equipe de Vendas
+- Equipe de Pós-Venda
+- Gerentes e Supervisores
+- Administradores do Sistema
+
+================================================================================
+2. ARQUITETURA E COMPONENTES
+================================================================================
+
+ESTRUTURA DE ARQUIVOS:
+├── lead.py                      # API principal (porta 5001)
+├── leadatributes.py             # API de classificação (porta 5002)
+├── leadinfos.py                 # API de informações extras (porta 5003)
+├── static/crud.html             # Interface web principal
+├── migration_lead_classification.sql  # Migração do banco
+└── README_CLASSIFICACAO.md      # Documentação
+
+TECNOLOGIAS UTILIZADAS:
+- Backend: Python 3.8+ com Flask 2.3+
+- Frontend: HTML5, CSS3, JavaScript (Vanilla)
+- Banco de Dados: PostgreSQL 12+
+- Comunicação: REST API com JSON
+- CORS: flask-cors para requisições cross-origin
+- ORM: psycopg2-binary para PostgreSQL
+
+SERVIDORES:
+- MariaDB (origem): 45.160.180.14:3306 (ixcprovedor)
+- PostgreSQL (destino): 45.160.180.34:5432 (zioncrm)
+
+PORTAS DAS APIs:
+- API Lead (CRUD): 5001
+- API Attributes (Classificação): 5002
+- API Infos (Extras): 5003
+- API Dashboard: 5004
+
+================================================================================
+3. BANCO DE DADOS - ESTRUTURA COMPLETA
+================================================================================
+
+TABELA: lead
+Localização: PostgreSQL zioncrm.lead
+
+COLUNAS PRINCIPAIS (Total: 220+ colunas importadas de 12 tabelas MariaDB)
+
+--- IDENTIFICAÇÃO BÁSICA ---
+id                          SERIAL PRIMARY KEY
+razao                       VARCHAR(200)      # Razão social
+fantasia                    VARCHAR(200)      # Nome fantasia
+cnpj_cpf                    VARCHAR(20)       # CNPJ ou CPF (único)
+tipo_pessoa                 VARCHAR(1)        # J=Jurídica, F=Física
+ativo                       VARCHAR(1)        # S=Ativo, I=Inativo
+
+--- CONTATOS ---
+email                       VARCHAR(200)
+fone                        VARCHAR(20)
+fone_comercial              VARCHAR(20)
+fone_celular                VARCHAR(20)
+telefone_celular            VARCHAR(20)
+fax                         VARCHAR(20)
+contato                     VARCHAR(100)      # Nome do contato
+
+--- ENDEREÇO ---
+endereco                    VARCHAR(200)
+numero                      VARCHAR(20)
+complemento                 VARCHAR(100)
+bairro                      VARCHAR(100)
+cidade                      VARCHAR(100)
+uf                          VARCHAR(2)
+cep                         VARCHAR(10)
+pais                        VARCHAR(100)
+
+--- DADOS EMPRESARIAIS ---
+inscricao_estadual          VARCHAR(50)
+inscricao_municipal         VARCHAR(50)
+data_nascimento             DATE
+data_cadastro               TIMESTAMP
+natureza_juridica           VARCHAR(100)
+porte_empresa               VARCHAR(50)
+cnae_principal              VARCHAR(20)
+ramo_atividade              VARCHAR(100)
+
+--- DADOS FINANCEIROS ---
+valor_mensalidade           DECIMAL(10,2)
+dia_vencimento              INTEGER
+banco                       VARCHAR(100)
+agencia                     VARCHAR(20)
+conta                       VARCHAR(30)
+tipo_conta                  VARCHAR(50)
+limite_credito              DECIMAL(10,2)
+saldo_devedor               DECIMAL(10,2)
+
+--- SISTEMA DE CLASSIFICAÇÃO (9 COLUNAS NOVAS) ---
+prioridade                  VARCHAR(50)       # Temperatura da lead
+    Valores: NovaLead, Ruim, Fria, Morna, Quente, MuitoQuente, Queimando
+    
+status_vendas               VARCHAR(50)       # Status no funil de vendas
+    Valores: NovaLeadVendas, Contato, Qualificacao, Proposta, Negociacao,
+             AguardandoAssinatura, GanhaSucesso, Perdida, Recuperar, 
+             SemInteresse
+    
+status_pos_venda            VARCHAR(100)      # Status pós-venda
+    Valores: AcompanhamentoPersonalizado, TreinamentoSuporte, 
+             ProgramasDeFidelidade, AcoesDeAgradecimento, 
+             AnaliseDeUsoEFeedback, AtivasSatisfeitas, AtivasInsatisfeitas,
+             RecuperarSatisfacao, UpsellCrossSell, AtendimentoRapido,
+             RelacionamentoDeLongoPrazo
+    
+nivel_contentamento         VARCHAR(20)       # Satisfação do cliente
+    Valores: Excelente, Bom, Regular, Ruim, Pessimo
+    
+status_debito               VARCHAR(20)       # Status financeiro
+    Valores: EmDia, EmAtraso
+    
+origem                      VARCHAR(50)       # Canal de captação
+    Valores: Panfleto, Telefone, Email, WhatsApp, RedeInstagram,
+             RedeFacebook, RedeGoogle, RedeTwiter, Loja
+    
+departamento                VARCHAR(20)       # Responsável
+    Valores: vendas, pos_venda
+    
+score                       INTEGER           # Pontuação 0-100
+    
+data_ultima_classificacao   TIMESTAMP         # Última atualização
+
+--- OBSERVAÇÕES E NOTAS ---
+obs                         TEXT              # Observações gerais
+observacoes                 TEXT              # Observações extras
+historico                   TEXT              # Histórico de interações
+tags                        VARCHAR(500)      # Tags separadas por vírgula
+
+--- RELACIONAMENTOS ---
+id_cliente                  INTEGER           # FK para cliente_contrato
+id_contrato                 INTEGER           # FK para contratos
+id_usuario_cadastro         INTEGER           # Quem cadastrou
+id_vendedor                 INTEGER           # Vendedor responsável
+id_supervisor               INTEGER           # Supervisor responsável
+
+--- CONTROLE ---
+data_criacao                TIMESTAMP         # Criação do registro
+data_atualizacao            TIMESTAMP         # Última atualização
+usuario_atualizacao         VARCHAR(100)      # Quem atualizou
+ip_cadastro                 VARCHAR(50)       # IP do cadastro
+
+--- DADOS DE CONTRATO (100+ COLUNAS IMPORTADAS) ---
+contrato_status             VARCHAR(1)        # A=Ativo, C=Cancelado
+contrato_data_ativacao      DATE
+contrato_data_cancelamento  DATE
+contrato_valor              DECIMAL(10,2)
+contrato_desconto           DECIMAL(10,2)
+contrato_forma_pagamento    VARCHAR(50)
+contrato_tipo_servico       VARCHAR(100)
+contrato_plano              VARCHAR(100)
+contrato_velocidade         VARCHAR(50)
+contrato_ip                 VARCHAR(50)
+contrato_login              VARCHAR(100)
+contrato_senha              VARCHAR(100)
+contrato_equipamento        VARCHAR(200)
+contrato_numero_serie       VARCHAR(100)
+contrato_mac_address        VARCHAR(50)
+... (e mais 80+ colunas de contrato)
+
+--- DADOS DE CHAMADOS/SUPORTE (50+ COLUNAS) ---
+total_chamados              INTEGER           # Total de chamados abertos
+chamados_abertos            INTEGER           # Chamados em aberto
+chamados_fechados           INTEGER           # Chamados resolvidos
+ultima_data_chamado         TIMESTAMP         # Último chamado
+tipo_ultimo_chamado         VARCHAR(100)      # Tipo do último chamado
+tempo_medio_atendimento     INTEGER           # Minutos
+satisfacao_atendimento      DECIMAL(3,2)      # Nota 0-5
+... (e mais 40+ colunas de suporte)
+
+ÍNDICES CRIADOS:
+- idx_lead_cnpj_cpf (UNIQUE) ON cnpj_cpf
+- idx_lead_email ON email
+- idx_lead_ativo ON ativo
+- idx_lead_cidade ON cidade
+- idx_lead_prioridade ON prioridade
+- idx_lead_status_vendas ON status_vendas
+- idx_lead_status_pos_venda ON status_pos_venda
+- idx_lead_departamento ON departamento
+- idx_lead_origem ON origem
+- idx_lead_score ON score
+- idx_lead_data_classificacao ON data_ultima_classificacao
+
+CONSTRAINTS:
+- cnpj_cpf UNIQUE NOT NULL
+- razao NOT NULL
+- ativo DEFAULT 'S'
+- prioridade DEFAULT 'NovaLead'
+- status_vendas DEFAULT 'NovaLeadVendas'
+- departamento DEFAULT 'vendas'
+- score DEFAULT 0
+- status_debito DEFAULT 'EmDia'
+
+================================================================================
+4. BACKEND - APIs E ENDPOINTS
+================================================================================
+
+--- API 1: LEAD.PY (PORTA 5001) ---
+Responsabilidade: CRUD principal de leads
+
+ENDPOINTS:
+
+GET /api/leads
+    Descrição: Lista todas as leads (com paginação)
+    Query Params:
+        - page (int): Número da página (padrão: 1)
+        - per_page (int): Itens por página (padrão: 50)
+        - ativo (S|I): Filtrar por status
+    Retorna:
+        {
+            "success": true,
+            "data": [...],
+            "total": 500,
+            "page": 1,
+            "per_page": 50
+        }
+
+GET /api/leads/:id
+    Descrição: Busca uma lead específica
+    Parâmetros: id (integer)
+    Retorna:
+        {
+            "success": true,
+            "data": {
+                "id": 1,
+                "razao": "Empresa X",
+                "cnpj_cpf": "12345678901",
+                ...todas as 220+ colunas
+            }
+        }
+
+POST /api/leads
+    Descrição: Cria nova lead
+    Content-Type: application/json
+    Body:
+        {
+            "razao": "Nova Empresa",
+            "cnpj_cpf": "12345678901",
+            "email": "contato@empresa.com",
+            "fone": "1199998888",
+            "cidade": "São Paulo",
+            "uf": "SP",
+            ... (campos opcionais)
+        }
+    Campos obrigatórios: razao, cnpj_cpf
+    Retorna:
+        {
+            "success": true,
+            "data": { "id": 123, ... },
+            "message": "Lead criado com sucesso"
+        }
+
+PUT /api/leads/:id
+    Descrição: Atualiza lead existente
+    Content-Type: application/json
+    Body: Mesma estrutura do POST (campos opcionais)
+    Retorna:
+        {
+            "success": true,
+            "message": "Lead atualizado com sucesso"
+        }
+
+DELETE /api/leads/:id
+    Descrição: Remove lead
+    Retorna:
+        {
+            "success": true,
+            "message": "Lead deletado com sucesso"
+        }
+
+POST /api/leads/:id/classify
+    Descrição: Classifica manualmente uma lead
+    Body:
+        {
+            "prioridade": "Quente",
+            "status_vendas": "Negociacao",
+            "departamento": "vendas"
+        }
+    Retorna:
+        {
+            "success": true,
+            "data": { ...classificação atualizada }
+        }
+
+GET /api/leads/by-department/:dept
+    Descrição: Filtra leads por departamento
+    Parâmetros: dept (vendas|pos_venda)
+    Retorna: Array de leads
+
+GET /api/leads/by-priority/:priority
+    Descrição: Filtra leads por prioridade
+    Parâmetros: priority (NovaLead|Ruim|Fria|Morna|Quente|MuitoQuente|Queimando)
+    Retorna: Array de leads
+
+GET /api/leads/stats/advanced
+    Descrição: Estatísticas avançadas
+    Retorna:
+        {
+            "success": true,
+            "data": {
+                "total": 500,
+                "by_department": {
+                    "vendas": 300,
+                    "pos_venda": 200
+                },
+                "by_priority": {...},
+                "by_status_vendas": {...},
+                "by_status_pos_venda": {...},
+                "average_score": 65.5
+            }
+        }
+
+GET /
+GET /crud
+    Descrição: Serve interface HTML
+
+--- API 2: LEADATRIBUTES.PY (PORTA 5002) ---
+Responsabilidade: Classificação automática e integrações
+
+ENDPOINTS:
+
+POST /api/leads/classify/:id_cliente
+    Descrição: Classifica automaticamente uma lead baseado em contrato
+    Lógica:
+        - Sem contrato → Vendas (NovaLead)
+        - Contrato ativo + satisfação ≥4 → Pós-Venda (Ativas Satisfeitas)
+        - Contrato ativo + satisfação <4 → Pós-Venda (Ativas Insatisfeitas)
+        - Contrato cancelado → Vendas (Recuperar)
+    Retorna:
+        {
+            "success": true,
+            "data": {
+                "departamento": "vendas",
+                "prioridade": "MuitoQuente",
+                "status_vendas": "Recuperar",
+                "score": 75
+            }
+        }
+
+POST /api/leads/classify-all
+    Descrição: Classifica todas as leads em lote
+    Retorna:
+        {
+            "success": true,
+            "classified": 145,
+            "message": "145 leads classificadas"
+        }
+
+GET /api/leads/facebook-webhook
+    Descrição: Verificação do webhook Facebook
+    Query: hub.mode, hub.verify_token, hub.challenge
+    Retorna: hub.challenge
+
+POST /api/leads/facebook-webhook
+    Descrição: Recebe leads do Facebook Lead Ads
+    Body: Formato Facebook Webhook
+    Cria lead automaticamente com origem="RedeFacebook"
+
+POST /api/leads/from-contact
+    Descrição: Cria lead de contato (WhatsApp/Telefone/Email)
+    Body:
+        {
+            "nome": "João Silva",
+            "telefone": "11999887766",
+            "email": "joao@email.com",
+            "origem": "WhatsApp",
+            "mensagem": "Quero conhecer os planos"
+        }
+    Retorna: Lead criado
+
+GET /api/leads/satisfaction/:id_cliente
+    Descrição: Busca satisfação do cliente (tabela configurável)
+    Retorna:
+        {
+            "success": true,
+            "data": {
+                "rating": 4.5,
+                "feedback": "Ótimo atendimento",
+                "date": "2026-02-15"
+            }
+        }
+
+POST /api/sync/verify-and-classify
+    Descrição: Hook para sincronização de contratos
+    Body: { "id_cliente": 123 }
+    Chama classificação automática após sync
+
+GET /api/contratos
+    Descrição: Lista contratos
+    Retorna: Array de contratos
+
+POST /api/contratos
+    Descrição: Cria contrato
+
+PUT /api/contratos/:id
+    Descrição: Atualiza contrato
+
+DELETE /api/contratos/:id
+    Descrição: Remove contrato
+
+GET /api/arquivos
+POST /api/arquivos
+    Descrição: Gestão de arquivos anexos
+
+--- API 3: LEADINFOS.PY (PORTA 5003) ---
+Responsabilidade: Informações extras e relatórios
+
+ENDPOINTS:
+
+GET /api/infos
+    Descrição: Lista informações adicionais
+
+POST /api/infos
+    Descrição: Cria informação adicional
+
+... (endpoints similares para gestão de infos)
+
+CONFIGURAÇÕES IMPORTANTES (leadatributes.py):
+
+FACEBOOK_CONFIG = {
+    "page_access_token": "",      # TODO: Preencher
+    "verify_token": "",           # TODO: Preencher
+    "app_secret": "",             # TODO: Preencher
+}
+
+SATISFACTION_CONFIG = {
+    "table_name": "",             # TODO: Nome da tabela
+    "column_id_cliente": "",      # TODO: Coluna FK
+    "column_rating": "",          # TODO: Coluna nota
+    "column_feedback": "",        # TODO: Coluna feedback
+    "column_date": "",            # TODO: Coluna data
+}
+
+WHATSAPP_CONFIG = {
+    "enabled": False,
+    "webhook_url": "",
+    "api_token": "",
+}
+
+PHONE_INTEGRATION = {
+    "enabled": False,
+    "pbx_api_url": "",
+    "api_key": "",
+}
+
+================================================================================
+5. FRONTEND - INTERFACE E FUNCIONALIDADES
+================================================================================
+
+ARQUIVO: static/crud.html
+
+SEÇÕES DA INTERFACE:
+
+1. CABEÇALHO
+   - Logo/Título do sistema
+   - Menu de navegação (Leads, Contratos, Arquivos, Infos)
+   - Estatísticas rápidas (cards)
+
+2. CARDS DE ESTATÍSTICAS
+   - Total de Leads
+   - Leads por Departamento (Vendas | Pós-Venda)
+   - Leads Prioritárias (Queimando + Muito Quente)
+   - Score Médio
+
+3. BARRA DE AÇÕES
+   Botões:
+   - [➕ Novo Lead]
+   - [🎯 Classificar Todas]
+   - [Campo de busca]
+   - [🔄 Atualizar]
+
+4. TABELA DE LEADS
+   Colunas exibidas:
+   - ID
+   - Razão Social
+   - CPF/CNPJ
+   - Email
+   - Telefone
+   - Cidade
+   - Prioridade (badge colorido)
+   - Departamento (badge colorido)
+   - Score (colorido por faixa)
+   - Status (Ativo/Inativo)
+   - Ações (Editar | Classificar | Deletar)
+
+5. MODAL DE CRIAÇÃO/EDIÇÃO
+   Abas:
+   
+   ABA 1 - DADOS BÁSICOS:
+   - Razão Social *
+   - Nome Fantasia
+   - CPF/CNPJ *
+   - Email
+   - Telefone
+   - Celular
+   - Cidade
+   - UF
+   - Endereço
+   - Bairro
+   - CEP
+   - Status (Ativo/Inativo)
+   - Observações
+
+   ABA 2 - CLASSIFICAÇÃO:
+   - Prioridade (Temperatura) [dropdown]
+       Options: NovaLead, Ruim, Fria, Morna, Quente, MuitoQuente, Queimando
+   - Departamento [dropdown]
+       Options: Vendas, Pós-Venda
+   - Status de Vendas [dropdown]
+       Options: NovaLeadVendas, Contato, Qualificacao, Proposta, Negociacao,
+                AguardandoAssinatura, GanhaSucesso, Perdida, Recuperar, 
+                SemInteresse
+   - Status Pós-Venda [dropdown]
+       Options: 11 opções (ver seção 3)
+   - Nível de Contentamento [dropdown]
+       Options: Excelente, Bom, Regular, Ruim, Péssimo
+   - Status Financeiro [dropdown]
+       Options: EmDia, EmAtraso
+   - Origem/Canal [dropdown]
+       Options: 9 canais (ver seção 3)
+   - Score [number input 0-100]
+
+   Botões:
+   - [💾 Salvar Alterações] ou [➕ Criar Lead]
+   - [Cancelar]
+
+ESTILOS CSS (Badges coloridos):
+
+Prioridade:
+.priority-NovaLead    { background: #dcfce7; color: #166534; }  /* Verde claro */
+.priority-Ruim        { background: #d1d5db; color: #374151; }  /* Cinza */
+.priority-Fria        { background: #dbeafe; color: #1e40af; }  /* Azul claro */
+.priority-Morna       { background: #fed7aa; color: #9a3412; }  /* Laranja claro */
+.priority-Quente      { background: #fdba74; color: #9a3412; }  /* Laranja */
+.priority-MuitoQuente { background: #fb923c; color: #7c2d12; }  /* Laranja escuro */
+.priority-Queimando   { background: #dc2626; color: #ffffff; }  /* Vermelho */
+
+Departamento:
+.dept-vendas      { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+.dept-pos_venda   { background: linear-gradient(135deg, #10b981, #047857); }
+
+Contentamento:
+.content-Excelente { background: #10b981; }
+.content-Bom       { background: #059669; }
+.content-Regular   { background: #f97316; }
+.content-Ruim      { background: #ef4444; }
+.content-Pessimo   { background: #dc2626; }
+
+Score:
+.score-high   { color: #10b981; }  /* 60-100 */
+.score-medium { color: #f59e0b; }  /* 30-59 */
+.score-low    { color: #ef4444; }  /* 0-29 */
+
+FUNCIONALIDADES JAVASCRIPT:
+
+Funções Principais:
+- loadLeads(page=1): Carrega lista de leads com paginação
+- loadLeadsStats(): Carrega estatísticas do dashboard
+- openLeadModal(leadId=null): Abre modal para criar/editar
+- saveLead(event, leadId=null): Salva lead (POST ou PUT)
+- editLead(id): Carrega dados para edição
+- deleteLead(id): Remove lead com confirmação
+- classifyLead(id): Classifica uma lead automaticamente
+- classifyAllLeads(): Classifica todas as leads em lote
+- searchLeads(): Filtra leads na tabela
+- displayLeads(leads): Renderiza tabela com badges
+
+Comunicação com Backend:
+- Fetch API (async/await)
+- Content-Type: application/json
+- CORS habilitado
+- Tratamento de erros com try/catch
+- Mensagens de feedback ao usuário
+
+================================================================================
+6. FLUXO DE DADOS (BACKEND ↔ FRONTEND ↔ BANCO)
+================================================================================
+
+FLUXO 1: CRIAR NOVA LEAD
+
+Frontend → Backend:
+    POST http://localhost:5001/api/leads
+    Content-Type: application/json
+    Body: {
+        "razao": "Empresa Nova",
+        "cnpj_cpf": "12345678901",
+        "email": "contato@empresa.com",
+        "fone": "1199998888",
+        "cidade": "São Paulo",
+        "uf": "SP",
+        "prioridade": "NovaLead",
+        "departamento": "vendas",
+        "status_vendas": "NovaLeadVendas",
+        "origem": "Telefone"
+    }
+
+Backend → Banco de Dados:
+    INSERT INTO lead (
+        razao, cnpj_cpf, email, fone, cidade, uf, 
+        prioridade, departamento, status_vendas, origem,
+        ativo, score, status_debito, data_criacao
+    ) VALUES (
+        'Empresa Nova', '12345678901', 'contato@empresa.com',
+        '1199998888', 'São Paulo', 'SP',
+        'NovaLead', 'vendas', 'NovaLeadVendas', 'Telefone',
+        'S', 0, 'EmDia', NOW()
+    )
+    RETURNING id
+
+Backend → Frontend:
+    HTTP 201 Created
+    {
+        "success": true,
+        "data": {
+            "id": 123,
+            "razao": "Empresa Nova",
+            ... (todos os campos)
+        },
+        "message": "Lead criado com sucesso"
+    }
+
+Frontend: Exibe mensagem de sucesso, fecha modal, recarrega lista
+
+FLUXO 2: EDITAR LEAD EXISTENTE
+
+Frontend → Backend:
+    1. GET http://localhost:5001/api/leads/123
+       (Busca dados atuais para preencher formulário)
+    
+    2. PUT http://localhost:5001/api/leads/123
+       Content-Type: application/json
+       Body: { ...campos modificados }
+
+Backend → Banco de Dados:
+    UPDATE lead SET
+        razao = 'Empresa Editada',
+        email = 'novo@email.com',
+        prioridade = 'Quente',
+        data_atualizacao = NOW()
+    WHERE id = 123
+
+Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "message": "Lead atualizado com sucesso"
+    }
+
+FLUXO 3: CLASSIFICAÇÃO AUTOMÁTICA
+
+Usuário clica em "Classificar" na interface
+
+Frontend → Backend:
+    POST http://localhost:5002/api/leads/classify/123
+
+Backend → Banco de Dados:
+    1. SELECT * FROM lead WHERE id = 123
+    2. SELECT status FROM cliente_contrato WHERE id_cliente = 123
+    3. SELECT nota FROM cliente_satisfacao WHERE id_cliente = 123
+                                                   (se configurado)
+
+Backend: Executa lógica de classificação:
+    - Verifica se tem contrato
+    - Verifica status do contrato (A=Ativo, C=Cancelado)
+    - Verifica satisfação (se disponível)
+    - Calcula score
+    - Define departamento, prioridade, status
+
+Backend → Banco de Dados:
+    UPDATE lead SET
+        departamento = 'pos_venda',
+        prioridade = 'Quente',
+        status_pos_venda = 'AtivasSatisfeitas',
+        nivel_contentamento = 'Excelente',
+        score = 85,
+        data_ultima_classificacao = NOW()
+    WHERE id = 123
+
+Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": {
+            "departamento": "pos_venda",
+            "prioridade": "Quente",
+            "status_pos_venda": "AtivasSatisfeitas",
+            "nivel_contentamento": "Excelente",
+            "score": 85
+        }
+    }
+
+Frontend: Atualiza badges na tabela com novas cores
+
+FLUXO 4: INTEGRAÇÃO FACEBOOK LEAD ADS
+
+Usuário preenche formulário no Facebook
+
+Facebook → Backend (Webhook):
+    POST http://seu-servidor.com/api/leads/facebook-webhook
+    Headers:
+        X-Hub-Signature: sha1=...
+    Body: {
+        "entry": [{
+            "changes": [{
+                "value": {
+                    "leadgen_id": "123456789",
+                    "created_time": 1234567890,
+                    "field_data": [
+                        {"name": "full_name", "values": ["João Silva"]},
+                        {"name": "email", "values": ["joao@email.com"]},
+                        {"name": "phone_number", "values": ["11999887766"]}
+                    ]
+                }
+            }]
+        }]
+    }
+
+Backend: Valida assinatura, extrai dados
+
+Backend → Banco de Dados:
+    INSERT INTO lead (
+        razao, email, fone, origem, departamento, 
+        prioridade, status_vendas, ativo, score, data_criacao
+    ) VALUES (
+        'João Silva', 'joao@email.com', '11999887766',
+        'RedeFacebook', 'vendas', 'NovaLead', 
+        'NovaLeadVendas', 'S', 0, NOW()
+    )
+
+Backend → Facebook:
+    HTTP 200 OK
+
+Backend → Frontend (opcional):
+    WebSocket ou SSE para notificar em tempo real
+
+FLUXO 5: LISTAGEM COM FILTROS E PAGINAÇÃO
+
+Frontend → Backend:
+    GET http://localhost:5001/api/leads?page=2&per_page=50&ativo=S
+
+Backend → Banco de Dados:
+    SELECT * FROM lead
+    WHERE ativo = 'S'
+    ORDER BY data_criacao DESC
+    LIMIT 50 OFFSET 50
+
+Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": [
+            { "id": 51, "razao": "Lead 51", ... },
+            { "id": 52, "razao": "Lead 52", ... },
+            ... (50 itens)
+        ],
+        "total": 500,
+        "page": 2,
+        "per_page": 50
+    }
+
+Frontend: Renderiza tabela + paginação
+
+FLUXO 6: ESTATÍSTICAS DO DASHBOARD
+
+Frontend → Backend:
+    GET http://localhost:5001/api/leads/stats/advanced
+
+Backend → Banco de Dados:
+    SELECT COUNT(*) as total FROM lead WHERE ativo = 'S'
+    
+    SELECT departamento, COUNT(*) as total 
+    FROM lead WHERE ativo = 'S' 
+    GROUP BY departamento
+    
+    SELECT prioridade, COUNT(*) as total
+    FROM lead WHERE ativo = 'S'
+    GROUP BY prioridade
+    
+    SELECT AVG(score) as media 
+    FROM lead WHERE ativo = 'S'
+    
+    ... (mais queries)
+
+Backend → Frontend:
+    HTTP 200 OK
+    {
+        "success": true,
+        "data": {
+            "total": 500,
+            "by_department": {
+                "vendas": 300,
+                "pos_venda": 200
+            },
+            "by_priority": {
+                "Queimando": 25,
+                "MuitoQuente": 50,
+                "Quente": 100,
+                "Morna": 80,
+                "Fria": 150,
+                "Ruim": 70,
+                "NovaLead": 25
+            },
+            "by_status_vendas": {...},
+            "by_status_pos_venda": {...},
+            "average_score": 65.5
+        }
+    }
+
+Frontend: Renderiza cards com os números
+
+================================================================================
+7. SISTEMA DE CLASSIFICAÇÃO
+================================================================================
+
+NÍVEIS DE PRIORIDADE (TEMPERATURA):
+
+1. NovaLead (🆕 Verde claro)
+   - Lead recém-cadastrada
+   - Sem interação ainda
+   - Score padrão: 0
+
+2. Ruim (⚫ Cinza)
+   - Lead sem potencial identificado
+   - Baixo interesse
+   - Score típico: 0-20
+
+3. Fria (❄️ Azul claro)
+   - Lead com baixo interesse
+   - Necessita aquecimento
+   - Score típico: 20-35
+
+4. Morna (🌡️ Laranja claro)
+   - Lead com interesse moderado
+   - Em processo de qualificação
+   - Score típico: 35-50
+
+5. Quente (🔥 Laranja)
+   - Lead com alto interesse
+   - Próxima de fechar negócio
+   - Score típico: 50-70
+
+6. MuitoQuente (🔥🔥 Laranja escuro)
+   - Lead com altíssimo interesse
+   - Demanda atenção prioritária
+   - Score típico: 70-85
+
+7. Queimando (🔥🔥🔥 Vermelho)
+   - Lead urgente
+   - Requer ação imediata
+   - Risco de perder se não agir
+   - Score típico: 85-100
+
+STATUS DE VENDAS (FUNIL):
+
+NovaLeadVendas → Contato → Qualificacao → Proposta → Negociacao 
+→ AguardandoAssinatura → GanhaSucesso
+
+Saídas laterais: Perdida, SemInteresse, Recuperar
+
+1. NovaLeadVendas: Lead no setor de vendas aguardando primeiro contato
+2. Contato: Primeiro contato realizado
+3. Qualificacao: Lead sendo qualificada (BANT: Budget, Authority, Need, Timeline)
+4. Proposta: Proposta comercial enviada
+5. Negociacao: Em negociação de valores/condições
+6. AguardandoAssinatura: Aguardando assinatura de contrato
+7. GanhaSucesso: Venda concretizada (vira cliente)
+8. Perdida: Oportunidade perdida
+9. Recuperar: Cliente inativo a ser recuperado
+10. SemInteresse: Lead desinteressada (não insistir)
+
+STATUS PÓS-VENDA (ESTRATÉGIAS):
+
+1. AcompanhamentoPersonalizado: Cliente VIP com atendimento dedicado
+2. TreinamentoSuporte: Necessita treinamento sobre produto/serviço
+3. ProgramasDeFidelidade: Participante de programa de fidelidade
+4. AcoesDeAgradecimento: Ações de reconhecimento e gratidão
+5. AnaliseDeUsoEFeedback: Análise de uso e coleta de feedback
+6. AtivasSatisfeitas: Clientes ativos e satisfeitos (manutenção)
+7. AtivasInsatisfeitas: Clientes ativos mas insatisfeitos (prioridade alta)
+8. RecuperarSatisfacao: Ação para recuperar satisfação
+9. UpsellCrossSell: Oferecer produtos/serviços adicionais
+10. AtendimentoRapido: Prioridade no atendimento
+11. RelacionamentoDeLongoPrazo: Foco em relacionamento duradouro
+
+NÍVEIS DE CONTENTAMENTO:
+
+⭐⭐⭐⭐⭐ Excelente (5/5): Cliente extremamente satisfeito
+⭐⭐⭐⭐ Bom (4/5): Cliente satisfeito
+⭐⭐⭐ Regular (3/5): Cliente neutro
+⭐⭐ Ruim (2/5): Cliente insatisfeito
+⭐ Péssimo (1/5): Cliente muito insatisfeito (churn risk)
+
+STATUS FINANCEIRO:
+
+✅ EmDia: Pagamentos em dia
+⚠️ EmAtraso: Pagamentos atrasados (risco de churn)
+
+CANAIS DE ORIGEM:
+
+📄 Panfleto: Divulgação impressa
+📞 Telefone: Ligação ativa ou receptiva
+📧 Email: E-mail marketing
+💬 WhatsApp: Mensagem WhatsApp
+📷 Instagram: Rede social Instagram
+📘 Facebook: Rede social Facebook (incluindo Lead Ads)
+🔍 Google: Google Ads ou busca orgânica
+🐦 Twitter: Rede social Twitter
+🏪 Loja: Visita presencial
+
+SISTEMA DE PONTUAÇÃO (SCORE 0-100):
+
+Cálculo do score baseado em:
+- Status do contrato (+40 pontos se ativo)
+- Satisfação do cliente (+20 pontos se excelente)
+- Status financeiro (+15 pontos se em dia)
+- Tempo de relacionamento (+10 pontos se > 12 meses)
+- Engajamento (+15 pontos se alta interação)
+
+Faixas de score:
+- 0-29: Baixo (vermelho)
+- 30-59: Médio (amarelo)
+- 60-100: Alto (verde)
+
+LÓGICA DE CLASSIFICAÇÃO AUTOMÁTICA:
+
+IF sem_contrato:
+    departamento = "vendas"
+    prioridade = "NovaLead"
+    status_vendas = "NovaLeadVendas"
+
+ELIF contrato_ativo:
+    departamento = "pos_venda"
+    
+    IF satisfacao >= 4:
+        status_pos_venda = "AtivasSatisfeitas"
+        prioridade = "Quente"
+        nivel_contentamento = "Excelente" ou "Bom"
+    ELSE:
+        status_pos_venda = "AtivasInsatisfeitas"
+        prioridade = "MuitoQuente"  # Alta prioridade!
+        nivel_contentamento = "Regular", "Ruim" ou "Pessimo"
+
+ELIF contrato_cancelado:
+    departamento = "vendas"
+    prioridade = "MuitoQuente"  # Recuperar é prioritário
+    status_vendas = "Recuperar"
+    
+    IF satisfacao_anterior >= 4:
+        nivel_contentamento = "Bom"  # Cliente estava satisfeito
+    ELSE:
+        nivel_contentamento = "Ruim"  # Cliente insatisfeito
+
+================================================================================
+8. INTEGRAÇÕES EXTERNAS
+================================================================================
+
+INTEGRAÇÃO 1: FACEBOOK LEAD ADS
+
+Passo 1: Configurar App no Facebook Developers
+    - Criar app em https://developers.facebook.com/
+    - Adicionar produto "Webhooks"
+    - Adicionar produto "Lead Ads"
+    - Obter Page Access Token
+    - Obter App Secret
+
+Passo 2: Configurar Webhook
+    URL: https://seu-servidor.com/api/leads/facebook-webhook
+    Verificação: GET com hub.verify_token
+    Dados: POST com lead data
+
+Passo 3: Configurar FACEBOOK_CONFIG em leadatributes.py:
+    FACEBOOK_CONFIG = {
+        "page_access_token": "SEU_TOKEN_AQUI",
+        "verify_token": "seu_token_secreto_123",
+        "app_secret": "SEU_APP_SECRET"
+    }
+
+Passo 4: Testar
+    curl -X POST http://localhost:5002/api/leads/facebook-webhook \
+      -H "Content-Type: application/json" \
+      -d '{"entry":[{"changes":[{"value":{"leadgen_id":"123","field_data":[...]}}]}]}'
+
+Campos mapeados:
+    full_name → razao
+    email → email
+    phone_number → fone
+    ... (customizável)
+
+INTEGRAÇÃO 2: WHATSAPP
+
+Provedor: Twilio, MessageBird, ou API oficial WhatsApp Business
+
+Configuração em leadatributes.py:
+    WHATSAPP_CONFIG = {
+        "enabled": True,
+        "webhook_url": "https://api.twilio.com/...",
+        "api_token": "SEU_TOKEN_TWILIO",
+        "phone_number": "+5511999999999"
+    }
+
+Endpoint:
+    POST /api/leads/from-contact
+    Body: {
+        "nome": "João Silva",
+        "telefone": "11999887766",
+        "origem": "WhatsApp",
+        "mensagem": "Olá, quero informações"
+    }
+
+INTEGRAÇÃO 3: TELEFONE/PBX
+
+Integração com sistema de telefonia (Asterisk, 3CX, etc.)
+
+Configuração:
+    PHONE_INTEGRATION = {
+        "enabled": True,
+        "pbx_api_url": "http://seu-pbx.com/api",
+        "api_key": "SUA_CHAVE_API"
+    }
+
+Webhook de chamada recebida:
+    POST /api/leads/from-contact
+    Body: {
+        "nome": "Não identificado",
+        "telefone": "11988776655",
+        "origem": "Telefone",
+        "mensagem": "Chamada recebida"
+    }
+
+INTEGRAÇÃO 4: SATISFAÇÃO DO CLIENTE
+
+Tabela externa de satisfação (formulários NPS, CSAT, etc.)
+
+Configuração em leadatributes.py:
+    SATISFACTION_CONFIG = {
+        "table_name": "cliente_satisfacao",
+        "column_id_cliente": "id_cliente",
+        "column_rating": "nota",
+        "column_feedback": "comentario",
+        "column_date": "data_avaliacao"
+    }
+
+Função get_customer_satisfaction():
+    SELECT nota, comentario, data_avaliacao
+    FROM cliente_satisfacao
+    WHERE id_cliente = :id
+    ORDER BY data_avaliacao DESC
+    LIMIT 1
+
+Usado na classificação automática para definir:
+    - nivel_contentamento
+    - status_pos_venda
+    - prioridade (se insatisfeito → aumenta prioridade)
+
+INTEGRAÇÃO 5: SINCRONIZAÇÃO DE CONTRATOS
+
+Scripts de exportação:
+    - zionexport.py
+    - zionexportatributes.py
+    - zionexportinfos.py
+
+Após sincronizar contrato, chamar:
+    POST http://localhost:5002/api/sync/verify-and-classify
+    Body: { "id_cliente": 123 }
+
+Isso dispara classificação automática da lead.
+
+================================================================================
+9. FORMATOS JSON - COMUNICAÇÃO FRONTEND/BACKEND
+================================================================================
+
+--- JSON 1: CRIAR LEAD (POST) ---
+
+REQUEST:
+POST http://localhost:5001/api/leads
+Content-Type: application/json
+
+{
+    "razao": "Empresa Exemplo Ltda",
+    "fantasia": "Exemplo Corp",
+    "cnpj_cpf": "12345678901234",
+    "tipo_pessoa": "J",
+    "email": "contato@exemplo.com",
+    "fone": "1133334444",
+    "fone_celular": "11999998888",
+    "contato": "João Silva",
+    "endereco": "Rua Exemplo, 123",
+    "numero": "123",
+    "complemento": "Sala 4",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "uf": "SP",
+    "cep": "01234567",
+    "prioridade": "NovaLead",
+    "departamento": "vendas",
+    "status_vendas": "NovaLeadVendas",
+    "origem": "Telefone",
+    "score": 0,
+    "status_debito": "EmDia",
+    "ativo": "S",
+    "obs": "Cliente interessado em plano de 100MB"
+}
+
+RESPONSE:
+HTTP 201 Created
+{
+    "success": true,
+    "data": {
+        "id": 456,
+        "razao": "Empresa Exemplo Ltda",
+        "fantasia": "Exemplo Corp",
+        "cnpj_cpf": "12345678901234",
+        ... (todos os campos enviados + gerados automaticamente)
+        "data_criacao": "2026-02-16T10:30:00",
+        "data_atualizacao": "2026-02-16T10:30:00"
+    },
+    "message": "Lead criado com sucesso"
+}
+
+--- JSON 2: ATUALIZAR LEAD (PUT) ---
+
+REQUEST:
+PUT http://localhost:5001/api/leads/456
+Content-Type: application/json
+
+{
+    "prioridade": "Quente",
+    "status_vendas": "Proposta",
+    "score": 65,
+    "obs": "Proposta enviada por email em 16/02/2026"
+}
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "message": "Lead atualizado com sucesso"
+}
+
+--- JSON 3: BUSCAR LEAD (GET) ---
+
+REQUEST:
+GET http://localhost:5001/api/leads/456
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": {
+        "id": 456,
+        "razao": "Empresa Exemplo Ltda",
+        "fantasia": "Exemplo Corp",
+        "cnpj_cpf": "12345678901234",
+        "tipo_pessoa": "J",
+        "email": "contato@exemplo.com",
+        "fone": "1133334444",
+        "fone_celular": "11999998888",
+        "telefone_celular": "11999998888",
+        "contato": "João Silva",
+        "endereco": "Rua Exemplo, 123",
+        "numero": "123",
+        "complemento": "Sala 4",
+        "bairro": "Centro",
+        "cidade": "São Paulo",
+        "uf": "SP",
+        "cep": "01234567",
+        "prioridade": "Quente",
+        "status_vendas": "Proposta",
+        "status_pos_venda": null,
+        "nivel_contentamento": null,
+        "status_debito": "EmDia",
+        "origem": "Telefone",
+        "departamento": "vendas",
+        "score": 65,
+        "data_ultima_classificacao": "2026-02-16T10:30:00",
+        "ativo": "S",
+        "obs": "Proposta enviada por email em 16/02/2026",
+        "data_criacao": "2026-02-16T10:00:00",
+        "data_atualizacao": "2026-02-16T10:30:00",
+        ... (mais 200+ colunas)
+    }
+}
+
+--- JSON 4: LISTAR LEADS COM PAGINAÇÃO (GET) ---
+
+REQUEST:
+GET http://localhost:5001/api/leads?page=1&per_page=10&ativo=S
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": [
+        {
+            "id": 456,
+            "razao": "Empresa Exemplo Ltda",
+            "cnpj_cpf": "12345678901234",
+            "email": "contato@exemplo.com",
+            "fone": "1133334444",
+            "cidade": "São Paulo",
+            "prioridade": "Quente",
+            "departamento": "vendas",
+            "score": 65,
+            "ativo": "S"
+        },
+        {
+            "id": 457,
+            "razao": "Outra Empresa",
+            ...
+        },
+        ... (10 itens)
+    ],
+    "total": 500,
+    "page": 1,
+    "per_page": 10
+}
+
+--- JSON 5: CLASSIFICAÇÃO AUTOMÁTICA (POST) ---
+
+REQUEST:
+POST http://localhost:5002/api/leads/classify/456
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": {
+        "departamento": "pos_venda",
+        "prioridade": "Quente",
+        "status_vendas": null,
+        "status_pos_venda": "AtivasSatisfeitas",
+        "nivel_contentamento": "Excelente",
+        "score": 85,
+        "motivo": "Cliente com contrato ativo e satisfação alta (4.5/5)"
+    }
+}
+
+--- JSON 6: ESTATÍSTICAS AVANÇADAS (GET) ---
+
+REQUEST:
+GET http://localhost:5001/api/leads/stats/advanced
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": {
+        "total": 500,
+        "by_department": {
+            "vendas": 300,
+            "pos_venda": 200
+        },
+        "by_priority": {
+            "NovaLead": 25,
+            "Ruim": 70,
+            "Fria": 150,
+            "Morna": 80,
+            "Quente": 100,
+            "MuitoQuente": 50,
+            "Queimando": 25
+        },
+        "by_status_vendas": {
+            "NovaLeadVendas": 50,
+            "Contato": 80,
+            "Qualificacao": 60,
+            "Proposta": 40,
+            "Negociacao": 30,
+            "AguardandoAssinatura": 15,
+            "GanhaSucesso": 10,
+            "Perdida": 10,
+            "Recuperar": 3,
+            "SemInteresse": 2
+        },
+        "by_status_pos_venda": {
+            "AtivasSatisfeitas": 120,
+            "AtivasInsatisfeitas": 30,
+            "AcompanhamentoPersonalizado": 20,
+            ...
+        },
+        "by_contentamento": {
+            "Excelente": 100,
+            "Bom": 80,
+            "Regular": 50,
+            "Ruim": 20,
+            "Pessimo": 10
+        },
+        "by_origem": {
+            "Telefone": 150,
+            "RedeFacebook": 100,
+            "WhatsApp": 80,
+            "Email": 60,
+            ...
+        },
+        "average_score": 65.5,
+        "total_ativo": 450,
+        "total_inativo": 50
+    }
+}
+
+--- JSON 7: CRIAR LEAD VIA FACEBOOK (POST) ---
+
+REQUEST (do Facebook):
+POST http://seu-servidor.com/api/leads/facebook-webhook
+Content-Type: application/json
+X-Hub-Signature: sha1=...
+
+{
+    "object": "page",
+    "entry": [
+        {
+            "id": "123456789",
+            "time": 1708084800,
+            "changes": [
+                {
+                    "value": {
+                        "leadgen_id": "987654321",
+                        "created_time": 1708084800,
+                        "page_id": "123456789",
+                        "form_id": "555666777",
+                        "field_data": [
+                            {
+                                "name": "full_name",
+                                "values": ["Maria Santos"]
+                            },
+                            {
+                                "name": "email",
+                                "values": ["maria@email.com"]
+                            },
+                            {
+                                "name": "phone_number",
+                                "values": ["+5511999887766"]
+                            }
+                        ]
+                    },
+                    "field": "leadgen"
+                }
+            ]
+        }
+    ]
+}
+
+RESPONSE:
+HTTP 200 OK
+
+(Lead criado automaticamente no banco com origem="RedeFacebook")
+
+--- JSON 8: CRIAR LEAD VIA CONTATO (POST) ---
+
+REQUEST:
+POST http://localhost:5002/api/leads/from-contact
+Content-Type: application/json
+
+{
+    "nome": "Pedro Costa",
+    "telefone": "11988776655",
+    "email": "pedro@email.com",
+    "origem": "WhatsApp",
+    "mensagem": "Olá, quero conhecer os planos de internet",
+    "cidade": "Campinas",
+    "uf": "SP"
+}
+
+RESPONSE:
+HTTP 201 Created
+{
+    "success": true,
+    "data": {
+        "id": 789,
+        "razao": "Pedro Costa",
+        "fone": "11988776655",
+        "email": "pedro@email.com",
+        "origem": "WhatsApp",
+        "cidade": "Campinas",
+        "uf": "SP",
+        "departamento": "vendas",
+        "prioridade": "NovaLead",
+        "status_vendas": "NovaLeadVendas",
+        "obs": "Olá, quero conhecer os planos de internet"
+    },
+    "message": "Lead criada via WhatsApp"
+}
+
+--- JSON 9: BUSCAR SATISFAÇÃO (GET) ---
+
+REQUEST:
+GET http://localhost:5002/api/leads/satisfaction/456
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": {
+        "id_cliente": 456,
+        "rating": 4.5,
+        "feedback": "Ótimo atendimento, velocidade excelente!",
+        "date": "2026-02-10T14:30:00"
+    }
+}
+
+--- JSON 10: DELETAR LEAD (DELETE) ---
+
+REQUEST:
+DELETE http://localhost:5001/api/leads/456
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "message": "Lead deletado com sucesso"
+}
+
+--- JSON 11: FILTRAR POR DEPARTAMENTO (GET) ---
+
+REQUEST:
+GET http://localhost:5001/api/leads/by-department/vendas
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": [
+        {
+            "id": 456,
+            "razao": "Empresa Exemplo",
+            "departamento": "vendas",
+            ...
+        },
+        ... (todas as leads de vendas)
+    ],
+    "total": 300
+}
+
+--- JSON 12: FILTRAR POR PRIORIDADE (GET) ---
+
+REQUEST:
+GET http://localhost:5001/api/leads/by-priority/Queimando
+
+RESPONSE:
+HTTP 200 OK
+{
+    "success": true,
+    "data": [
+        {
+            "id": 101,
+            "razao": "Lead Urgente 1",
+            "prioridade": "Queimando",
+            "score": 95,
+            ...
+        },
+        ... (todas as leads Queimando)
+    ],
+    "total": 25
+}
+
+================================================================================
+10. LISTA COMPLETA DE RECURSOS
+================================================================================
+
+--- COLUNAS DO BANCO DE DADOS (lead) ---
+
+Total: 220+ colunas
+
+IDENTIFICAÇÃO:
+id, razao, fantasia, cnpj_cpf, tipo_pessoa, ativo
+
+CONTATOS:
+email, fone, fone_comercial, fone_celular, telefone_celular, fax, contato
+
+ENDEREÇO:
+endereco, numero, complemento, bairro, cidade, uf, cep, pais
+
+DADOS EMPRESARIAIS:
+inscricao_estadual, inscricao_municipal, data_nascimento, data_cadastro,
+natureza_juridica, porte_empresa, cnae_principal, ramo_atividade
+
+FINANCEIRO:
+valor_mensalidade, dia_vencimento, banco, agencia, conta, tipo_conta,
+limite_credito, saldo_devedor
+
+CLASSIFICAÇÃO (9 COLUNAS):
+prioridade, status_vendas, status_pos_venda, nivel_contentamento,
+status_debito, origem, departamento, score, data_ultima_classificacao
+
+OBSERVAÇÕES:
+obs, observacoes, historico, tags
+
+RELACIONAMENTOS:
+id_cliente, id_contrato, id_usuario_cadastro, id_vendedor, id_supervisor
+
+CONTROLE:
+data_criacao, data_atualizacao, usuario_atualizacao, ip_cadastro
+
+CONTRATO (100+ colunas):
+contrato_status, contrato_data_ativacao, contrato_data_cancelamento,
+contrato_valor, contrato_desconto, contrato_forma_pagamento,
+contrato_tipo_servico, contrato_plano, contrato_velocidade, contrato_ip,
+contrato_login, contrato_senha, contrato_equipamento, contrato_numero_serie,
+contrato_mac_address, ... (e mais 85+ colunas)
+
+SUPORTE/CHAMADOS (50+ colunas):
+total_chamados, chamados_abertos, chamados_fechados, ultima_data_chamado,
+tipo_ultimo_chamado, tempo_medio_atendimento, satisfacao_atendimento,
+... (e mais 43+ colunas)
+
+--- OPÇÕES DO FRONTEND (Dropdowns e Seleções) ---
+
+PRIORIDADE (7 opções):
+- NovaLead
+- Ruim
+- Fria
+- Morna
+- Quente
+- MuitoQuente
+- Queimando
+
+STATUS DE VENDAS (10 opções):
+- NovaLeadVendas
+- Contato
+- Qualificacao
+- Proposta
+- Negociacao
+- AguardandoAssinatura
+- GanhaSucesso
+- Perdida
+- Recuperar
+- SemInteresse
+
+STATUS PÓS-VENDA (11 opções):
+- AcompanhamentoPersonalizado
+- TreinamentoSuporte
+- ProgramasDeFidelidade
+- AcoesDeAgradecimento
+- AnaliseDeUsoEFeedback
+- AtivasSatisfeitas
+- AtivasInsatisfeitas
+- RecuperarSatisfacao
+- UpsellCrossSell
+- AtendimentoRapido
+- RelacionamentoDeLongoPrazo
+
+NÍVEL DE CONTENTAMENTO (5 opções):
+- Excelente
+- Bom
+- Regular
+- Ruim
+- Pessimo
+
+STATUS FINANCEIRO (2 opções):
+- EmDia
+- EmAtraso
+
+ORIGEM/CANAL (9 opções):
+- Panfleto
+- Telefone
+- Email
+- WhatsApp
+- RedeInstagram
+- RedeFacebook
+- RedeGoogle
+- RedeTwiter
+- Loja
+
+DEPARTAMENTO (2 opções):
+- vendas
+- pos_venda
+
+STATUS ATIVO (2 opções):
+- S (Ativo)
+- I (Inativo)
+
+TIPO PESSOA (2 opções):
+- J (Jurídica)
+- F (Física)
+
+--- ENDPOINTS DA API ---
+
+Total: 17 endpoints REST
+
+API LEAD (5001):
+1. GET /api/leads
+2. GET /api/leads/:id
+3. POST /api/leads
+4. PUT /api/leads/:id
+5. DELETE /api/leads/:id
+6. POST /api/leads/:id/classify
+7. GET /api/leads/by-department/:dept
+8. GET /api/leads/by-priority/:priority
+9. GET /api/leads/stats/advanced
+10. GET / (serve HTML)
+11. GET /crud (serve HTML)
+
+API LEADATRIBUTES (5002):
+12. POST /api/leads/classify/:id_cliente
+13. POST /api/leads/classify-all
+14. GET /api/leads/facebook-webhook
+15. POST /api/leads/facebook-webhook
+16. POST /api/leads/from-contact
+17. GET /api/leads/satisfaction/:id_cliente
+18. POST /api/sync/verify-and-classify
+19. GET /api/contratos
+20. POST /api/contratos
+21. PUT /api/contratos/:id
+22. DELETE /api/contratos/:id
+23. GET /api/arquivos
+24. POST /api/arquivos
+
+API LEADINFOS (5003):
+25. GET /api/infos
+26. POST /api/infos
+27. PUT /api/infos/:id
+28. DELETE /api/infos/:id
+
+--- DADOS ENVIADOS DO FRONTEND PARA BACKEND ---
+
+CRIAR LEAD:
+{
+    razao: string (obrigatório),
+    cnpj_cpf: string (obrigatório, único),
+    fantasia: string (opcional),
+    tipo_pessoa: "J"|"F" (opcional),
+    email: string (opcional),
+    fone: string (opcional),
+    fone_celular: string (opcional),
+    contato: string (opcional),
+    endereco: string (opcional),
+    numero: string (opcional),
+    complemento: string (opcional),
+    bairro: string (opcional),
+    cidade: string (opcional),
+    uf: string (opcional),
+    cep: string (opcional),
+    prioridade: string (opcional, padrão: NovaLead),
+    status_vendas: string (opcional, padrão: NovaLeadVendas),
+    status_pos_venda: string (opcional, null),
+    nivel_contentamento: string (opcional, null),
+    status_debito: string (opcional, padrão: EmDia),
+    origem: string (opcional),
+    departamento: string (opcional, padrão: vendas),
+    score: integer (opcional, padrão: 0),
+    ativo: "S"|"I" (opcional, padrão: S),
+    obs: text (opcional)
+}
+
+ATUALIZAR LEAD:
+Qualquer campo do CRIAR LEAD (todos opcionais)
+
+CLASSIFICAR LEAD:
+{
+    prioridade: string (opcional),
+    status_vendas: string (opcional),
+    status_pos_venda: string (opcional),
+    nivel_contentamento: string (opcional),
+    status_debito: string (opcional),
+    departamento: string (opcional),
+    score: integer (opcional)
+}
+
+CRIAR LEAD VIA CONTATO:
+{
+    nome: string (obrigatório),
+    telefone: string (opcional),
+    email: string (opcional),
+    origem: string (obrigatório),
+    mensagem: text (opcional),
+    cidade: string (opcional),
+    uf: string (opcional)
+}
+
+--- DADOS ENVIADOS DO BACKEND PARA FRONTEND ---
+
+LEAD COMPLETO:
+{
+    id: integer,
+    razao: string,
+    fantasia: string,
+    cnpj_cpf: string,
+    tipo_pessoa: string,
+    email: string,
+    fone: string,
+    fone_celular: string,
+    telefone_celular: string,
+    contato: string,
+    endereco: string,
+    numero: string,
+    complemento: string,
+    bairro: string,
+    cidade: string,
+    uf: string,
+    cep: string,
+    prioridade: string,
+    status_vendas: string,
+    status_pos_venda: string,
+    nivel_contentamento: string,
+    status_debito: string,
+    origem: string,
+    departamento: string,
+    score: integer,
+    data_ultima_classificacao: timestamp,
+    ativo: string,
+    obs: text,
+    data_criacao: timestamp,
+    data_atualizacao: timestamp,
+    ... (mais 200+ campos)
+}
+
+LISTA DE LEADS:
+{
+    success: boolean,
+    data: [array de leads],
+    total: integer,
+    page: integer,
+    per_page: integer
+}
+
+ESTATÍSTICAS:
+{
+    success: boolean,
+    data: {
+        total: integer,
+        by_department: {vendas: int, pos_venda: int},
+        by_priority: {NovaLead: int, ..., Queimando: int},
+        by_status_vendas: {NovaLeadVendas: int, ..., SemInteresse: int},
+        by_status_pos_venda: {...},
+        by_contentamento: {...},
+        by_origem: {...},
+        average_score: float
+    }
+}
+
+CLASSIFICAÇÃO:
+{
+    success: boolean,
+    data: {
+        departamento: string,
+        prioridade: string,
+        status_vendas: string,
+        status_pos_venda: string,
+        nivel_contentamento: string,
+        score: integer,
+        motivo: string (opcional)
+    }
+}
+
+ERRO:
+{
+    success: false,
+    error: string (mensagem de erro)
+}
+
+--- DADOS ENVIADOS DO BACKEND PARA BANCO DE DADOS ---
+
+INSERT (criar):
+INSERT INTO lead (
+    razao, cnpj_cpf, fantasia, tipo_pessoa, email, fone, fone_celular,
+    contato, endereco, numero, complemento, bairro, cidade, uf, cep,
+    prioridade, status_vendas, status_pos_venda, nivel_contentamento,
+    status_debito, origem, departamento, score, ativo, obs,
+    data_criacao, data_atualizacao
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, NOW(), NOW())
+
+UPDATE (atualizar):
+UPDATE lead SET
+    razao = ?,
+    email = ?,
+    prioridade = ?,
+    status_vendas = ?,
+    score = ?,
+    data_atualizacao = NOW()
+WHERE id = ?
+
+DELETE (remover):
+DELETE FROM lead WHERE id = ?
+
+SELECT (buscar):
+SELECT * FROM lead WHERE id = ?
+SELECT * FROM lead WHERE ativo = 'S' ORDER BY data_criacao DESC LIMIT 50 OFFSET 0
+SELECT * FROM lead WHERE departamento = 'vendas'
+SELECT * FROM lead WHERE prioridade = 'Queimando'
+
+--- DADOS ENVIADOS DO BANCO DE DADOS PARA BACKEND ---
+
+Row completo (todas as 220+ colunas):
+{
+    id, razao, fantasia, cnpj_cpf, tipo_pessoa, email, fone, fone_celular,
+    telefone_celular, contato, endereco, numero, complemento, bairro,
+    cidade, uf, cep, pais, inscricao_estadual, inscricao_municipal,
+    data_nascimento, data_cadastro, natureza_juridica, porte_empresa,
+    cnae_principal, ramo_atividade, valor_mensalidade, dia_vencimento,
+    banco, agencia, conta, tipo_conta, limite_credito, saldo_devedor,
+    prioridade, status_vendas, status_pos_venda, nivel_contentamento,
+    status_debito, origem, departamento, score, data_ultima_classificacao,
+    obs, observacoes, historico, tags, id_cliente, id_contrato,
+    id_usuario_cadastro, id_vendedor, id_supervisor, data_criacao,
+    data_atualizacao, usuario_atualizacao, ip_cadastro,
+    contrato_status, contrato_data_ativacao, contrato_data_cancelamento,
+    ... (e mais 160+ campos de contrato e suporte)
+}
+
+Array de rows (lista):
+[
+    {id: 1, razao: "Lead 1", ...},
+    {id: 2, razao: "Lead 2", ...},
+    ...
+]
+
+Contagem:
+{count: integer}
+
+Agregações:
+{total: int, avg_score: float, by_department: {...}, ...}
+
+================================================================================
+FIM DO MANUAL DE LEADS
+================================================================================
+
+VERSÃO: 1.0
+DATA: 16/02/2026
+AUTOR: Sistema Zion CRM
+
+Este manual documenta completamente o sistema de leads, incluindo:
+✓ Estrutura do banco de dados (220+ colunas)
+✓ APIs e endpoints (27+ endpoints)
+✓ Frontend (interface completa)
+✓ Fluxos de dados (backend ↔ frontend ↔ banco)
+✓ Sistema de classificação (7 níveis + 10 status + 11 estratégias)
+✓ Integrações (Facebook, WhatsApp, Telefone, Satisfação)
+✓ Formatos JSON (12 exemplos completos)
+✓ Listas completas de recursos
+
+Para documentação do Dashboard, consulte: manual_dashboard.txt

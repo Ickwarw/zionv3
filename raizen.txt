@@ -1,0 +1,1036 @@
+RAIZEN - DOCUMENTAÇÃO TÉCNICA DETALHADA DE FUNÇÕES E CONEXÕES
+Data da análise: 2026-02-19
+
+Escopo analisado:
+- zioncrm-backend/leadsdashagent/raizen.py
+- zioncrm-backend/leadsdashagent/raizen_ml_system.py
+- zioncrm-backend/leadsdashagent/raizen_integrated.py
+- zioncrm-backend/leadsdashagent/raizen_setup_config.py
+- zioncrm-backend/leadsdashagent/raizen_exemplo_uso.py
+
+Objetivo deste documento:
+1) Explicar melhor cada função (o que faz, por que existe e como funciona).
+2) Listar entradas, saídas, fluxo interno e dependências.
+3) Mostrar tudo com que o agente se conecta (APIs, banco, arquivos, variáveis e módulos).
+
+
+=====================================================================
+VISÃO GERAL DA ARQUITETURA RAIZEN
+=====================================================================
+O ecossistema Raizen é dividido em 3 camadas principais:
+
+1) Camada de IA (raizen.py)
+   - Responsável por conversar com provedores de LLM (OpenAI, Google, Anthropic).
+   - Controla prompt, histórico, tokens e custo.
+
+2) Camada de dados/aprendizado (raizen_ml_system.py)
+   - Responsável por persistir conversas, treinamentos, popups, insights, feedback e logs no MySQL.
+   - Permite ciclo de aprendizado contínuo com aprovação humana.
+
+3) Camada de orquestração (raizen_integrated.py)
+   - Une IA + banco + regras de negócio.
+   - Aplica treinamentos aprovados no contexto, cria insights e alimenta dashboard.
+
+Arquivos auxiliares:
+- raizen_setup_config.py: setup e validação de chaves de API.
+- raizen_exemplo_uso.py: demonstrações práticas de uso.
+
+
+=====================================================================
+1) ARQUIVO: raizen.py (NÚCLEO DE IA)
+=====================================================================
+Classe principal: RaizenAssistant
+
+1. __init__(config_file='raizen_config.json')
+   Finalidade:
+   - Inicializar o agente com configuração, métricas e chaves de API.
+
+   Entradas:
+   - config_file (str): caminho do JSON com modelos, prompts e parâmetros globais.
+
+   Saída:
+   - Não retorna valor; prepara estado interno da instância.
+
+   Fluxo interno:
+   - Chama _load_config().
+   - Inicializa conversation_history (lista).
+   - Inicializa metrics (requests, tokens, custo, contagem por provider/modelo).
+   - Lê OPENAI_API_KEY / GOOGLE_API_KEY / ANTHROPIC_API_KEY das variáveis de ambiente.
+
+   Conexões:
+   - Sistema de arquivos (config JSON).
+   - Variáveis de ambiente.
+
+   Pontos de atenção:
+   - Se config estiver ausente/inválido, a inicialização falha.
+   - Se API keys estiverem vazias, chamadas externas falharão em runtime.
+
+
+2. _load_config(config_file)
+   Finalidade:
+   - Ler e validar parsing do JSON de configuração.
+
+   Entradas:
+   - config_file (str).
+
+   Saída:
+   - dict com configuração completa.
+
+   Fluxo interno:
+   - open(..., encoding='utf-8') + json.load().
+   - Trata FileNotFoundError e JSONDecodeError com log + raise.
+
+   Conexões:
+   - Arquivo local de configuração.
+
+
+3. get_available_models(provider=None, include_free=True, include_paid=True)
+   Finalidade:
+   - Montar catálogo de modelos disponíveis a partir do config.
+
+   Entradas:
+   - provider: filtra por openai/google/anthropic (ou todos quando None).
+   - include_free/include_paid: controla subconjuntos.
+
+   Saída:
+   - list[dict] com metadados de modelos (id, nome, tipo, provider, categoria, preço etc.).
+
+   Fluxo interno:
+   - Percorre config['modelos_ia'] por provider.
+   - Anexa campos adicionais: provider e tipo ('gratuito'/'pago').
+
+   Conexões:
+   - Estrutura interna do config JSON.
+
+
+4. _prepare_openai_request(model, messages, temperature, max_tokens)
+   Finalidade:
+   - Converter dados internos para payload compatível com OpenAI Chat Completions.
+
+   Entradas:
+   - model, messages, temperature, max_tokens.
+
+   Saída:
+   - dict com {url, headers, payload} pronto para requests.post().
+
+   Conexões:
+   - API OpenAI: https://api.openai.com/v1/chat/completions
+
+
+5. _prepare_google_request(model, messages, temperature, max_tokens)
+   Finalidade:
+   - Adaptar estrutura de mensagens para formato Gemini.
+
+   Entradas:
+   - model, messages, temperature, max_tokens.
+
+   Saída:
+   - dict com url (inclui key), headers e payload no formato contents/parts.
+
+   Fluxo interno:
+   - Converte role interno para role Gemini ('user'/'model').
+   - Empacota texto em parts.
+
+   Conexões:
+   - API Google Gemini:
+     https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+
+
+6. _prepare_anthropic_request(model, messages, temperature, max_tokens)
+   Finalidade:
+   - Montar requisição no formato Claude Messages API.
+
+   Entradas:
+   - model, messages, temperature, max_tokens.
+
+   Saída:
+   - dict com url, headers e payload.
+
+   Fluxo interno:
+   - Separa mensagem system das mensagens conversacionais.
+   - Mantém roles esperados pela Anthropic.
+
+   Conexões:
+   - API Anthropic: https://api.anthropic.com/v1/messages
+
+
+7. _parse_openai_response(response)
+   Finalidade:
+   - Normalizar resposta OpenAI para formato interno único.
+
+   Entradas:
+   - response (dict) bruto da API.
+
+   Saída:
+   - dict: {content, tokens_input, tokens_output, tokens_total}.
+
+   Pontos de atenção:
+   - Estrutura inesperada dispara erro (KeyError/IndexError).
+
+
+8. _parse_google_response(response)
+   Finalidade:
+   - Normalizar resposta Gemini para formato interno.
+
+   Entradas:
+   - response (dict).
+
+   Saída:
+   - dict de conteúdo e tokens.
+
+
+9. _parse_anthropic_response(response)
+   Finalidade:
+   - Normalizar resposta Claude para formato interno.
+
+   Entradas:
+   - response (dict).
+
+   Saída:
+   - dict de conteúdo e tokens.
+
+
+10. _make_api_request(provider, request_data, retry_attempts=3)
+    Finalidade:
+    - Executar chamada HTTP com estratégia de retry.
+
+    Entradas:
+    - provider, request_data, retry_attempts.
+
+    Saída:
+    - JSON da resposta da API.
+
+    Fluxo interno:
+    - requests.post(..., timeout=config.timeout_segundos).
+    - response.raise_for_status().
+    - Em falha de rede/HTTP: retry com backoff exponencial 2^tentativa.
+
+    Conexões:
+    - Rede externa + requests.
+
+    Pontos de atenção:
+    - Se todas tentativas falharem, exceção sobe para camada chamadora.
+
+
+11. _calculate_cost(model_info, tokens_input, tokens_output)
+    Finalidade:
+    - Estimar custo monetário local da inferência.
+
+    Entradas:
+    - model_info com preco_input/preco_output.
+    - tokens_input, tokens_output.
+
+    Saída:
+    - float (USD).
+
+    Regra:
+    - custo = (tokens_input/1_000_000 * preco_input) + (tokens_output/1_000_000 * preco_output)
+
+
+12. _update_metrics(provider, model, tokens, cost)
+    Finalidade:
+    - Atualizar telemetria local da sessão.
+
+    Entradas:
+    - provider, model, tokens(normalizados), cost.
+
+    Saída:
+    - Sem retorno; altera self.metrics.
+
+
+13. chat(message, provider, model_id, prompt_type='analise_marketing', temperature=None, max_tokens=None, reset_history=False)
+    Finalidade:
+    - Método central de conversação do Raizen.
+
+    Entradas:
+    - message: texto do usuário.
+    - provider/model_id: roteamento para LLM.
+    - prompt_type: seleciona system prompt no config.
+    - temperature/max_tokens opcionais.
+    - reset_history: limpa contexto conversacional antes da nova pergunta.
+
+    Saída:
+    - dict completo com resposta, metadados de modelo, tokens, custo, timestamp e parâmetros.
+
+    Fluxo detalhado:
+    1) (Opcional) limpa histórico.
+    2) Define defaults de temperatura/max_tokens via config.
+    3) Se histórico vazio, injeta system prompt.
+    4) Adiciona mensagem user ao histórico.
+    5) Prepara request específico do provider.
+    6) Chama API com retry.
+    7) Faz parse da resposta.
+    8) Adiciona resposta assistant ao histórico.
+    9) Busca metadado do modelo e calcula custo.
+    10) Atualiza métricas.
+    11) Retorna payload normalizado.
+
+    Conexões:
+    - prompts do config.
+    - APIs externas de IA.
+    - estado de histórico e métricas.
+
+    Pontos de atenção:
+    - provider inválido gera ValueError.
+    - Histórico cresce indefinidamente se não houver reset/gestão externa.
+
+
+14. analyze_marketing_data(dados, provider, model_id)
+    Finalidade:
+    - Wrapper de caso de uso de marketing analytics.
+
+    O que faz:
+    - Serializa dados em JSON no prompt e solicita insights, tendências, oportunidades, recomendações, métricas e projeções.
+    - Executa chat com prompt_type='analise_marketing' e reset_history=True.
+
+
+15. analyze_customer_churn(dados_clientes, provider, model_id)
+    Finalidade:
+    - Wrapper para análise de risco de churn.
+
+    O que faz:
+    - Solicita identificação de clientes em risco, fatores causais e plano de retenção.
+    - Usa prompt_type='recuperacao_clientes'.
+
+
+16. create_acquisition_strategy(perfil_target, orcamento, provider, model_id)
+    Finalidade:
+    - Gerar plano de aquisição com orçamento.
+
+    O que faz:
+    - Pede canais, distribuição de verba, KPIs, timeline, CAC e conversão.
+    - Usa prompt_type='captacao_clientes'.
+
+
+17. identify_process_failures(dados_processo, provider, model_id)
+    Finalidade:
+    - Diagnosticar gargalos operacionais/comerciais.
+
+    O que faz:
+    - Solicita falhas, impacto, quick wins, melhorias de médio/longo prazo e ROI.
+    - Usa prompt_type='analise_falhas'.
+
+
+18. create_dashboard_insights(dados, tipo_dashboard, provider, model_id)
+    Finalidade:
+    - Gerar estrutura orientada a dashboard com insights acionáveis.
+
+    O que faz:
+    - Solicita KPIs, visualizações, alertas, tendências e JSON de implementação frontend.
+    - Usa prompt_type='dashboard_previsoes'.
+
+
+19. predict_sales(historico_vendas, periodo_previsao, provider, model_id)
+    Finalidade:
+    - Criar previsão de vendas com análise de tendência/sazonalidade.
+
+    O que faz:
+    - Solicita cenários (otimista, realista, pessimista), confiança e contingência.
+    - Usa prompt_type='dashboard_previsoes'.
+
+
+20. get_metrics()
+    Finalidade:
+    - Retornar snapshot das métricas acumuladas da instância.
+
+    Saída:
+    - timestamp, métricas, tamanho do histórico e custo médio por request.
+
+
+21. reset_metrics()
+    Finalidade:
+    - Zerar telemetria sem reiniciar objeto.
+
+
+22. save_conversation(filename)
+    Finalidade:
+    - Persistir histórico + métricas no disco para auditoria/replay.
+
+    Conexões:
+    - Sistema de arquivos local.
+
+
+23. load_conversation(filename)
+    Finalidade:
+    - Reidratar histórico salvo anteriormente.
+
+
+24. main()
+    Finalidade:
+    - Exemplo de execução standalone do assistente.
+
+
+=====================================================================
+2) ARQUIVO: raizen_ml_system.py (BANCO, TREINAMENTO, POPUPS, INSIGHTS)
+=====================================================================
+Classe: RaizenDatabase
+
+1. __init__(host, user, password, database='zioncrm')
+   - Armazena parâmetros de conexão (não conecta imediatamente).
+
+2. connect()
+   - Tenta abrir conexão MySQL com autocommit=False.
+   - Retorna True/False.
+
+3. disconnect()
+   - Encerra conexão ativa se houver.
+
+4. execute_query(query, params=None, fetch=False)
+   Finalidade:
+   - Executor padrão para operações SQL únicas.
+
+   Comportamento:
+   - fetch=True: retorna cursor.fetchall().
+   - fetch=False: commit e retorna lastrowid.
+   - em erro: rollback e raise.
+
+5. execute_many(query, data)
+   - Executor para lotes (executemany).
+   - Em erro: rollback e retorna False.
+
+
+Classe: RaizenMLSystem
+
+6. __init__(db)
+   - Injeta acesso ao banco e prepara contexto de usuário atual.
+
+7. set_current_user(user_id, user_name)
+   - Define usuário para rastreabilidade de ações (logs, popups, feedback etc.).
+
+
+--- BLOCO: Conversas e Mensagens ---
+
+8. create_conversation(provider, model_id, model_name, prompt_type, session_id=None)
+   Finalidade:
+   - Abrir sessão de conversa persistida.
+
+   Tabela:
+   - raizen_conversations
+
+   Saída:
+   - conversation_id (UUID string).
+
+
+9. add_message(conversation_id, role, content, tokens_input=0, tokens_output=0, cost=0.0, temperature=None, max_tokens=None, response_time_ms=None)
+   Finalidade:
+   - Salvar cada turno da conversa com telemetria completa.
+
+   Tabela:
+   - raizen_messages
+
+   Saída:
+   - message_id (UUID string).
+
+
+10. get_conversation_history(conversation_id, limit=50)
+    Finalidade:
+    - Recuperar histórico da conversa em ordem cronológica.
+
+    Comportamento:
+    - Busca DESC no banco e reverte para ASC antes de retornar.
+
+
+--- BLOCO: Popups ---
+
+11. create_popup(title, message, popup_type, priority='medium', requires_action=False, action_type=None, action_data=None, expires_in_hours=24)
+    Finalidade:
+    - Criar notificação/ação pendente para usuário.
+
+    Tabela:
+    - raizen_chat_popups
+
+    Saída:
+    - popup_id.
+
+
+12. get_pending_popups(user_id=None)
+    Finalidade:
+    - Retornar popups pendentes e não expirados.
+
+    Regras:
+    - filtra status='pending'.
+    - filtra expires_at > NOW() quando definido.
+    - ordena por prioridade (urgent/high/medium/low) e criação.
+
+
+13. update_popup_status(popup_id, status, user_response=None, user_action=None)
+    Finalidade:
+    - Atualizar ciclo de vida do popup.
+
+    Regras:
+    - define interacted_at automaticamente para status interacted/dismissed.
+
+
+--- BLOCO: Treinamento e Aprendizado ---
+
+14. save_training_data(category, input_data, expected_output=None, model_output=None, subcategory=None, auto_approve=False)
+    Finalidade:
+    - Registrar exemplo de treinamento para aprendizado contínuo.
+
+    Tabela:
+    - raizen_training_data
+
+    Regras:
+    - se auto_approve=False, cria popup para aprovação humana.
+
+    Saída:
+    - training_id.
+
+
+15. _create_training_approval_popup(training_id, category, input_data)
+    Finalidade:
+    - Solicitar avaliação humana de novo treinamento.
+
+    Conexões:
+    - create_popup().
+
+
+16. approve_training(training_id, feedback_score=1.0)
+    Finalidade:
+    - Aprovar formalmente um treinamento.
+
+    Conexões de banco:
+    - Stored Procedure: sp_raizen_approve_training
+    - log_activity(activity_type='training', action='approve_training')
+
+
+17. reject_training(training_id, rejection_reason, deprecation_type='rejected')
+    Finalidade:
+    - Rejeitar ou depreciar treinamento.
+
+    Conexões de banco:
+    - Stored Procedure: sp_raizen_reject_training
+    - log_activity(..., action='reject_training', status='warning')
+
+
+18. get_approved_trainings(category=None, limit=100)
+    Finalidade:
+    - Listar base aprovada para enriquecimento de contexto.
+
+    Regras:
+    - ordena por effectiveness_score e usage_count.
+    - parseia JSON de input_data/expected_output/model_output.
+
+
+19. update_training_usage(training_id, effectiveness_score=None)
+    Finalidade:
+    - Atualizar rastreio de utilização de exemplos aprovados.
+
+    Efeitos:
+    - usage_count++ e last_used_at = NOW().
+    - opcionalmente atualiza effectiveness_score.
+
+
+--- BLOCO: Predições e Feedback de Predição ---
+
+20. save_prediction(session_id, prediction_type, input_features, prediction_result, confidence_score, related_entity_type=None, related_entity_id=None)
+    Finalidade:
+    - Persistir saída preditiva para auditoria e aprendizado posterior.
+
+    Tabela:
+    - raizen_ml_predictions
+
+    Saída:
+    - prediction_id.
+
+
+21. update_prediction_feedback(prediction_id, actual_outcome, is_accurate, error_margin=None)
+    Finalidade:
+    - Registrar realidade observada e avaliar acurácia da predição.
+
+    Regra importante:
+    - Se is_accurate=True, cria treinamento automaticamente a partir da predição.
+
+
+22. _create_training_from_prediction(prediction_id, actual_outcome)
+    Finalidade:
+    - Converter uma predição validada em exemplo de treinamento.
+
+    Regra importante:
+    - auto_approve = True quando confidence_score > 0.90.
+
+
+--- BLOCO: Insights ---
+
+23. create_insight(insight_type, title, description, supporting_data, priority='medium', confidence_level=75.0, recommendations=None, predicted_impact=None, expires_in_days=30)
+    Finalidade:
+    - Registrar insight acionável no sistema.
+
+    Tabela:
+    - raizen_insights
+
+    Regras:
+    - insights high/critical geram popup automático.
+
+    Saída:
+    - insight_id.
+
+
+24. _create_insight_popup(insight_id, title, description, priority)
+    Finalidade:
+    - Levar insight importante imediatamente para UI.
+
+
+25. get_active_insights(insight_type=None)
+    Finalidade:
+    - Consultar insights ainda válidos para operação e dashboard.
+
+    Conexão:
+    - View v_raizen_active_insights.
+
+
+--- BLOCO: Análise de Clientes ---
+
+26. analyze_customer(customer_id, analysis_type, score, risk_level, behavioral_patterns, recommendations, predicted_actions=None, intervention_priority=5)
+    Finalidade:
+    - Salvar análise atual de cliente com versionamento de “análise corrente”.
+
+    Fluxo:
+    - desativa análise anterior do mesmo tipo (is_current=False).
+    - cria nova análise em raizen_customer_analysis.
+    - se risco alto/muito alto, cria popup de urgência.
+
+    Saída:
+    - analysis_id.
+
+
+27. _create_high_risk_customer_popup(customer_id, score, risk_level, recommendations)
+    Finalidade:
+    - Forçar atenção operacional para clientes críticos.
+
+    Regra:
+    - very_high => prioridade urgent; high => prioridade high.
+
+
+28. get_high_risk_customers()
+    Finalidade:
+    - Retornar lista consolidada de clientes em risco.
+
+    Conexão:
+    - View v_raizen_high_risk_customers.
+
+
+--- BLOCO: Logs, Feedback e Configuração Dinâmica ---
+
+29. log_activity(activity_type, action, description=None, input_data=None, output_data=None, status='info', error_message=None, execution_time_ms=None)
+    Finalidade:
+    - Telemetria de operação para auditoria e troubleshooting.
+
+    Tabela:
+    - raizen_activity_logs
+
+
+30. get_activity_logs(activity_type=None, user_id=None, limit=100)
+    Finalidade:
+    - Consultar trilha de auditoria com filtros.
+
+
+31. save_feedback(feedback_type, related_id, rating=None, sentiment=None, feedback_text=None, useful=None, accurate=None, actionable=None)
+    Finalidade:
+    - Persistir avaliação humana sobre qualidade do sistema.
+
+    Tabela:
+    - raizen_feedback
+
+    Saída:
+    - feedback_id.
+
+
+32. get_statistics(stat_type, category, period_start, period_end)
+    Finalidade:
+    - Recuperar séries estatísticas agregadas para análise de desempenho.
+
+    Tabela:
+    - raizen_statistics
+
+
+33. get_config(config_key)
+    Finalidade:
+    - Ler parâmetro de configuração armazenado no banco com conversão de tipo.
+
+    Conversões suportadas:
+    - integer, float, boolean, json, string(default).
+
+
+--- Funções auxiliares globais ---
+
+34. serialize_for_json(obj)
+    Finalidade:
+    - Converter tipos não serializáveis (datetime, Decimal, bytes).
+
+
+35. prepare_data_for_frontend(data)
+    Finalidade:
+    - Garantir payload JSON-safe para frontend.
+
+
+36. prepare_data_for_database(data)
+    Finalidade:
+    - Higienizar payload removendo campos None.
+
+
+37. main()
+    Finalidade:
+    - Script demonstrativo do módulo ML com conexão real.
+
+
+=====================================================================
+3) ARQUIVO: raizen_integrated.py (ORQUESTRAÇÃO IA + ML + DB)
+=====================================================================
+Classe principal: RaizenIntegrated
+
+1. __init__(config_file='raizen_config.json', db_host='localhost', db_user='root', db_password='', db_name='zioncrm')
+   Finalidade:
+   - Subir stack completo integrada.
+
+   Fluxo:
+   - Inicializa RaizenAssistant.
+   - Cria RaizenDatabase e conecta.
+   - Cria RaizenMLSystem.
+   - Define IDs de sessão e flags de aprendizado.
+
+   Pontos de atenção:
+   - Falha de conexão MySQL dispara ConnectionError.
+
+
+2. set_user(user_id, user_name)
+   - Encaminha contexto de usuário para camada ML.
+
+
+3. chat(message, provider, model_id, prompt_type='analise_marketing', temperature=None, max_tokens=None, learn_from_interaction=True)
+   Finalidade:
+   - Chat com aprendizado contínuo e persistência total.
+
+   Fluxo detalhado:
+   1) Cria conversa se não houver atual.
+   2) Salva mensagem do usuário no banco.
+   3) Busca treinamentos aprovados relevantes (se learning habilitado).
+   4) Enriquece mensagem com contexto histórico de aprendizado.
+   5) Chama assistant.chat().
+   6) Salva resposta do assistente com tokens, custo e latência.
+   7) Detecta possíveis insights automáticos por palavras-chave.
+   8) Loga atividade operacional.
+   9) Opcionalmente salva interação como candidato de treinamento.
+   10) Retorna payload normalizado para frontend.
+
+   Saída:
+   - dict com success, IDs, resposta, modelo, tokens, custo, tempo, timestamp e uso de treinamento.
+
+   Tratamento de erro:
+   - log de erro + log_activity(status='error') + resposta {'success': False, 'error': ...}.
+
+
+4. _get_model_info(provider, model_id)
+   - Busca metadados do modelo para enriquecer criação da conversa.
+
+
+5. _enhance_message_with_training(message, trainings)
+   Finalidade:
+   - Injetar contexto curto de aprendizados aprovados para melhorar resposta.
+
+   Regra:
+   - Usa até 3 treinamentos com expected_output.
+
+
+6. _save_as_training_candidate(message, response, category, tokens_used)
+   Finalidade:
+   - Capturar interação útil para curadoria humana posterior.
+
+   Regra:
+   - Só salva se tokens_used > 100 (threshold de relevância).
+
+
+7. _analyze_response_for_insights(message, response, category)
+   Finalidade:
+   - Detectar gatilhos semânticos simples (churn/opportunity/problem) e gerar insight.
+
+   Observação:
+   - Método heurístico por palavras-chave; pode gerar falso positivo/negativo.
+
+
+8. get_pending_popups()
+   Finalidade:
+   - Fornecer lista de popups pronta para consumo em frontend.
+
+   O que agrega:
+   - serializa datas para ISO.
+   - gera botões de ação por tipo de popup.
+
+
+9. _generate_popup_buttons(popup)
+   Finalidade:
+   - Traduz tipo/ação do popup em comandos de UI.
+
+   Regras:
+   - approve_training => Aprovar/Rejeitar/Detalhes.
+   - view_customer_analysis => Ver/Tomar ação/Dispensar.
+   - default => Confirmar/Cancelar ou OK.
+
+
+10. respond_to_popup(popup_id, action, response=None, data=None)
+    Finalidade:
+    - Aplicar ação do usuário e atualizar estado de popup.
+
+    Casos importantes:
+    - Approve/Reject de treinamento dispara procedures de treino.
+    - Dismiss altera status sem workflow adicional.
+
+
+11. analyze_customer(customer_id, customer_data, analysis_types=None)
+    Finalidade:
+    - Pipeline de análise de cliente com IA generativa + persistência estruturada.
+
+    Fluxo:
+    - para cada tipo de análise:
+      a) cria prompt específico,
+      b) consulta IA (OpenAI gpt-4o-mini no código atual),
+      c) parseia score/risco,
+      d) grava análise no banco.
+    - registra atividade ao final.
+
+
+12. _create_customer_analysis_prompt(customer_data, analysis_type)
+    - Template de prompt para churn_risk, engagement e lifetime_value.
+
+
+13. _parse_customer_analysis(ai_response, customer_data, analysis_type)
+    Finalidade:
+    - Transformar texto livre da IA em estrutura numérica/operacional.
+
+    Estratégia usada:
+    - regex para extrair primeiro número e tratá-lo como score.
+    - converte score em risk_level e priority.
+    - encapsula recomendações e predicted_actions.
+
+    Ponto de atenção:
+    - Parsing heurístico; sensível a formatos de resposta inesperados.
+
+
+14. get_high_risk_customers()
+    - Encapsula consulta de clientes de risco na camada integrada.
+
+
+15. get_dashboard_data()
+    Finalidade:
+    - Agregar visão executiva do estado do sistema.
+
+    Fontes integradas:
+    - popups pendentes
+    - insights ativos
+    - clientes de alto risco
+    - logs recentes
+    - métricas do assistente
+
+    Saída:
+    - summary, recent_activity, top_insights, pending_popups, high_risk_customers, provider_usage, alerts.
+
+
+16. _generate_alerts(popups, customers, insights)
+    - Cria alertas de severidade para dashboard operacional.
+
+
+17. end_conversation()
+    - Finaliza conversa atual e limpa contexto local do assistente.
+
+
+18. toggle_learning(enabled)
+    - Ativa/desativa aplicação de aprendizado no chat.
+
+
+19. save_session(filename)
+    - Salva conversa atual em arquivo via assistente base.
+
+
+20. disconnect()
+    - Encerra conexão com banco (boa prática de shutdown).
+
+
+21. main()
+    - Demonstra uso ponta a ponta do modo integrado.
+
+
+=====================================================================
+4) ARQUIVO: raizen_setup_config.py (SETUP DE CHAVES)
+=====================================================================
+1. clear_screen()
+   - Limpa terminal conforme SO.
+
+2. print_header()
+   - Exibe banner da ferramenta de setup.
+
+3. get_api_key(provider_name, env_var_name)
+   - Pergunta chave, preserva existente opcionalmente e retorna valor final.
+
+4. save_windows_env(var_name, value)
+   - Tenta persistir variável no Windows via setx.
+
+5. generate_env_file(keys)
+   - Gera .env com as chaves informadas.
+
+6. generate_batch_file(keys)
+   - Gera setup_raizen_keys.bat para persistência no Windows.
+
+7. generate_shell_script(keys)
+   - Gera setup_raizen_keys.sh para Linux/Mac e aplica chmod.
+
+8. test_api_keys()
+   - Verifica presença das variáveis de ambiente e informa cobertura.
+
+9. show_instructions()
+   - Mostra URLs oficiais de obtenção de API keys.
+
+10. main()
+    - Fluxo completo interativo de configuração e validação.
+
+
+=====================================================================
+5) ARQUIVO: raizen_exemplo_uso.py (FUNÇÕES DE DEMONSTRAÇÃO)
+=====================================================================
+1. exemplo_basico()
+   - Inicializa Raizen, lista modelos e executa pergunta simples.
+
+2. exemplo_analise_marketing()
+   - Demonstra analyze_marketing_data() com dados fictícios de campanha.
+
+3. exemplo_analise_churn()
+   - Demonstra analyze_customer_churn() em base de clientes simulada.
+
+4. exemplo_estrategia_captacao()
+   - Demonstra create_acquisition_strategy().
+
+5. exemplo_analise_falhas()
+   - Demonstra identify_process_failures().
+
+6. exemplo_previsao_vendas()
+   - Demonstra predict_sales().
+
+7. exemplo_dashboard()
+   - Demonstra create_dashboard_insights().
+
+8. exemplo_metricas()
+   - Demonstra get_metrics() e save_conversation().
+
+9. exemplo_comparacao_modelos()
+   - Compara custo/tokens entre providers para o mesmo prompt.
+
+10. menu_principal()
+    - CLI para executar os exemplos individualmente.
+
+
+=====================================================================
+6) O QUE O AGENTE RAIZEN FAZ (DETALHADO)
+=====================================================================
+- Atua como copiloto de marketing/comercial com LLM multi-provider.
+- Traduz dados brutos em análises estratégicas (churn, aquisição, falhas, previsões, dashboards).
+- Monitora custo e uso por modelo/provider.
+- Em modo integrado, persiste toda trilha de conversa no MySQL.
+- Implementa aprendizado contínuo supervisionado:
+  - coleta candidatos de treinamento,
+  - solicita aprovação humana,
+  - reutiliza treinamentos aprovados no contexto futuro.
+- Cria popups operacionais para ação humana em pontos críticos.
+- Gera insights automáticos e alertas de risco (clientes, popups urgentes, insights críticos).
+- Oferece base de auditoria: logs, feedback, estatísticas e configuração dinâmica no banco.
+
+
+=====================================================================
+7) TUDO COM QUE O AGENTE SE CONECTA
+=====================================================================
+A) APIs externas de IA
+1. OpenAI
+   - Endpoint: https://api.openai.com/v1/chat/completions
+   - Autenticação: Bearer OPENAI_API_KEY
+
+2. Google Gemini
+   - Endpoint: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+   - Autenticação: query param key=GOOGLE_API_KEY
+
+3. Anthropic Claude
+   - Endpoint: https://api.anthropic.com/v1/messages
+   - Autenticação: header x-api-key=ANTHROPIC_API_KEY
+
+
+B) Variáveis de ambiente
+- OPENAI_API_KEY
+- GOOGLE_API_KEY
+- ANTHROPIC_API_KEY
+
+
+C) Banco de dados (MySQL - zioncrm)
+Tabelas usadas:
+- raizen_conversations
+- raizen_messages
+- raizen_chat_popups
+- raizen_training_data
+- raizen_ml_predictions
+- raizen_insights
+- raizen_customer_analysis
+- raizen_activity_logs
+- raizen_feedback
+- raizen_statistics
+- raizen_config
+
+Views usadas:
+- v_raizen_active_insights
+- v_raizen_high_risk_customers
+
+Stored procedures usadas:
+- sp_raizen_approve_training
+- sp_raizen_reject_training
+
+
+D) Arquivos locais
+- raizen_config.json
+- .env (gerado)
+- setup_raizen_keys.bat (gerado)
+- setup_raizen_keys.sh (gerado)
+- arquivos de sessão/conversa salvos por save_conversation()
+
+
+E) Bibliotecas/módulos de runtime
+- requests (HTTP)
+- mysql.connector (MySQL)
+- json, os, sys, platform, time, uuid, datetime, timedelta, logging, hashlib, decimal, re, typing
+
+
+=====================================================================
+8) LIMITAÇÕES E PONTOS DE MELHORIA IDENTIFICADOS
+=====================================================================
+1. Parsing heurístico em _parse_customer_analysis
+   - Usa regex simples para score; pode interpretar número errado dependendo do texto.
+
+2. Crescimento de histórico em chat
+   - conversation_history pode crescer sem limite se não houver política de truncamento.
+
+3. Aprendizado por palavra-chave em _analyze_response_for_insights
+   - Heurística básica; ideal evoluir para classificação mais robusta.
+
+4. Dependência de schema SQL
+   - O modo integrado exige tabelas/views/procedures presentes e coerentes.
+
+5. Falta de validação forte de payloads
+   - Há serialização e saneamento, mas não há validação semântica rígida por schema em todas as entradas.
+
+
+=====================================================================
+9) FLUXO RESUMIDO DE EXECUÇÃO (MODO INTEGRADO)
+=====================================================================
+Passo 1: Usuário envia mensagem -> RaizenIntegrated.chat()
+Passo 2: Sistema cria/retoma conversa no MySQL
+Passo 3: Salva mensagem do usuário
+Passo 4: Busca treinamentos aprovados e enriquece contexto
+Passo 5: Chama provedor de IA via RaizenAssistant.chat()
+Passo 6: Salva resposta + tokens + custo + latência
+Passo 7: Gera insights automáticos (quando detectado)
+Passo 8: Registra log de atividade
+Passo 9: Opcionalmente salva interação como candidato de treinamento
+Passo 10: Retorna payload formatado para frontend
+
+
+=====================================================================
+10) CONCLUSÃO
+=====================================================================
+O Raizen é um agente de IA comercial/marketing com arquitetura modular e rastreável,
+capaz de operar em modo simples (somente APIs de IA) ou modo enterprise (IA + banco +
+aprendizado supervisionado + monitoramento operacional). As funções cobrem ciclo completo
+de geração de resposta, persistência, curadoria de treinamento, insights e suporte a dashboard.

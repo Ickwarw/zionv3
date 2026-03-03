@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Fluxo de Atendimento</title>
+
+<style>
+body{font-family:Arial;background:#f2f2f2;margin:0;padding:20px}
+h2{text-align:center}
+#editor{display:flex;gap:20px}
+#flow{flex:3;background:#fff;border:2px dashed #ccc;min-height:600px;position:relative;padding:10px}
+svg{position:absolute;top:0;left:0}
+.node{width:240px;background:#e3f2fd;border:1px solid #2196f3;border-radius:8px;padding:10px;position:absolute;cursor:move}
+.node.active{border:3px solid #000;background:#fff3cd;font-weight:bold}
+.node textarea{width:100%;resize:none}
+.option{display:flex;gap:5px;margin-top:5px;align-items:center}
+.option .num{width:22px;text-align:center;font-weight:bold}
+.option input{flex:1}
+.handle{width:10px;height:10px;border-radius:50%;background:#000;cursor:crosshair}
+#controls{flex:1}
+button{width:100%;margin-bottom:10px;padding:10px}
+line.active{stroke:red;stroke-width:3}
+</style>
+</head>
+
+<body>
+
+<h2>Fluxo de Atendimento</h2>
+
+<div id="editor">
+    <div id="flow">
+        <svg id="lines" width="100%" height="100%">
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="black"/>
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <div id="controls">
+        <button onclick="addNode()">➕ Nova Pergunta</button>
+        <button onclick="testFlow()">▶ Testar Fluxo</button>
+    </div>
+</div>
+
+<script>
+let nodeCount=0;
+const flow=document.getElementById('flow');
+const svg=document.getElementById('lines');
+const nodes={},links=[];
+
+function addNode(){
+    const n=document.createElement('div');
+    n.className='node';
+    n.dataset.id='node'+nodeCount;
+    n.style.left='20px';
+    n.style.top=(20+nodeCount*120)+'px';
+    n.innerHTML=`
+        <strong>${n.dataset.id}</strong>
+        <textarea rows="2" placeholder="Pergunta"></textarea>
+        <div class="options"></div>
+        <button onclick="addOption(this)">➕ Resposta</button>
+    `;
+    flow.appendChild(n);
+    nodes[n.dataset.id]=n;
+    makeDraggable(n);
+    addOption(n.querySelector('button'));
+    addOption(n.querySelector('button'));
+    nodeCount++;
+}
+
+function renumber(options){
+    options.querySelectorAll('.option').forEach((o,i)=>{
+        o.querySelector('.num').innerText=i+1;
+    });
+}
+
+function addOption(btn){
+    const c=btn.previousElementSibling;
+    if(c.children.length>=8)return;
+    const o=document.createElement('div');
+    o.className='option';
+    o.innerHTML=`
+        <div class="num"></div>
+        <input placeholder="Resposta">
+        <div class="handle"></div>
+    `;
+    c.appendChild(o);
+    renumber(c);
+
+    o.querySelector('.handle').onmousedown=e=>{
+        e.stopPropagation();
+        startDragLink(o,e);
+    };
+}
+
+function startDragLink(option,e){
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('stroke','black');
+    line.setAttribute('stroke-width','2');
+    line.setAttribute('marker-end','url(#arrow)');
+    svg.appendChild(line);
+
+    const r=option.getBoundingClientRect();
+    const p=flow.getBoundingClientRect();
+    const x=r.right-p.left;
+    const y=r.top-p.top+r.height/2;
+
+    line.setAttribute('x1',x);
+    line.setAttribute('y1',y);
+    line.setAttribute('x2',x);
+    line.setAttribute('y2',y);
+
+    document.onmousemove=ev=>{
+        line.setAttribute('x2',ev.clientX-p.left);
+        line.setAttribute('y2',ev.clientY-p.top);
+    };
+
+    document.onmouseup=ev=>{
+        document.onmousemove=null;
+        document.onmouseup=null;
+        const target=Object.values(nodes).find(n=>{
+            const r=n.getBoundingClientRect();
+            return ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+        });
+        if(target){
+            links.push({from:option.closest('.node').dataset.id,to:target.dataset.id,optionEl:option,line});
+            redraw();
+        }else svg.removeChild(line);
+    };
+}
+
+function redraw(){
+    svg.innerHTML=svg.querySelector('defs').outerHTML;
+    links.forEach(l=>{
+        const o=l.optionEl.getBoundingClientRect();
+        const t=nodes[l.to].getBoundingClientRect();
+        const p=flow.getBoundingClientRect();
+        const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1',o.right-p.left);
+        line.setAttribute('y1',o.top-p.top+o.height/2);
+        line.setAttribute('x2',t.left-p.left);
+        line.setAttribute('y2',t.top-p.top+t.height/2);
+        line.setAttribute('stroke','black');
+        line.setAttribute('stroke-width','2');
+        line.setAttribute('marker-end','url(#arrow)');
+        svg.appendChild(line);
+        l.line=line;
+    });
+}
+
+function makeDraggable(el){
+    let ox,oy;
+    el.onmousedown=e=>{
+        ox=e.clientX-el.offsetLeft;
+        oy=e.clientY-el.offsetTop;
+        document.onmousemove=ev=>{
+            el.style.left=(ev.clientX-ox)+'px';
+            el.style.top=(ev.clientY-oy)+'px';
+            redraw();
+        };
+        document.onmouseup=()=>document.onmousemove=null;
+    };
+}
+
+function testFlow(){
+    let current="node0";
+    const speed=5000; // AJUSTE De VELOCIDaDe AQUI (ms)
+
+    function step(){
+        document.querySelectorAll('.node').forEach(n=>n.classList.remove('active'));
+        document.querySelectorAll('line').forEach(l=>l.classList.remove('active'));
+
+        const node=nodes[current];
+        node.classList.add('active');
+
+        const opts=[...node.querySelectorAll('.option')];
+        if(!opts.length)return;
+
+        setTimeout(()=>{
+            const opt=opts[0];
+            opt.style.fontWeight='bold';
+            const link=links.find(l=>l.from===current&&l.optionEl===opt);
+            if(!link)return;
+            link.line.classList.add('active');
+            current=link.to;
+            step();
+        },speed);
+    }
+    step();
+}
+</script>
+
+</body>
+</html>

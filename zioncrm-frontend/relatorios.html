@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Relatórios - ZION CRM</title>
+    <meta name="description" content="Relatórios detalhados e análises de negócio" />
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 font-inter">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ZION CRM
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="sobre-nos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Sobre Nós</a>
+                            <a href="contato.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Contato</a>
+                            <a href="produtos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Produtos</a>
+                            <a href="agenda.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Agenda</a>
+                            <a href="financeiro.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Financeiro</a>
+                            <a href="leads.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Leads</a>
+                            <a href="chat-voip.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Chat & VoIP</a>
+                            <a href="tarefas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Tarefas</a>
+                            <a href="relatorios.html" class="text-purple-600 border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm font-medium">Relatórios</a>
+                            <a href="estatisticas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="assistentes-ia.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Assistentes IA</a>
+                            <a href="grupos-permissoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Grupos e Permissões</a>
+                            <a href="logs.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                            <a href="configuracoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Configurações</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    Relatórios
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Análises detalhadas e insights do seu negócio
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-chart-bar text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Relatório de Vendas</h3>
+                            <p class="text-sm text-gray-600">Performance mensal</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-blue-600">R$ 125.450</p>
+                        <p class="text-sm text-green-600">+12% vs. mês anterior</p>
+                    </div>
+                    <button class="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                        Ver Detalhes
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Relatório de Leads</h3>
+                            <p class="text-sm text-gray-600">Conversão semanal</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-green-600">245</p>
+                        <p class="text-sm text-green-600">Taxa de conversão: 18%</p>
+                    </div>
+                    <button class="w-full mt-4 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
+                        Ver Detalhes
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Relatório Financeiro</h3>
+                            <p class="text-sm text-gray-600">Fluxo de caixa</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-purple-600">R$ 79.560</p>
+                        <p class="text-sm text-green-600">Lucro líquido +18%</p>
+                    </div>
+                    <button class="w-full mt-4 bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600">
+                        Ver Detalhes
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Vendas por Período</h2>
+                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <p class="text-gray-500">Gráfico de Vendas por Período</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Top Produtos</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-900">Smartphone Galaxy S23</p>
+                                <p class="text-sm text-gray-600">145 unidades vendidas</p>
+                            </div>
+                            <span class="text-green-600 font-bold">R$ 42.500</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-900">Notebook Dell Inspiron</p>
+                                <p class="text-sm text-gray-600">89 unidades vendidas</p>
+                            </div>
+                            <span class="text-green-600 font-bold">R$ 29.350</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-900">Fone Bluetooth Sony</p>
+                                <p class="text-sm text-gray-600">234 unidades vendidas</p>
+                            </div>
+                            <span class="text-green-600 font-bold">R$ 19.890</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Relatórios Personalizados</h2>
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        + Novo Relatório
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-file-alt text-purple-600 mr-2"></i>
+                            <h3 class="font-medium text-gray-900">Relatório de Atividades</h3>
+                        </div>
+                        <p class="text-sm text-gray-600">Atividades da equipe por período</p>
+                    </div>
+                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
+                            <h3 class="font-medium text-gray-900">Análise de Clientes</h3>
+                        </div>
+                        <p class="text-sm text-gray-600">Segmentação e comportamento</p>
+                    </div>
+                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-clock text-green-600 mr-2"></i>
+                            <h3 class="font-medium text-gray-900">Produtividade</h3>
+                        </div>
+                        <p class="text-sm text-gray-600">Métricas de desempenho</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 ZION CRM. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

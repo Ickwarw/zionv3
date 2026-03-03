@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Produtos - ZION CRM</title>
+    <meta name="description" content="Conheça os produtos e soluções da ZION CRM" />
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 font-inter">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ZION CRM
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="sobre-nos.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Sobre Nós</a>
+                            <a href="contato.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Contato</a>
+                            <a href="produtos.html" class="text-purple-600 border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm font-medium">Produtos</a>
+                            <a href="agenda.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Agenda</a>
+                            <a href="financeiro.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Financeiro</a>
+                            <a href="leads.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Leads</a>
+                            <a href="chat-voip.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Chat & VoIP</a>
+                            <a href="tarefas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Tarefas</a>
+                            <a href="relatorios.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Relatórios</a>
+                            <a href="estatisticas.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="assistentes-ia.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Assistentes IA</a>
+                            <a href="grupos-permissoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Grupos e Permissões</a>
+                            <a href="logs.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Logs</a>
+                            <a href="configuracoes.html" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Configurações</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                    Nossos Produtos
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Soluções completas para gestão empresarial moderna
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-calendar text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Agenda Inteligente</h3>
+                    <p class="text-gray-600 mb-4">
+                        Gerencie compromissos, reuniões e eventos com sincronização automática e lembretes personalizados.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Calendário compartilhado</li>
+                        <li>• Lembretes automáticos</li>
+                        <li>• Integração com email</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-dollar-sign text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Gestão Financeira</h3>
+                    <p class="text-gray-600 mb-4">
+                        Controle completo das finanças com relatórios detalhados e análises de performance.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Fluxo de caixa</li>
+                        <li>• Relatórios financeiros</li>
+                        <li>• Análise de receitas</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Gestão de Leads</h3>
+                    <p class="text-gray-600 mb-4">
+                        Capture, qualifique e converta leads com automação inteligente e funil de vendas.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Captura automática</li>
+                        <li>• Qualificação de leads</li>
+                        <li>• Funil de vendas</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-comments text-orange-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Chat & VoIP</h3>
+                    <p class="text-gray-600 mb-4">
+                        Comunicação integrada com chat em tempo real, videoconferências e telefonia IP.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Chat em tempo real</li>
+                        <li>• Videoconferência</li>
+                        <li>• Telefonia IP</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-tasks text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Gestão de Tarefas</h3>
+                    <p class="text-gray-600 mb-4">
+                        Organize projetos, atribua tarefas e acompanhe o progresso da equipe em tempo real.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Quadros Kanban</li>
+                        <li>• Atribuição de tarefas</li>
+                        <li>• Acompanhamento de progresso</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-bar text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Relatórios Avançados</h3>
+                    <p class="text-gray-600 mb-4">
+                        Dashboards personalizáveis com análises detalhadas e insights de negócio.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• Dashboards personalizáveis</li>
+                        <li>• Análises detalhadas</li>
+                        <li>• Insights de negócio</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-8">Pronto para começar?</h2>
+                <div class="flex justify-center space-x-4">
+                    <button class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-3 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Teste Grátis
+                    </button>
+                    <button class="border-2 border-purple-500 text-purple-500 px-8 py-3 rounded-lg hover:bg-purple-500 hover:text-white transition-all duration-300">
+                        Agendar Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 ZION CRM. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

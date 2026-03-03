@@ -1,0 +1,20 @@
+#Pegando uma imagem mais leve do python
+FROM python:3.8.10-slim
+
+# copiando requirements.txt
+COPY  requirements.txt /app/
+
+WORKDIR ./app
+
+#Instalando os requerimentos da aplicação python e uma lib para conectar ao oracle e removendo o alien, pois não será mais utilizado
+RUN pip install -r requirements.txt
+
+# Copia o código da aplicação
+COPY . /app
+
+EXPOSE 5000
+
+ENV PYTHONUNBUFFERED=1
+ 
+#Executa a aplicação
+CMD ["python", "/app/app.py"]

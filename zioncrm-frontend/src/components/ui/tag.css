@@ -1,0 +1,13 @@
+.tag {
+  display: inline-block; /* Allows padding and other box model properties */
+  padding: 0.8em 0.8em; /* Vertical and horizontal padding */
+  font-size: 0.90em; /* Smaller font size relative to parent */
+  font-weight: bold; /* Bold text */
+  line-height: 1; /* Ensures text doesn't overflow */
+  text-align: center; /* Centers text horizontally */
+  white-space: nowrap; /* Prevents text from wrapping */
+  vertical-align: baseline; /* Aligns with text baseline */
+  border-radius: 0.50rem; /* Slightly rounded corners */
+  background-color: #007bff; /* Example background color (blue) */
+  color: #fff; /* White text color */
+}

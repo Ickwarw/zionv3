@@ -1,0 +1,679 @@
+{
+  "_metadata": {
+    "nome": "Dashboard Completo ZionCRM - Chart.js",
+    "versao": "2.0",
+    "data_criacao": "2026-02-17",
+    "autor": "Sistema ZionCRM",
+    "descricao": "Configuração completa do dashboard com todas as 11 tabelas do sistema integradas",
+    "total_tabelas": 11,
+    "total_assuntos": 220,
+    "total_categorias": 25,
+    "biblioteca_graficos": "Chart.js v4.x"
+  },
+
+  "sistema": {
+    "banco_origem": {
+      "tipo": "MariaDB",
+      "versao": "10.11.7",
+      "host": "45.160.180.14",
+      "porta": 3306,
+      "database": "ixcprovedor",
+      "tabelas_exportadas": 11
+    },
+    "banco_destino": {
+      "tipo": "PostgreSQL",
+      "versao": "15.x",
+      "host": "45.160.180.34",
+      "porta": 5432,
+      "database": "zioncrm",
+      "tabelas_sincronizadas": 11
+    },
+    "api": {
+      "framework": "Flask",
+      "porta": 5004,
+      "base_url": "http://localhost:5004",
+      "cors": "enabled",
+      "documentacao": "/api/docs"
+    }
+  },
+
+  "tabelas": {
+    "lead": {
+      "origem": "cliente",
+      "total_colunas": 250,
+      "total_assuntos": 91,
+      "categorias": [
+        "Classificação",
+        "Status",
+        "Localização",
+        "Contato",
+        "Financeiro",
+        "Datas",
+        "Performance",
+        "Satisfação",
+        "Customizado"
+      ],
+      "descricao": "Tabela principal de clientes/leads do sistema",
+      "endpoints": {
+        "listar": "/api/dashboard/assuntos?categoria=Classificação",
+        "dados": "/api/dashboard/assuntos/{assunto_key}"
+      }
+    },
+    "cliente_contrato": {
+      "total_colunas": 51,
+      "total_assuntos": 10,
+      "categoria": "Contratos",
+      "descricao": "Contratos ativos, cancelados, renovações e periodicidade",
+      "exemplos_assuntos": [
+        "contratos_ativos_por_mes",
+        "contratos_cancelados_por_mes",
+        "distribuicao_tipo_contrato",
+        "valor_medio_contratos",
+        "contratos_inadimplentes"
+      ]
+    },
+    "cliente_contrato_servicos": {
+      "total_colunas": 43,
+      "total_assuntos": 8,
+      "categoria": "Serviços",
+      "descricao": "Serviços contratados, velocidades, TV, telefonia e receita",
+      "exemplos_assuntos": [
+        "servicos_mais_contratados",
+        "receita_por_servico",
+        "servicos_por_velocidade",
+        "servicos_tv",
+        "servicos_telefonia"
+      ]
+    },
+    "cliente_contrato_alt_plano": {
+      "total_colunas": 25,
+      "total_assuntos": 6,
+      "categoria": "Alterações",
+      "descricao": "Alterações de plano, upgrades, downgrades e impacto financeiro",
+      "exemplos_assuntos": [
+        "alteracoes_plano_por_mes",
+        "upgrades_vs_downgrades",
+        "motivos_alteracao_plano",
+        "impacto_financeiro_alteracoes"
+      ]
+    },
+    "cliente_contrato_historico": {
+      "total_colunas": 11,
+      "total_assuntos": 4,
+      "categoria": "Histórico",
+      "descricao": "Histórico de mudanças de status e eventos de contratos",
+      "exemplos_assuntos": [
+        "historico_mudancas_status",
+        "atividades_por_mes",
+        "tipos_evento_historico"
+      ]
+    },
+    "cliente_arquivos": {
+      "total_colunas": 9,
+      "total_assuntos": 4,
+      "categoria": "Arquivos",
+      "descricao": "Arquivos enviados pelos clientes e documentação",
+      "exemplos_assuntos": [
+        "arquivos_por_cliente",
+        "tipos_arquivo_cliente",
+        "uploads_por_mes",
+        "tamanho_medio_arquivos"
+      ]
+    },
+    "su_oss_chamado": {
+      "total_colunas": 70,
+      "total_assuntos": 15,
+      "categoria": "Chamados",
+      "descricao": "Chamados de suporte, OSS, SLA, prioridades e satisfação",
+      "exemplos_assuntos": [
+        "chamados_abertos_por_mes",
+        "chamados_por_status",
+        "tempo_medio_atendimento",
+        "chamados_por_tecnico",
+        "chamados_sla_cumprido",
+        "satisfacao_atendimento"
+      ]
+    },
+    "su_oss_chamado_historico": {
+      "total_colunas": 17,
+      "total_assuntos": 5,
+      "categoria": "Histórico Chamados",
+      "descricao": "Histórico de alterações nos chamados",
+      "exemplos_assuntos": [
+        "historico_chamados_por_mes",
+        "mudancas_status_chamados",
+        "reatribuicoes_tecnico",
+        "tempo_medio_status"
+      ]
+    },
+    "su_oss_chamado_mensagem": {
+      "total_colunas": 25,
+      "total_assuntos": 5,
+      "categoria": "Mensagens",
+      "descricao": "Mensagens trocadas nos chamados e tempo de resposta",
+      "exemplos_assuntos": [
+        "mensagens_por_mes",
+        "mensagens_por_tipo",
+        "tempo_resposta_medio",
+        "mensagens_por_usuario"
+      ]
+    },
+    "su_oss_chamado_arquivos": {
+      "total_colunas": 9,
+      "total_assuntos": 3,
+      "categoria": "Arquivos Chamados",
+      "descricao": "Anexos enviados nos chamados",
+      "exemplos_assuntos": [
+        "arquivos_chamados_por_mes",
+        "tipos_arquivo_chamado",
+        "tamanho_medio_arquivos_chamados"
+      ]
+    },
+    "su_oss_evento": {
+      "total_colunas": 2,
+      "total_assuntos": 3,
+      "categoria": "Eventos",
+      "descricao": "Eventos do sistema e logs",
+      "exemplos_assuntos": [
+        "eventos_por_tipo",
+        "eventos_por_mes",
+        "eventos_criticos"
+      ]
+    },
+    "usuarios": {
+      "total_colunas": 66,
+      "total_assuntos": 8,
+      "categoria": "Usuários",
+      "descricao": "Usuários do sistema, perfis, acessos e departamentos",
+      "exemplos_assuntos": [
+        "usuarios_ativos",
+        "usuarios_por_perfil",
+        "usuarios_por_departamento",
+        "ultimo_acesso_usuarios"
+      ]
+    }
+  },
+
+  "categorias_completas": [
+    {
+      "id": 1,
+      "key": "Classificação",
+      "label": "Classificação",
+      "icon": "🎯",
+      "color": "#8b5cf6",
+      "total_assuntos": 12,
+      "descricao": "Análise de prioridades, status, departamentos e funil de vendas"
+    },
+    {
+      "id": 2,
+      "key": "Status",
+      "label": "Status",
+      "icon": "📊",
+      "color": "#3b82f6",
+      "total_assuntos": 8,
+      "descricao": "Distribuição por status de vendas, pós-venda e viabilidade"
+    },
+    {
+      "id": 3,
+      "key": "Localização",
+      "label": "Localização",
+      "icon": "📍",
+      "color": "#10b981",
+      "total_assuntos": 9,
+      "descricao": "Análise geográfica: cidade, UF, bairro, CEP e coordenadas"
+    },
+    {
+      "id": 4,
+      "key": "Pessoal",
+      "label": "Dados Pessoais",
+      "icon": "👤",
+      "color": "#f59e0b",
+      "total_assuntos": 11,
+      "descricao": "Tipo pessoa, sexo, estado civil, idade, nacionalidade"
+    },
+    {
+      "id": 5,
+      "key": "Contato",
+      "label": "Contato",
+      "icon": "📞",
+      "color": "#06b6d4",
+      "total_assuntos": 8,
+      "descricao": "Email, telefone, celular, WhatsApp e redes sociais"
+    },
+    {
+      "id": 6,
+      "key": "Financeiro",
+      "label": "Financeiro",
+      "icon": "💰",
+      "color": "#10b981",
+      "total_assuntos": 4,
+      "descricao": "Vencimento, tabela de preço, tipo cliente e vendedor"
+    },
+    {
+      "id": 7,
+      "key": "Gestão",
+      "label": "Gestão",
+      "icon": "🏢",
+      "color": "#f97316",
+      "total_assuntos": 7,
+      "descricao": "Filial, canal venda, campanha, indicações e conversões"
+    },
+    {
+      "id": 8,
+      "key": "Profissional",
+      "label": "Dados Profissionais",
+      "icon": "💼",
+      "color": "#8b5cf6",
+      "total_assuntos": 4,
+      "descricao": "Emprego, cargo, remuneração e segmento"
+    },
+    {
+      "id": 9,
+      "key": "Tecnologia",
+      "label": "Tecnologia",
+      "icon": "💻",
+      "color": "#6366f1",
+      "total_assuntos": 7,
+      "descricao": "Cálculo velocidade, tipo rede, integrações"
+    },
+    {
+      "id": 10,
+      "key": "Temporalidade",
+      "label": "Temporal",
+      "icon": "📅",
+      "color": "#ec4899",
+      "total_assuntos": 6,
+      "descricao": "Cadastros, atualizações, aniversariantes e prospecção"
+    },
+    {
+      "id": 11,
+      "key": "Qualidade",
+      "label": "Qualidade de Dados",
+      "icon": "✅",
+      "color": "#14b8a6",
+      "total_assuntos": 8,
+      "descricao": "Completude de dados, falta de email, telefone, endereço"
+    },
+    {
+      "id": 12,
+      "key": "Observações",
+      "label": "Observações",
+      "icon": "📝",
+      "color": "#64748b",
+      "total_assuntos": 5,
+      "descricao": "Leads com observações, alertas, referências"
+    },
+    {
+      "id": 13,
+      "key": "Score",
+      "label": "Score",
+      "icon": "⭐",
+      "color": "#eab308",
+      "total_assuntos": 2,
+      "descricao": "Distribuição e médias de score"
+    },
+    {
+      "id": 14,
+      "key": "Customizado",
+      "label": "Customizado",
+      "icon": "🔧",
+      "color": "#84cc16",
+      "total_assuntos": 1,
+      "descricao": "Análises personalizadas e específicas"
+    },
+    {
+      "id": 15,
+      "key": "Contratos",
+      "label": "Contratos",
+      "icon": "📝",
+      "color": "#6366f1",
+      "total_assuntos": 10,
+      "descricao": "Contratos ativos, cancelados, renovações, inadimplência"
+    },
+    {
+      "id": 16,
+      "key": "Serviços",
+      "label": "Serviços",
+      "icon": "🛠️",
+      "color": "#14b8a6",
+      "total_assuntos": 8,
+      "descricao": "Serviços contratados, velocidades, TV, telefonia"
+    },
+    {
+      "id": 17,
+      "key": "Alterações",
+      "label": "Alterações Plano",
+      "icon": "🔄",
+      "color": "#a855f7",
+      "total_assuntos": 6,
+      "descricao": "Upgrades, downgrades, motivos, impacto financeiro"
+    },
+    {
+      "id": 18,
+      "key": "Histórico",
+      "label": "Histórico",
+      "icon": "📜",
+      "color": "#64748b",
+      "total_assuntos": 4,
+      "descricao": "Histórico de mudanças e eventos"
+    },
+    {
+      "id": 19,
+      "key": "Arquivos",
+      "label": "Arquivos",
+      "icon": "📎",
+      "color": "#ec4899",
+      "total_assuntos": 4,
+      "descricao": "Uploads, tipos de arquivo, documentação"
+    },
+    {
+      "id": 20,
+      "key": "Chamados",
+      "label": "Chamados/OSS",
+      "icon": "🎫",
+      "color": "#ef4444",
+      "total_assuntos": 15,
+      "descricao": "Chamados de suporte, SLA, prioridades, satisfação"
+    },
+    {
+      "id": 21,
+      "key": "Histórico Chamados",
+      "label": "Histórico Chamados",
+      "icon": "📋",
+      "color": "#f97316",
+      "total_assuntos": 5,
+      "descricao": "Alterações e reatribuições em chamados"
+    },
+    {
+      "id": 22,
+      "key": "Mensagens",
+      "label": "Mensagens",
+      "icon": "💬",
+      "color": "#06b6d4",
+      "total_assuntos": 5,
+      "descricao": "Comunicação e tempo de resposta"
+    },
+    {
+      "id": 23,
+      "key": "Arquivos Chamados",
+      "label": "Arquivos Chamados",
+      "icon": "📁",
+      "color": "#84cc16",
+      "total_assuntos": 3,
+      "descricao": "Anexos em chamados"
+    },
+    {
+      "id": 24,
+      "key": "Eventos",
+      "label": "Eventos Sistema",
+      "icon": "⚡",
+      "color": "#eab308",
+      "total_assuntos": 3,
+      "descricao": "Eventos e logs do sistema"
+    },
+    {
+      "id": 25,
+      "key": "Usuários",
+      "label": "Usuários",
+      "icon": "👥",
+      "color": "#3b82f6",
+      "total_assuntos": 8,
+      "descricao": "Usuários, perfis, acessos e departamentos"
+    }
+  ],
+
+  "endpoints_api": {
+    "base_url": "http://localhost:5004",
+    "documentacao": "http://localhost:5004/api/docs",
+    "rotas": {
+      "dashboard": {
+        "listar_assuntos": {
+          "method": "GET",
+          "path": "/api/dashboard/assuntos",
+          "params": {
+            "categoria": "string (opcional)"
+          },
+          "retorno": "Lista de assuntos com label, descricao e categoria"
+        },
+        "listar_categorias": {
+          "method": "GET",
+          "path": "/api/dashboard/categorias",
+          "retorno": "Lista de todas as categorias disponíveis"
+        },
+        "obter_dados_assunto": {
+          "method": "GET",
+          "path": "/api/dashboard/assuntos/{assunto_key}",
+          "retorno": "Dados prontos para Chart.js (labels e data)"
+        },
+        "estatisticas_gerais": {
+          "method": "GET",
+          "path": "/api/dashboard/estatisticas",
+          "retorno": "Estatísticas para 12 cards principais"
+        },
+        "listar_graficos": {
+          "method": "GET",
+          "path": "/api/dashboard/graficos",
+          "params": {
+            "ativo": "boolean (opcional)"
+          },
+          "retorno": "Lista de gráficos salvos pelo usuário"
+        },
+        "obter_grafico": {
+          "method": "GET",
+          "path": "/api/dashboard/graficos/{id}",
+          "retorno": "Detalhes de um gráfico específico"
+        },
+        "obter_dados_grafico": {
+          "method": "GET",
+          "path": "/api/dashboard/graficos/{id}/dados",
+          "retorno": "Dados do gráfico prontos para Chart.js"
+        },
+        "criar_grafico": {
+          "method": "POST",
+          "path": "/api/dashboard/graficos",
+          "body": {
+            "titulo": "string (required, 3-200 chars)",
+            "descricao": "string (optional)",
+            "tipo_grafico": "string (bar|line|pie|doughnut|radar|polarArea)",
+            "assuntos": "array (1-10 items)",
+            "configuracoes": "object (optional)"
+          },
+          "retorno": "Gráfico criado com ID"
+        },
+        "atualizar_grafico": {
+          "method": "PUT",
+          "path": "/api/dashboard/graficos/{id}",
+          "retorno": "Gráfico atualizado"
+        },
+        "deletar_grafico": {
+          "method": "DELETE",
+          "path": "/api/dashboard/graficos/{id}",
+          "retorno": "Confirmação de exclusão (soft delete)"
+        },
+        "graficos_predefinidos": {
+          "method": "GET",
+          "path": "/api/dashboard/graficos-predefinidos",
+          "retorno": "12 gráficos prontos para uso imediato"
+        }
+      },
+      "crud": {
+        "lead": {
+          "base": "/api/lead",
+          "metodos": ["GET", "POST", "PUT", "DELETE"],
+          "descricao": "CRUD completo da tabela lead"
+        },
+        "contratos": {
+          "base": "/api/contratos",
+          "metodos": ["GET", "POST", "PUT", "DELETE"],
+          "descricao": "Gerenciamento de contratos"
+        },
+        "servicos": {
+          "base": "/api/servicos",
+          "metodos": ["GET", "POST", "PUT", "DELETE"],
+          "descricao": "Gerenciamento de serviços contratados"
+        },
+        "chamados": {
+          "base": "/api/chamados",
+          "metodos": ["GET", "POST", "PUT", "DELETE"],
+          "descricao": "Sistema completo de chamados/OSS"
+        },
+        "usuarios": {
+          "base": "/api/usuarios",
+          "metodos": ["GET", "POST", "PUT", "DELETE"],
+          "descricao": "Gerenciamento de usuários do sistema"
+        }
+      }
+    }
+  },
+
+  "integracao_chartjs": {
+    "biblioteca": "Chart.js",
+    "versao_recomendada": "4.4.0",
+    "cdn": "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js",
+    "instalacao_npm": "npm install chart.js",
+    "formato_dados": {
+      "estrutura": {
+        "labels": "array de strings - Rótulos do eixo X",
+        "datasets": [{
+          "label": "string - Nome do dataset",
+          "data": "array de números - Valores",
+          "backgroundColor": "string ou array - Cores de fundo",
+          "borderColor": "string ou array - Cores de borda",
+          "borderWidth": "number - Largura da borda"
+        }]
+      },
+      "exemplo_resposta_api": {
+        "success": true,
+        "data": {
+          "label": "Contratos Ativos por Mês",
+          "descricao": "Quantidade de contratos ativos ao longo do tempo",
+          "labels": ["2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02"],
+          "data": [450, 478, 492, 501, 515, 528]
+        }
+      }
+    },
+    "tipos_grafico_suportados": [
+      {
+        "tipo": "bar",
+        "nome": "Barras Verticais",
+        "ideal_para": "Comparações categoricas, rankings, distribuições",
+        "exemplo_uso": "Chamados por técnico, Contratos por plano"
+      },
+      {
+        "tipo": "line",
+        "nome": "Linhas",
+        "ideal_para": "Séries temporais, tendências, evolução",
+        "exemplo_uso": "Contratos ativos por mês, Score médio ao longo do tempo"
+      },
+      {
+        "tipo": "pie",
+        "nome": "Pizza",
+        "ideal_para": "Proporções, percentuais, partes do todo",
+        "exemplo_uso": "Status de chamados, Distribuição por UF"
+      },
+      {
+        "tipo": "doughnut",
+        "nome": "Rosca",
+        "ideal_para": "Proporções com visual moderno",
+        "exemplo_uso": "Satisfação do cliente, SLA cumprido vs não cumprido"
+      },
+      {
+        "tipo": "radar",
+        "nome": "Radar/Aranha",
+        "ideal_para": "Análises multidimensionais, comparações complexas",
+        "exemplo_uso": "Perfil de performance de técnicos"
+      },
+      {
+        "tipo": "polarArea",
+        "nome": "Área Polar",
+        "ideal_para": "Magnitudes e proporções combinadas",
+        "exemplo_uso": "Distribuição de prioridades com intensidade"
+      }
+    ],
+    "exemplo_implementacao_frontend": {
+      "html": "<canvas id=\"meuGrafico\" width=\"400\" height=\"200\"></canvas>",
+      "javascript": "const ctx = document.getElementById('meuGrafico').getContext('2d');\n\n// Buscar dados da API\nfetch('http://localhost:5004/api/dashboard/assuntos/contratos_ativos_por_mes')\n  .then(response => response.json())\n  .then(result => {\n    const chartData = result.data;\n    \n    new Chart(ctx, {\n      type: 'line',\n      data: {\n        labels: chartData.labels,\n        datasets: [{\n          label: chartData.label,\n          data: chartData.data,\n          borderColor: '#3b82f6',\n          backgroundColor: 'rgba(59, 130, 246, 0.1)',\n          tension: 0.4\n        }]\n      },\n      options: {\n        responsive: true,\n        plugins: {\n          legend: {\n            display: true,\n            position: 'top'\n          },\n          tooltip: {\n            mode: 'index',\n            intersect: false\n          }\n        },\n        scales: {\n          y: {\n            beginAtZero: true\n          }\n        }\n      }\n    });\n  });"
+    }
+  },
+
+  "casos_uso_praticos": [
+    {
+      "nome": "Dashboard Executivo",
+      "descricao": "Visão geral para tomada de decisão",
+      "graficos_recomendados": [
+        "contratos_ativos_por_mes",
+        "receita_por_servico",
+        "chamados_por_status",
+        "satisfacao_atendimento",
+        "taxa_renovacao_contratos"
+      ]
+    },
+    {
+      "nome": "Dashboard de Vendas",
+      "descricao": "Foco em conversão e pipeline",
+      "graficos_recomendados": [
+        "distribuicao_prioridade",
+        "taxa_conversao_vendas",
+        "leads_recuperadas",
+        "origem_leads",
+        "distribuicao_por_vendedor"
+      ]
+    },
+    {
+      "nome": "Dashboard de Suporte",
+      "descricao": "Monitoramento de atendimento",
+      "graficos_recomendados": [
+        "chamados_abertos_por_mes",
+        "tempo_medio_atendimento",
+        "chamados_por_tecnico",
+        "chamados_sla_cumprido",
+        "satisfacao_atendimento"
+      ]
+    },
+    {
+      "nome": "Dashboard Financeiro",
+      "descricao": "Análise de receita e inadimplência",
+      "graficos_recomendados": [
+        "valor_medio_contratos",
+        "receita_por_servico",
+        "contratos_inadimplentes",
+        "impacto_financeiro_alteracoes",
+        "distribuicao_dia_vencimento"
+      ]
+    },
+    {
+      "nome": "Dashboard de Retenção",
+      "descricao": "Reduzir churn e cancelamentos",
+      "graficos_recomendados": [
+        "contratos_cancelados_por_mes",
+        "duracao_media_contratos",
+        "motivos_alteracao_plano",
+        "satisfacao_cliente",
+        "reincidencia_chamados"
+      ]
+    }
+  ],
+
+  "status": {
+    "sistema_completo": true,
+    "tabelas_integradas": 11,
+    "assuntos_disponiveis": 220,
+    "categorias_ativas": 25,
+    "grafico_tipos": 6,
+    "endpoints_funcionais": 14,
+    "integracao_chartjs": "ready",
+    "ambiente": "produção",
+    "ultima_atualizacao": "2026-02-17T00:00:00Z"
+  },
+
+  "proximos_passos": [
+    "Desenvolver frontend em React/Vue/Angular consumindo a API",
+    "Implementar sistema de cache para queries complexas",
+    "Adicionar filtros de data personalizados nos gráficos",
+    "Criar sistema de alertas baseado em thresholds",
+    "Implementar exportação de gráficos em PDF/PNG",
+    "Adicionar comparação de períodos (YoY, MoM)",
+    "Implementar dashboard em tempo real com WebSocket",
+    "Criar sistema de permissões para visualização de gráficos"
+  ]
+}
