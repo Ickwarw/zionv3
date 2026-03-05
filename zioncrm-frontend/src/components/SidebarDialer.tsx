@@ -1,6 +1,5 @@
-
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { X, RotateCcw, User, Phone, PhoneOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Phone, PhoneOff, PhoneOutgoing, RotateCcw, User, Wifi, WifiOff, X } from 'lucide-react';
 import JsSIP from 'jssip';
 import { configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
@@ -8,12 +7,10 @@ import { showErrorAlert } from './ui/alert-dialog-error';
 import { showWarningAlert } from './ui/alert-dialog-warning';
 import SocketService from '@/services/SocketService';
 
-
 interface SidebarDialerProps {
   isVisible: boolean;
   onClose: () => void;
 }
-
 
 const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -23,15 +20,18 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [isSipReady, setIsSipReady] = useState(false);
   const [ua, setUa] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
-  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-  const callStartRef = useRef<number | null>(null);
   const [sipSettings, setSipSettings] = useState({
     server: '',
-    port: '7443',
+    port: '8088',
     wsPath: '/ws',
     extension: '',
     password: ''
   });
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const callStartRef = useRef<number | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
 
   const sipDomain = useMemo(() => {
     const raw = sipSettings.server || '';
@@ -47,53 +47,53 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     ['*', '0', '#']
   ];
 
-  const handleNumberClick = (num: string) => {
-    setPhoneNumber(prev => prev + num);
-  };
-
-  const handleClear = () => {
-    setPhoneNumber('');
-  };
-
-  const normalizePhoneNumber = (value: string) => {
-    return value.replace(/\s+/g, '').trim();
-  };
+  const normalizePhoneNumber = (value: string) => value.replace(/\s+/g, '').trim();
 
   const getWsUrl = (server: string, port: string, wsPath: string) => {
     const raw = (server || '').trim();
-    if (!raw) {
-      return '';
-    }
+    if (!raw) return '';
 
-    if (/^wss?:\/\//i.test(raw) || /^https?:\/\//i.test(raw)) {
-      return raw.replace(/^http/i, 'ws');
-    }
+    if (/^wss?:\/\//i.test(raw)) return raw;
+    if (/^https?:\/\//i.test(raw)) return raw.replace(/^http/i, 'ws');
 
-    const serverPath = raw.includes('/') ? raw.slice(raw.indexOf('/')) : '';
-    const hostPortRaw = raw.includes('/') ? raw.slice(0, raw.indexOf('/')) : raw;
-    const hasPort = hostPortRaw.includes(':');
-    const hostPort = hasPort ? hostPortRaw : `${hostPortRaw}:${port || '7443'}`;
+    const hostPart = raw.includes('/') ? raw.slice(0, raw.indexOf('/')) : raw;
+    const pathFromServer = raw.includes('/') ? raw.slice(raw.indexOf('/')) : '';
+    const hostWithPort = hostPart.includes(':') ? hostPart : `${hostPart}:${port || '8088'}`;
 
-    let normalizedPath = (wsPath || '').trim();
-    if (!normalizedPath) {
-      normalizedPath = serverPath || '/ws';
-    }
-    if (!normalizedPath.startsWith('/')) {
-      normalizedPath = `/${normalizedPath}`;
-    }
+    let path = (wsPath || '').trim() || pathFromServer || '/ws';
+    if (!path.startsWith('/')) path = `/${path}`;
 
-    return `wss://${hostPort}${normalizedPath}`;
+    return `ws://${hostWithPort}${path}`;
   };
 
   const getDialDestination = (value: string) => {
     const target = normalizePhoneNumber(value);
-    if (target.startsWith('sip:')) {
-      return target;
-    }
-    if (target.includes('@')) {
-      return `sip:${target}`;
-    }
+    if (target.startsWith('sip:')) return target;
+    if (target.includes('@')) return `sip:${target}`;
     return `sip:${target}@${sipDomain}`;
+  };
+
+  const getCallStatusStyle = () => {
+    switch (callStatus) {
+      case 'connected':
+        return { label: 'Em ligação', icon: CheckCircle2, cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' };
+      case 'ringing':
+      case 'initiating':
+        return { label: 'Chamando', icon: PhoneOutgoing, cls: 'bg-amber-500/20 text-amber-300 border border-amber-400/40' };
+      case 'failed':
+        return { label: 'Falhou', icon: AlertTriangle, cls: 'bg-red-500/20 text-red-300 border border-red-400/40' };
+      case 'completed':
+        return { label: 'Finalizada', icon: CheckCircle2, cls: 'bg-slate-500/20 text-slate-200 border border-slate-400/40' };
+      default:
+        return { label: 'Inativa', icon: Phone, cls: 'bg-slate-500/20 text-slate-200 border border-slate-400/40' };
+    }
+  };
+
+  const getSipStatusStyle = () => {
+    if (isSipReady) {
+      return { label: 'SIP conectado', icon: Wifi, cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' };
+    }
+    return { label: 'SIP desconectado', icon: WifiOff, cls: 'bg-red-500/20 text-red-300 border border-red-400/40' };
   };
 
   const loadSipSettings = async () => {
@@ -114,12 +114,12 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         extensionNumber = extResponse?.data?.extension_number || '';
         extensionPassword = extResponse?.data?.password || '';
       } catch {
-        // usuário sem extensão cadastrada
+        // usuario sem extensao cadastrada
       }
 
       setSipSettings({
         server: extensionServer || confMap['voip.server'] || '',
-        port: confMap['voip.port'] || '7443',
+        port: confMap['voip.port'] || '8088',
         wsPath: confMap['voip.ws_path'] || '/ws',
         extension: extensionNumber || confMap['voip.user'] || '',
         password: extensionPassword || confMap['voip.pass'] || ''
@@ -129,18 +129,63 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     }
   };
 
-  const handleCall = async () => {
-    if (!phoneNumber || isSubmitting) {
-      return;
+  const cleanupRemoteAudio = () => {
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.getTracks().forEach((track) => track.stop());
+      remoteStreamRef.current = null;
     }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = null;
+    }
+  };
+
+  const attachRemoteAudio = (session: any) => {
+    if (!session?.connection || !remoteAudioRef.current) return;
+
+    const pc = session.connection;
+    const remoteStream = new MediaStream();
+    remoteStreamRef.current = remoteStream;
+    remoteAudioRef.current.srcObject = remoteStream;
+
+    const playRemoteAudio = () => {
+      remoteAudioRef.current?.play().catch(() => {
+        // navegador pode bloquear autoplay sem gesto adicional
+      });
+    };
+
+    const onTrack = (event: RTCTrackEvent) => {
+      if (event.streams && event.streams[0]) {
+        event.streams[0].getAudioTracks().forEach((track) => remoteStream.addTrack(track));
+      } else if (event.track) {
+        remoteStream.addTrack(event.track);
+      }
+      playRemoteAudio();
+    };
+
+    pc.addEventListener('track', onTrack);
+    session.on('ended', () => {
+      pc.removeEventListener('track', onTrack);
+      cleanupRemoteAudio();
+    });
+    session.on('failed', () => {
+      pc.removeEventListener('track', onTrack);
+      cleanupRemoteAudio();
+    });
+  };
+
+  const handleCall = async () => {
+    if (!phoneNumber || isSubmitting) return;
+
     if (!ua || !isSipReady) {
       showWarningAlert('SIP não conectado', 'Verifique as configurações VoIP e a conexão com o servidor SIP.', null);
       return;
     }
+
     if (!sipDomain) {
       showWarningAlert('Domínio SIP inválido', 'Configure corretamente o servidor SIP.', null);
       return;
     }
+
     if (activeSession) {
       showWarningAlert('Ligação em andamento', 'Finalize a ligação atual antes de iniciar outra.', null);
       return;
@@ -209,6 +254,8 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         eventHandlers,
         mediaConstraints: { audio: true, video: false }
       });
+
+      attachRemoteAudio(session);
       setActiveSession(session);
     } catch (error) {
       showErrorAlert('Não foi possível iniciar a ligação', formatAxiosError(error));
@@ -218,9 +265,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   };
 
   const handleHangup = async () => {
-    if (isSubmitting) {
-      return;
-    }
+    if (isSubmitting) return;
 
     if (activeSession) {
       activeSession.terminate();
@@ -239,6 +284,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setCallStatus(call?.status ?? 'completed');
       setCurrentCallId(null);
       callStartRef.current = null;
+      cleanupRemoteAudio();
     } catch (error) {
       showErrorAlert('Não foi possível encerrar a ligação', formatAxiosError(error));
     } finally {
@@ -246,24 +292,24 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     }
   };
 
-  const handleBackspace = () => {
-    setPhoneNumber(prev => prev.slice(0, -1));
-  };
-
   useEffect(() => {
     loadSipSettings();
   }, []);
 
   useEffect(() => {
-    if (!isVisible) {
-      return;
-    }
+    if (!isVisible) return;
+
     if (!sipSettings.server || !sipSettings.extension || !sipSettings.password) {
       setIsSipReady(false);
       return;
     }
 
     const wsUrl = getWsUrl(sipSettings.server, sipSettings.port, sipSettings.wsPath);
+    if (!wsUrl) {
+      setIsSipReady(false);
+      return;
+    }
+
     const socket = new JsSIP.WebSocketInterface(wsUrl);
     const sipUri = `sip:${sipSettings.extension}@${sipDomain}`;
     const userAgent = new JsSIP.UA({
@@ -290,6 +336,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setIsSipReady(false);
       console.error('WebSocket SIP desconectado:', event?.cause || event);
     });
+
     userAgent.start();
     setUa(userAgent);
 
@@ -297,22 +344,20 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setIsSipReady(false);
       setUa(null);
       setActiveSession(null);
+      cleanupRemoteAudio();
       userAgent.stop();
     };
   }, [isVisible, sipDomain, sipSettings.extension, sipSettings.password, sipSettings.port, sipSettings.server, sipSettings.wsPath]);
 
   useEffect(() => {
-    if (!storedUser?.id) {
-      return;
-    }
+    if (!storedUser?.id) return;
 
     SocketService.connect();
     SocketService.socket?.emit('register_for_calls', { user_id: storedUser.id });
 
     const onCallStatus = (payload: any) => {
-      if (!payload?.call_id) {
-        return;
-      }
+      if (!payload?.call_id) return;
+
       if (!currentCallId || payload.call_id === currentCallId) {
         setCurrentCallId(payload.call_id);
       }
@@ -330,12 +375,18 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
   if (!isVisible) return null;
 
+  const callStatusStyle = getCallStatusStyle();
+  const sipStatusStyle = getSipStatusStyle();
+  const CallStatusIcon = callStatusStyle.icon;
+  const SipStatusIcon = sipStatusStyle.icon;
+
   return (
     <div className="bg-slate-800/50 rounded-lg p-6 max-w-sm mx-auto">
-      {/* Header */}
+      <audio ref={remoteAudioRef} autoPlay playsInline />
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <div className={`w-3 h-3 rounded-full ${isSipReady ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
           <span className="text-white font-semibold">Discador</span>
         </div>
         <button onClick={onClose} className="text-purple-400 hover:text-white">
@@ -343,24 +394,17 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         </button>
       </div>
 
-      {/* Flag and Number Display */}
       <div className="flex items-center space-x-2 mb-6">
         <div className="w-6 h-4 bg-green-500 rounded-sm flex items-center justify-center">
           <span className="text-xs">🇧🇷</span>
         </div>
         <div className="flex-1 bg-slate-700 rounded px-3 py-2 min-h-[40px] flex items-center">
-          <span className="text-white font-mono text-lg">
-            {phoneNumber || ''}
-          </span>
+          <span className="text-white font-mono text-lg">{phoneNumber || ''}</span>
         </div>
       </div>
 
-      {/* Action Buttons - 3 buttons only */}
       <div className="flex justify-center space-x-8 mb-6">
-        <button 
-          onClick={handleClear}
-          className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-        >
+        <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
           <RotateCcw size={20} className="text-purple-400" />
         </button>
         <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
@@ -371,12 +415,11 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         </button>
       </div>
 
-      {/* Dialpad */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {dialpadNumbers.flat().map((num) => (
           <button
             key={num}
-            onClick={() => handleNumberClick(num)}
+            onClick={() => setPhoneNumber((prev) => prev + num)}
             className="h-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xl font-semibold transition-colors"
           >
             {num}
@@ -384,36 +427,39 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         ))}
       </div>
 
-      {/* Bottom Action Buttons - 3 buttons only */}
       <div className="flex justify-center space-x-8 mb-4">
         <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
           <User size={20} className="text-purple-400" />
         </button>
-        <button 
+        <button
           onClick={handleCall}
           disabled={isSubmitting}
           className="p-4 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
         >
           <Phone size={24} className="text-white" />
         </button>
-        <button 
-          onClick={handleBackspace}
+        <button
+          onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))}
           className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
         >
           <X size={20} className="text-purple-400" />
         </button>
       </div>
 
-      {/* Bottom Text */}
-      <p className="text-center text-purple-400 text-xs">
-        Não utilize o discador para realizar chamadas de emergência.
-      </p>
-      <p className="text-center text-slate-300 text-xs mt-2">
-        {callStatus ? `Status da chamada: ${callStatus}` : 'Status da chamada: inativa'}
-      </p>
-      <p className="text-center text-slate-300 text-xs mt-1">
-        SIP: {isSipReady ? 'conectado' : 'desconectado'}
-      </p>
+      <p className="text-center text-purple-400 text-xs">Não utilize o discador para realizar chamadas de emergência.</p>
+
+      <div className="mt-3 space-y-2">
+        <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${callStatusStyle.cls}`}>
+          <CallStatusIcon size={14} />
+          <span>Chamada: {callStatusStyle.label}</span>
+        </div>
+
+        <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${sipStatusStyle.cls}`}>
+          <SipStatusIcon size={14} />
+          <span>{sipStatusStyle.label}</span>
+        </div>
+      </div>
+
       <div className="flex justify-center mt-3">
         <button
           onClick={handleHangup}
