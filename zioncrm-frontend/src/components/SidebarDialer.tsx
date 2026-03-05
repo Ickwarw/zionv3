@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Phone, PhoneOff, PhoneOutgoing, RotateCcw, User, Wifi, WifiOff, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RotateCcw, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
 import JsSIP from 'jssip';
 import { configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
@@ -375,6 +375,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
   if (!isVisible) return null;
 
+  const hasCallInProgress = Boolean(activeSession || currentCallId);
   const callStatusStyle = getCallStatusStyle();
   const sipStatusStyle = getSipStatusStyle();
   const CallStatusIcon = callStatusStyle.icon;
@@ -404,14 +405,17 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       </div>
 
       <div className="flex justify-center space-x-8 mb-6">
-        <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
-          <RotateCcw size={20} className="text-purple-400" />
+        <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
+          title="Limpar número discado">
+          <Eraser size={20} className="text-purple-400" />
         </button>
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
+        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
+          title="Visualizar contatos">
           <User size={20} className="text-purple-400" />
         </button>
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
-          <User size={20} className="text-purple-400" />
+        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
+          title="Transferir chamada">
+          <PhoneForwarded size={20} className="text-purple-400" />
         </button>
       </div>
 
@@ -428,21 +432,34 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       </div>
 
       <div className="flex justify-center space-x-8 mb-4">
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
-          <User size={20} className="text-purple-400" />
+        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
+          title="Adicionar contato">
+          <UserPlus size={20} className="text-purple-400" />
         </button>
-        <button
-          onClick={handleCall}
-          disabled={isSubmitting}
-          className="p-4 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-        >
-          <Phone size={24} className="text-white" />
-        </button>
+        {hasCallInProgress ? (
+          <button
+            onClick={handleHangup}
+            disabled={isSubmitting}
+            className="p-4 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+            title="Encerrar ligação"
+          >
+            <PhoneOff size={24} className="text-white" />
+          </button>
+        ) : (
+          <button
+            onClick={handleCall}
+            disabled={isSubmitting}
+            className="p-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+            title="Iniciar/atender ligação"
+          >
+            <Phone size={24} className="text-white" />
+          </button>
+        )}
         <button
           onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))}
           className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
         >
-          <X size={20} className="text-purple-400" />
+          <Delete size={20} className="text-purple-400" />
         </button>
       </div>
 
@@ -460,16 +477,6 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         </div>
       </div>
 
-      <div className="flex justify-center mt-3">
-        <button
-          onClick={handleHangup}
-          disabled={!currentCallId || isSubmitting}
-          className="p-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-          title="Encerrar ligação"
-        >
-          <PhoneOff size={18} className="text-white" />
-        </button>
-      </div>
     </div>
   );
 };
