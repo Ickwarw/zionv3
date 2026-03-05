@@ -46,6 +46,15 @@ def _gateway_post(path: str, payload: dict):
         logger.exception('VoIP gateway request failed')
         return None, str(exc)
 
+
+def _parse_iso_datetime(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
 # Get user's VoIP extension
 @voip_bp.route('/extension', methods=['GET'])
 @jwt_required()
@@ -338,11 +347,61 @@ def delete_voip_contact(contact_id):
 
 # WebSocket event handlers for VoIP
 @socketio.on('register_for_calls')
-@jwt_required()
-def register_for_calls():
-    current_user_id = get_jwt_identity()
-    room = f'user_{current_user_id}'
+def register_for_calls(data=None):
+    if not data or 'user_id' not in data:
+        return
+
+    room = f"user_{data['user_id']}"
     join_room(room)
+
+
+@voip_bp.route('/call/status', methods=['POST'])
+def update_call_status():
+    data = request.get_json() or {}
+    call_id = data.get('call_id') or data.get('call_uuid')
+    status = data.get('status')
+
+    if not call_id or not status:
+        return jsonify({'message': 'Missing call_id/call_uuid or status'}), 400
+
+    call = CallLog.query.filter_by(call_id=str(call_id)).first()
+    if not call:
+        return jsonify({'message': 'Call not found'}), 404
+
+    call.status = status
+
+    if data.get('phone_number'):
+        call.phone_number = _normalize_phone_number(data['phone_number']) or call.phone_number
+
+    parsed_connect_time = _parse_iso_datetime(data.get('connect_time'))
+    if parsed_connect_time and not call.connect_time:
+        call.connect_time = parsed_connect_time
+    elif status == 'connected' and not call.connect_time:
+        call.connect_time = datetime.utcnow()
+
+    parsed_end_time = _parse_iso_datetime(data.get('end_time'))
+    if parsed_end_time:
+        call.end_time = parsed_end_time
+    elif status in ('completed', 'failed', 'canceled', 'cancelled') and not call.end_time:
+        call.end_time = datetime.utcnow()
+
+    if data.get('duration') is not None:
+        call.duration = int(data['duration'])
+    elif call.connect_time and call.end_time and call.duration is None:
+        call.duration = int((call.end_time - call.connect_time).total_seconds())
+
+    db.session.commit()
+
+    socketio.emit('call_status', {
+        'call_id': call.call_id,
+        'status': call.status,
+        'phone_number': call.phone_number,
+        'connect_time': call.connect_time.isoformat() if call.connect_time else None,
+        'end_time': call.end_time.isoformat() if call.end_time else None,
+        'duration': call.duration
+    }, room=f'user_{call.user_id}')
+
+    return jsonify({'message': 'Call status updated', 'call': call.to_dict()}), 200
 
 # Handle incoming call (webhook from SIP provider)
 @voip_bp.route('/incoming-call', methods=['POST'])

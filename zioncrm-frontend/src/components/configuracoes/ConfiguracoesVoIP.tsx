@@ -10,6 +10,7 @@ import { showErrorAlert } from '../ui/alert-dialog-error';
 import { formatAxiosError } from '../ui/formatResponseError';
 import { confService } from './service/confService';
 import { showSuccessAlert } from '../ui/alert-dialog-success';
+import { voipService } from '@/services/api';
 
 const ConfiguracoesVoIP = () => {
   const [configList, setConfigList]  = useState([]);
@@ -41,7 +42,26 @@ const ConfiguracoesVoIP = () => {
     handleSaveConfig(senhaSipId, 'voip.pass', formData.senhaSip);
     handleSaveConfig(codecAudioId, 'voip.codec', formData.codecAudio);
     handleSaveConfig(qualidadeAudioId, 'voip.quality', formData.qualidadeAudio);
-    showSuccessAlert("Configurações Salvas", "Configurações salvas com sucesso",null);
+    saveVoipExtension();
+  };
+
+  const saveVoipExtension = async () => {
+    if (!formData.usuarioSip || String(formData.usuarioSip).trim() === '') {
+      showWarningAlert('Ramal obrigatório', 'Informe o Usuário SIP/Ramal para salvar a extensão.', null);
+      return;
+    }
+
+    try {
+      await voipService.createExtension({
+        extension_number: formData.usuarioSip,
+        password: formData.senhaSip,
+        display_name: formData.usuarioSip,
+        sip_server: formData.servidorSip
+      });
+      showSuccessAlert("Configurações Salvas", "Configurações salvas com sucesso",null);
+    } catch (error) {
+      showErrorAlert('Erro ao salvar extensão VoIP', formatAxiosError(error));
+    }
   };
 
   const fullFillConf = async (confList) => {
@@ -100,9 +120,27 @@ const ConfiguracoesVoIP = () => {
           showErrorAlert('Erro ao carregar as configurações', formatAxiosError(error));
       }
     }
+
+  const getVoipExtension = async () => {
+    try {
+      const response = await voipService.getExtension();
+      if (response.status === 200 && response.data) {
+        const extension = response.data;
+        setFormData((prev) => ({
+          ...prev,
+          servidorSip: extension.sip_server || prev.servidorSip,
+          usuarioSip: extension.extension_number || prev.usuarioSip,
+          senhaSip: prev.senhaSip
+        }));
+      }
+    } catch {
+      // extensão ainda não cadastrada para o usuário
+    }
+  };
   
     useEffect(() => {
       getConf();
+      getVoipExtension();
     }, []);
 
   return (

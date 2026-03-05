@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, RotateCcw, User, Phone, PhoneOff } from 'lucide-react';
 import { voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
 import { showErrorAlert } from './ui/alert-dialog-error';
 import { showWarningAlert } from './ui/alert-dialog-warning';
+import SocketService from '@/services/SocketService';
 
 
 interface SidebarDialerProps {
@@ -18,6 +19,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 
   const dialpadNumbers = [
     ['1', '2', '3'],
@@ -74,6 +76,31 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const handleBackspace = () => {
     setPhoneNumber(prev => prev.slice(0, -1));
   };
+
+  useEffect(() => {
+    if (!storedUser?.id) {
+      return;
+    }
+
+    SocketService.connect();
+    SocketService.socket?.emit('register_for_calls', { user_id: storedUser.id });
+
+    const onCallStatus = (payload: any) => {
+      if (!payload?.call_id) {
+        return;
+      }
+      setCurrentCallId(payload.call_id);
+      setCallStatus(payload.status || null);
+      if (payload.status === 'completed' || payload.status === 'failed') {
+        setCurrentCallId(null);
+      }
+    };
+
+    SocketService.on('call_status', onCallStatus);
+    return () => {
+      SocketService.off('call_status', onCallStatus);
+    };
+  }, [storedUser?.id]);
 
   if (!isVisible) return null;
 
@@ -138,7 +165,8 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         </button>
         <button 
           onClick={handleCall}
-          className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors"
+          disabled={isSubmitting}
+          className="p-4 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
         >
           <Phone size={24} className="text-white" />
         </button>
