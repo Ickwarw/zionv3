@@ -160,59 +160,59 @@ export const tasksService = {
 };
 
 // Serviços de leads
-export const leadsService = {
-  getLeads: (params?: any) => {
-    return api.get('/leads/', { params });
-  },
+// export const leadsService = {
+//   getLeads: (params?: any) => {
+//     return api.get('/leads/', { params });
+//   },
   
-  getLead: (id: number) => {
-    return api.get(`/leads/${id}`);
-  },
+//   getLead: (id: number) => {
+//     return api.get(`/leads/${id}`);
+//   },
   
-  createLead: (leadData: any) => {
-    return api.post('/leads/', leadData);
-  },
+//   createLead: (leadData: any) => {
+//     return api.post('/leads/', leadData);
+//   },
   
-  updateLead: (id: number, leadData: any) => {
-    return api.put(`/leads/${id}`, leadData);
-  },
+//   updateLead: (id: number, leadData: any) => {
+//     return api.put(`/leads/${id}`, leadData);
+//   },
   
-  deleteLead: (id: number) => {
-    return api.delete(`/leads/${id}`);
-  },
+//   deleteLead: (id: number) => {
+//     return api.delete(`/leads/${id}`);
+//   },
   
-  getLeadActivities: (leadId: number) => {
-    return api.get(`/leads/${leadId}/activities`);
-  },
+//   getLeadActivities: (leadId: number) => {
+//     return api.get(`/leads/${leadId}/activities`);
+//   },
   
-  addLeadActivity: (leadId: number, activityType: string, description: string) => {
-    return api.post(`/leads/${leadId}/activities`, { activity_type: activityType, description });
-  },
+//   addLeadActivity: (leadId: number, activityType: string, description: string) => {
+//     return api.post(`/leads/${leadId}/activities`, { activity_type: activityType, description });
+//   },
 
-   getLeadDepartments: () => {
-    return api.get('/leads/departments');
-  },
+//    getLeadDepartments: () => {
+//     return api.get('/leads/departments');
+//   },
 
-   getLeadStatuses: () => {
-    return api.get('/leads/statuses');
-  },
+//    getLeadStatuses: () => {
+//     return api.get('/leads/statuses');
+//   },
   
-  getLeadDepartmentStatuses: (depId: number) => {
-    return api.get(`/leads/departments/${depId}/statuses`);
-  },
+//   getLeadDepartmentStatuses: (depId: number) => {
+//     return api.get(`/leads/departments/${depId}/statuses`);
+//   },
   
-  getLeadSources: () => {
-    return api.get('/leads/sources');
-  },
+//   getLeadSources: () => {
+//     return api.get('/leads/sources');
+//   },
 
-  addLeadSources: ( name: string, description: string) => {
-    return api.post('/leads/sources', { name, description });
-  },
+//   addLeadSources: ( name: string, description: string) => {
+//     return api.post('/leads/sources', { name, description });
+//   },
   
-  getLeadStatistics: () => {
-    return api.get('/leads/statistics');
-  }
-};
+//   getLeadStatistics: () => {
+//     return api.get('/leads/statistics');
+//   }
+// };
 
 // Serviços LeadsDashAgent - Sistema completo de gestão de leads
 export const leadsDashAgentService = {
@@ -851,7 +851,7 @@ export const statisticsService = {
   getDashboardStats: () => {
     return Promise.all([
       tasksService.getTaskStatistics(),
-      leadsService.getLeadStatistics(),
+      leadsDashAgentService.getEstatisticasGerais(),
       financialService.getFinancialSummary(),
       productsService.getProductStatistics()
     ]).then(([tasks, leads, financial, products]) => ({

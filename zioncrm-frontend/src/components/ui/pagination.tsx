@@ -37,15 +37,15 @@ PaginationItem.displayName = "PaginationItem"
 type PaginationLinkProps = {
   isActive?: boolean
 } & Pick<ButtonProps, "size"> &
-  React.ComponentProps<"a">
+  React.ComponentProps<"button">
 
 const PaginationLink = ({
   className,
-  isActive,
+  isActive=true,
   size = "icon",
   ...props
 }: PaginationLinkProps) => (
-  <a
+  <button
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
@@ -95,25 +95,47 @@ type PaginationPageProps = {
   isActive?: boolean,
   number: number
 } & Pick<ButtonProps, "size"> &
-  React.ComponentProps<"a">
+  React.ComponentProps<"button">
 
 const PaginationPage = ({
   className,
   number,
+  isActive,
   ...props
-  }: PaginationPageProps) => (
+}: PaginationPageProps) => (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-current={isActive ? "page" : undefined}
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn(
+      "min-w-[40px] font-medium transition-all duration-200",
+      isActive
+        ? "bg-purple-400 text-gray-900 shadow-md scale-105"
+        : "bg-gray-100 hover:bg-accent hover:text-accent-foreground",
+      className
+    )}
     {...props}
-    style={{ color: 'var(--theme-text)',
-            backgroundColor: 'var(--theme-inputback)',
-    }}
   >
     <span>{number}</span>
   </PaginationLink>
 )
+
+// const PaginationPage = ({
+//   className,
+//   number,
+//   ...props
+//   }: PaginationPageProps) => (
+//   <PaginationLink
+//     aria-label="Go to previous page"
+//     size="default"
+//     className={cn("gap-1 pl-2.5", className)}
+//     {...props}
+//     style={{ color: 'var(--theme-text)',
+//             backgroundColor: 'var(--theme-inputback)',
+//     }}
+//   >
+//     <span>{number}</span>
+//   </PaginationLink>
+// )
 PaginationPage.displayName = "PaginationPage"
 
 const PaginationEllipsis = ({

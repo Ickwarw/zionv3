@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { LeadDepartment } from '../types/leads.types';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { withMask } from 'use-mask-input';
@@ -13,12 +12,11 @@ import { showErrorAlert } from '@/components/ui/alert-dialog-error';
 
 interface NovoLeadModalProps {
   isOpen: boolean;
-  departmentList: LeadDepartment[];
   onClose: () => void;
   onSave: () => void;
 }
 
-const NewLeadModal = ({ departmentList, isOpen, onClose, onSave }: NovoLeadModalProps) => {
+const NewLeadModal = ({ isOpen, onClose, onSave }: NovoLeadModalProps) => {
   const [formData, setFormData] = useState({
     // Campos obrigatórios
     razao: '',

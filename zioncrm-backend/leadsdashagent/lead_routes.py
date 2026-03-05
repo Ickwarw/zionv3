@@ -8,15 +8,18 @@ from . import lead_bp
 import psycopg2
 import psycopg2.extras
 from datetime import datetime
+from config import Config
 
 # Configuração do PostgreSQL
-POSTGRES_CONFIG = {
-    "host": "45.160.180.34",
-    "port": 5432,
-    "user": "zioncrm",
-    "password": "kN98upt4gJ3G",
-    "dbname": "zioncrm",
-}
+# POSTGRES_CONFIG = {
+#     "host": "45.160.180.34",
+#     "port": 5432,
+#     "user": "zioncrm",
+#     "password": "kN98upt4gJ3G",
+#     "dbname": "zioncrm",
+# }
+
+POSTGRES_CONFIG = Config().get_db_config()
 
 
 def get_db_connection():
@@ -95,11 +98,45 @@ def get_leads():
         # Busca dados paginados
         params.extend([per_page, offset])
         query = f"""
-            SELECT * FROM lead
+            SELECT
+                id,
+                razao,
+                fantasia,
+                cnpj_cpf,
+                ie_identidade,
+                tipo_pessoa,
+                contato,
+                email,
+                fone,
+                telefone_celular,
+                telefone_comercial,
+                endereco,
+                numero,
+                complemento,
+                bairro,
+                cidade,
+                uf,
+                cep,
+                referencia,
+                data_nascimento,
+                estado_civil,
+                sexo,
+                prioridade,
+                origem,
+                obs,
+                ativo,
+                data_cadastro
+            FROM lead
             {where_sql}
             ORDER BY data_cadastro DESC
             LIMIT %s OFFSET %s
         """
+        # query = f"""
+        #     SELECT * FROM lead
+        #     {where_sql}
+        #     ORDER BY data_cadastro DESC
+        #     LIMIT %s OFFSET %s
+        # """
         
         cursor.execute(query, params)
         leads = cursor.fetchall()
@@ -127,6 +164,7 @@ def get_leads():
         })
         
     except Exception as e:
+        print(str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
 

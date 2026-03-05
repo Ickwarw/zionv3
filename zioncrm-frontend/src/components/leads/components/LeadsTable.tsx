@@ -6,7 +6,7 @@ import Tag from '@/components/ui/tag';
 import FormateCurrency from '@/components/ui/FormateCurrency';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { leadsService } from '@/services/api';
+import { leadsDashAgentService } from '@/services/api';
 import { showQuestionAlert } from '@/components/ui/alert-dialog-question';
 import { showWarningAlert } from '@/components/ui/alert-dialog-warning';
 import { showErrorAlert } from '@/components/ui/alert-dialog-error';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 
 interface LeadsTableProps {
   leads: Lead[];
-  activeTab: LeadDepartment;
+  activeTab: string;
   onLeadClick: (lead: Lead) => void;
   onLeadEditClick: (lead: Lead) => void;
   onLeadUpdate: () => void;
@@ -25,10 +25,10 @@ interface LeadsTableProps {
   totalPages: number;
   isJuliaActive: boolean;
   totalItens: number;
-  onLeadActivityClick: (lead: Lead) => void;
+  // onLeadActivityClick: (lead: Lead) => void;
 }
 
-const LeadsTable = ({ leads, activeTab, onLeadClick, onLeadEditClick, isJuliaActive, onLeadUpdate, setCurrentPage, currentPage, totalPages, totalItens, onLeadActivityClick }: LeadsTableProps) => {
+const LeadsTable = ({ leads, activeTab, onLeadClick, onLeadEditClick, isJuliaActive, onLeadUpdate, setCurrentPage, currentPage, totalPages, totalItens }: LeadsTableProps) => {
 
   if (leads.length === 0) {
     return (
@@ -37,7 +37,7 @@ const LeadsTable = ({ leads, activeTab, onLeadClick, onLeadEditClick, isJuliaAct
         <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum lead encontrado</h3>
         <p className="text-gray-600 mb-6">
           {activeTab ? (
-            <span>Não há leads na categoria {activeTab?.name} no momento.</span>
+            <span>Não há leads na categoria {activeTab} no momento.</span>
           ) : <span>Não há leads no momento.</span>
           }
         </p>
@@ -56,7 +56,7 @@ const LeadsTable = ({ leads, activeTab, onLeadClick, onLeadEditClick, isJuliaAct
   const closeDeleteYes = async (leadId) => {
     console.log("closeDeleteYes");
       try {
-      const response = await leadsService.deleteLead(leadId);
+      const response = await leadsDashAgentService.deleteLead(leadId);
       if (response.status == 200) {
         onLeadUpdate();
         } else if (response.status == 400) {
@@ -125,14 +125,14 @@ const LeadsTable = ({ leads, activeTab, onLeadClick, onLeadEditClick, isJuliaAct
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button 
+                      {/* <Button 
                         size="sm" 
                         title="Visualizar Atividades"
                         onClick={(e) => onLeadActivityClick(lead)}
                         className={isJuliaActive ? 'cursor-help' : ''}
                       >
                         <Activity size={16} />
-                      </Button>
+                      </Button> */}
                       <Button 
                         size="sm" 
                         title="Visualizar Detalhes"

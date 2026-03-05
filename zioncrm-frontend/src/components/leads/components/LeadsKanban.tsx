@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { User, Phone, Mail, DollarSign, MapPin, Info, Activity } from 'lucide-react';
 import { Lead, LeadStatus } from '../types/leads.types';
-import { leadsService } from '@/services/api';
+import { leadsDashAgentService } from '@/services/api';
 import { showWarningAlert } from '@/components/ui/alert-dialog-warning';
 import { showErrorAlert } from '@/components/ui/alert-dialog-error';
 import { formatAxiosError } from '@/components/ui/formatResponseError';
@@ -24,9 +24,53 @@ interface LeadsKanbanProps {
   currentPage: number;
   totalPages: number;
   totalItens: number;
-  statusList: LeadStatus[];
-  onLeadActivityClick: (lead: Lead) => void;
+  // statusList: LeadStatus[];
+  // onLeadActivityClick: (lead: Lead) => void;
 }
+
+
+const statusColumns = [
+  { id: 'NovaLead', title: 'Novos Leads', color: 'bg-blue-50 border-blue-200', headerColor: 'bg-blue-500' },
+  { id: 'Ruim', title: 'Ruim', color: 'bg-yellow-50 border-yellow-200', headerColor: 'bg-yellow-500' },
+  { id: 'Fria', title: 'Fria', color: 'bg-gray-50 border-gray-200', headerColor: 'bg-gray-500' },
+  { id: 'Morna', title: 'Morna', color: 'bg-green-50 border-green-200', headerColor: 'bg-green-500' },
+  { id: 'Quente', title: 'Quente', color: 'bg-orange-50 border-orange-200', headerColor: 'bg-orange-500' },
+  { id: 'MuitoQuente', title: 'Muito Quente', color: 'bg-purple-50 border-purple-200', headerColor: 'bg-purple-500' },
+  { id: 'Queimando', title: 'Queimando', color: 'bg-red-50 border-red-200', headerColor: 'bg-red-500' }
+];
+
+const getVisiblePages = (currentPage: number, totalPages: number) => {
+  const delta = 2; // páginas ao redor da atual
+  const range: (number | string)[] = [];
+  const rangeWithDots: (number | string)[] = [];
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - delta && i <= currentPage + delta)
+    ) {
+      range.push(i);
+    }
+  }
+
+  let last = 0;
+
+  for (let i of range) {
+    if (last && typeof i === "number") {
+      if (i - last === 2) {
+        rangeWithDots.push(last + 1);
+      } else if (i - last > 2) {
+        rangeWithDots.push("...");
+      }
+    }
+
+    rangeWithDots.push(i);
+    if (typeof i === "number") last = i;
+  }
+
+  return rangeWithDots;
+};
 
 const LeadsKanban: React.FC<LeadsKanbanProps> = ({ 
   leads, 
@@ -38,8 +82,8 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
   currentPage,
   totalPages,
   totalItens,
-  statusList,
-  onLeadActivityClick
+  // statusList,
+  // onLeadActivityClick
 }) => {
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
@@ -91,7 +135,7 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
         notes: updatedLead.obs || updatedLead.notes,
         value: updatedLead.value,
       }
-      const response = await leadsService.updateLead(updatedToLead.id, updatedToLead);
+      const response = await leadsDashAgentService.updateLead(updatedToLead.id, updatedToLead);
       if (response.status == 200 || response.status == 201) {
         onStatusChange();
       } else if (response.status == 400) {
@@ -108,8 +152,11 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
   };
 
 
-  const getLeadsByStatus = (status: number) => {
-    return leads.filter(lead => lead.status_id === status);
+  const getLeadsByStatus = (status: string) => {
+    if (leads == null || leads == undefined) {
+      return [];
+    }
+    return leads.filter(lead => lead.prioridade === status);
   };
 
 
@@ -143,7 +190,27 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
             />
           </PaginationItem>
 
-          {Array.from({ length: totalPages }, (_, i) => (
+          {getVisiblePages(currentPage, totalPages).map((page, index) => {
+            if (typeof page !== "number") {
+              return (
+                <PaginationItem key={index}>
+                  <span className="px-2 select-none">...</span>
+                </PaginationItem>
+              );
+            }
+
+            return (
+              <PaginationItem key={index}>
+                <PaginationPage
+                  number={page}
+                  isActive={currentPage === page}
+                  onClick={() => setCurrentPage(page)}
+                />
+              </PaginationItem>
+            );
+          })}
+
+          {/* {Array.from({ length: totalPages }, (_, i) => (
             <PaginationItem key={i}>
               <PaginationPage
                 number={i + 1}
@@ -151,7 +218,7 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
                 onClick={() => setCurrentPage(i + 1)}
               />
             </PaginationItem>
-          ))}
+          ))} */}
 
           <PaginationItem>
             <PaginationNext
@@ -164,12 +231,10 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
       </Pagination>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {statusList.map((column) => (
+          {statusColumns.map((column) => (
             <div key={column.id} className="flex flex-col">
-              <div 
-                style={getColumnHeaderStyle(column.color)} 
-                className='text-white px-4 py-3 rounded-t-xl border-2'>
-                <h3 className="font-semibold text-center">{column.name}</h3>
+              <div className={`${column.headerColor} text-white px-4 py-3 rounded-t-xl`}>
+                <h3 className="font-semibold text-center">{column.title}</h3>
                 <p className="text-center text-sm opacity-90">
                   {getLeadsByStatus(column.id).length} leads
                 </p>
@@ -205,18 +270,18 @@ const LeadsKanban: React.FC<LeadsKanbanProps> = ({
                               <div className='grid grid-cols-2 md:grid-cols-2 gap-2'>
                                 <Button
                                   title="Informações da Lead"
-                                  className='bg-white-500 hover:bg-white-700 text-blue p-1 rounded-full w-4 h-4 flex items-center justify-center'
+                                  className='bg-white-500 hover:bg-white-700 p-1 rounded-full w-4 h-4 flex items-center justify-center'
                                   onClick={() => onLeadClick(lead)}
                                 >
                                   <Info size={"12"}/>
                                 </Button>
-                                <Button
+                                {/* <Button
                                   title="Atividades da Leads"
                                   className='bg-white-500 hover:bg-white-700 text-blue p-1 rounded-full w-4 h-4 flex items-center justify-center'
                                   onClick={() => onLeadActivityClick(lead)}
                                 >
                                   <Activity size={"12"}/>
-                                </Button>
+                                </Button> */}
                               </div>
                             </div>
                             

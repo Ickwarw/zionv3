@@ -7,19 +7,21 @@ import psycopg2
 import psycopg2.extras
 from datetime import datetime
 import json
+from config import Config
 
 # ============================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
 # ============================================
 
-DB_CONFIG = {
-    "host": "45.160.180.34",
-    "port": 5432,
-    "user": "zioncrm",
-    "password": "kN98upt4gJ3G",
-    "dbname": "zioncrm",
-}
+# DB_CONFIG = {
+#     "host": "45.160.180.34",
+#     "port": 5432,
+#     "user": "zioncrm",
+#     "password": "kN98upt4gJ3G",
+#     "dbname": "zioncrm",
+# }
 
+DB_CONFIG = Config().get_db_config()
 
 def get_db_connection():
     """Cria conexão com o banco PostgreSQL"""

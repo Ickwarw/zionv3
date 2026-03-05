@@ -21,7 +21,7 @@ def register_routes(app):
     from leadsdashagent import lead_bp, dashboard_bp, leadattributes_bp, leadinfos_bp, raizen_bp
 
     # Backward compatibility: modules.leads may not exist in some deployments
-    from modules.leads.routes import leads_bp
+    # from modules.leads.routes import leads_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -32,7 +32,7 @@ def register_routes(app):
     app.register_blueprint(voip_bp, url_prefix='/api/voip')
     # app.register_blueprint(statistics_bp, url_prefix='/api/statistics')
     app.register_blueprint(financial_bp, url_prefix='/api/financial')
-    app.register_blueprint(leads_bp, url_prefix='/api/leads')
+    # app.register_blueprint(leads_bp, url_prefix='/api/leads')
     # app.register_blueprint(groups_bp, url_prefix='/api/groups')
     app.register_blueprint(logs_bp, url_prefix='/api/logs')
     app.register_blueprint(products_bp, url_prefix='/api/products')

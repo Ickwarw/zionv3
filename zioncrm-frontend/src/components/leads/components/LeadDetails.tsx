@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { leadsService } from '@/services/api';
+import { leadsDashAgentService } from '@/services/api';
 import { showWarningAlert } from '@/components/ui/alert-dialog-warning';
 import { showErrorAlert } from '@/components/ui/alert-dialog-error';
 import { formatAxiosError } from '@/components/ui/formatResponseError';
@@ -28,16 +28,15 @@ import FormateCurrency from '@/components/ui/FormateCurrency';
 interface LeadDetailsProps {
   lead: Lead;
   editMode: boolean;
-  departmentList: LeadDepartment[];
   onClose: () => void;
   onElementClick: (event: React.MouseEvent, message: string) => void;
   isJuliaActive: boolean;
 }
 
-const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaActive, editMode }: LeadDetailsProps) => {
+const LeadDetails = ({ lead, onClose, onElementClick, isJuliaActive, editMode }: LeadDetailsProps) => {
   const [localLead, setLocalLead] = useState(lead);
   const [isEditing, setIsEditing] = useState(editMode);
-  const [sourceList, setSourceList] = useState([]);
+  // const [sourceList, setSourceList] = useState([]);
   const [statusList, setStatusList] = useState([]);
   const [userList, setUserList] = useState([]);
   const [formData, setFormData] = useState({
@@ -114,7 +113,7 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
   const fetchStatuses = async () => {
     if (formData == null || formData.department_id == null) return;
     try {
-      const response = await leadsService.getLeadDepartmentStatuses(formData.department_id);
+      const response = await leadsDashAgentService.getLeadStats();
       if (response.status == 200 || response.status == 201) {
         setStatusList(response.data.statuses);
       } else if (response.status == 400) {
@@ -130,27 +129,27 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
     }
   };
 
-  const fetchSources = async () => {
-    try {
-      const response = await leadsService.getLeadSources();
-      if (response.status == 200 || response.status == 201) {
-        setSourceList(response.data.sources);
-      } else if (response.status == 400) {
-        if ('message' in response.data) {
-          showWarningAlert("Não foi possível buscar as Origens", response.data.message,null);
-        } else {
-          showWarningAlert("Não foi possível buscaras Origens", response.data,null);
-        }
-      }
-    } catch (error) {
-        console.error('Failed to get sources:', error);
-        showErrorAlert('Erro ao buscar as Origens', formatAxiosError(error));
-    }
-    };
+  // const fetchSources = async () => {
+  //   try {
+  //     const response = await leadsDashAgentService.getLeadSources();
+  //     if (response.status == 200 || response.status == 201) {
+  //       setSourceList(response.data.sources);
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível buscar as Origens", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível buscaras Origens", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //       console.error('Failed to get sources:', error);
+  //       showErrorAlert('Erro ao buscar as Origens', formatAxiosError(error));
+  //   }
+  //   };
   
-  useEffect(() => {
-    fetchSources();
-  }, []);
+  // useEffect(() => {
+  //   fetchSources();
+  // }, []);
 
   useEffect(() => {
       fetchStatuses();
@@ -205,7 +204,7 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
           notes: formData.obs || formData.notes,
           value: formData.value,
         }
-        const response = await leadsService.updateLead(updatedLead.id, updatedLead);
+        const response = await leadsDashAgentService.updateLead(updatedLead.id, updatedLead);
         if (response.status == 200 || response.status == 201) {
           setIsEditing(false);
         } else if (response.status == 400) {
@@ -437,25 +436,14 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
                       <SelectValue placeholder="Selecione o Departamento" />
                     </SelectTrigger>
                     <SelectContent>
-                      {departmentList.map((department) => (
-                        <SelectItem key={department.id} value={department.id.toString()}>
-                          <Tag
-                            backgroundColor={department.color}
-                            name={department.name}
-                          />
-                        </SelectItem>
-                      ))
-                    }
+                      <SelectItem value='marketing'>Marketing</SelectItem>
+                      <SelectItem value='vendas'>Vendas</SelectItem>
+                      <SelectItem value='pos_venda'>Pós Venda</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
                   <p className="p-2 bg-gray-50 rounded min-height-40">
-                    {localLead.department && (
-                      <Tag
-                        backgroundColor={localLead.department.color}
-                        name={localLead.department.name}
-                      />
-                    )}
+                    <span>{localLead.departamento}</span>
                   </p>
                 )}
               </div>
@@ -500,7 +488,7 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
                 )}
               </div>
 
-              <div>
+              {/* <div>
                 <Label
                   onClick={(e) => onElementClick(e, "Origem")}
                   className={isJuliaActive ? 'cursor-help' : ''}
@@ -532,7 +520,7 @@ const LeadDetails = ({ lead, departmentList, onClose, onElementClick, isJuliaAct
                     )}
                   </p>
                 )}
-              </div>
+              </div> */}
 
               <div>
                 <Label

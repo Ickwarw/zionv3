@@ -10,7 +10,7 @@ import LeadsSearch from './leads/components/LeadsSearch';
 import { Lead, LeadDepartment, LeadStatus } from './leads/types/leads.types';
 import { useJulia } from './tarefas/hooks/useJulia';
 import JuliaControls from './tarefas/components/JuliaControls';
-import { leadsService } from '@/services/api';
+import { leadsDashAgentService } from '@/services/api';
 import { showWarningAlert } from './ui/alert-dialog-warning';
 import { showErrorAlert } from './ui/alert-dialog-error';
 import { formatAxiosError } from './ui/formatResponseError';
@@ -21,18 +21,18 @@ import LeadActivities from './leads/components/LeadActivities';
 
 const Leads = () => {
   const [leadList, setLeadList] = useState([]);
-  const [departmentList, setDepartmentList] = useState([]);
-  const [departmentSelected, setDepartmentSelected] = useState(null);
-  const [statusList, setStatusList] = useState([]);
-  const [statusSelected, setStatusSelected] = useState(null);
+  // const [departmentList, setDepartmentList] = useState([]);
+  // const [departmentSelected, setDepartmentSelected] = useState(null);
+  // const [statusList, setStatusList] = useState([]);
+  // const [statusSelected, setStatusSelected] = useState(null);
   
   const [editMode, setEditMode] = useState(false);
   const { isAuthenticated } = useAuth();
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [leadSelecionado, setLeadSelecionado] = useState<Lead | null>(null);
   const [showNovoLeadModal, setShowNovoLeadModal] = useState(false);
-  // const [activeTab, setActiveTab] = useState<'marketing' | 'vendas' | 'posvenda'>('marketing');
-  // const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'marketing' | 'vendas' | 'posvenda'>('marketing');
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [leadFilter, setLeadFilter] = useState({});
   const itemsPerPage = 20;
@@ -40,7 +40,7 @@ const Leads = () => {
   const [totalPages, setTotalPages] =  useState(0);
   const [totalLeads, setTotalLeads] =  useState(0);
   const [search, setSearch] =  useState('');
-  const [leadSelectedActivities, setLeadSelectedActivities] = useState(null);
+  // const [leadSelectedActivities, setLeadSelectedActivities] = useState(null);
 
   const {
     isJuliaActive,
@@ -52,60 +52,87 @@ const Leads = () => {
     handleCloseBubble
   } = useJulia();
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await leadsService.getLeadDepartments();
-      if (response.status == 200 || response.status == 201) {
-         setDepartmentList(response.data.departments);
-        if (response.data.departments.length > 0) {
-          setDepartmentSelected(response.data.departments[0]);
-        }
-      } else if (response.status == 400) {
-        if ('message' in response.data) {
-          showWarningAlert("Não foi possível obter os Setores", response.data.message,null);
-        } else {
-          showWarningAlert("Não foi possível obter os Setores", response.data,null);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to get Departments:', error);
-      showErrorAlert('Erro ao obter os Setores', formatAxiosError(error));
-    }
-  };
+  // const fetchDepartments = async () => {
+  //   try {
+  //     const response = await leadsService.getLeadDepartments();
+  //     if (response.status == 200 || response.status == 201) {
+  //        setDepartmentList(response.data.departments);
+  //       if (response.data.departments.length > 0) {
+  //         setDepartmentSelected(response.data.departments[0]);
+  //       }
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível obter os Setores", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível obter os Setores", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to get Departments:', error);
+  //     showErrorAlert('Erro ao obter os Setores', formatAxiosError(error));
+  //   }
+  // };
 
-  const fetchStatus = async () => {
-    if (departmentSelected == null) return;
-    try {
-      const response = await leadsService.getLeadDepartmentStatuses(departmentSelected.id);
-      if (response.status == 200 || response.status == 201) {
-          setStatusList(response.data.statuses);
-      } else if (response.status == 400) {
-        if ('message' in response.data) {
-          showWarningAlert("Não foi possível obter os Status", response.data.message,null);
-        } else {
-          showWarningAlert("Não foi possível obter os Status", response.data,null);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to get Status:', error);
-      showErrorAlert('Erro ao obter os Status', formatAxiosError(error));
-    }
-  };
+  // const fetchStatus = async () => {
+  //   if (departmentSelected == null) return;
+  //   try {
+  //     const response = await leadsService.getLeadDepartmentStatuses(departmentSelected.id);
+  //     if (response.status == 200 || response.status == 201) {
+  //         setStatusList(response.data.statuses);
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível obter os Status", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível obter os Status", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to get Status:', error);
+  //     showErrorAlert('Erro ao obter os Status', formatAxiosError(error));
+  //   }
+  // };
+
+  // const fetchLeads = async (params: any) => {
+  //   if (departmentSelected == null) return;
+  //   try {
+  //     let filter = {
+  //       ...params,
+  //       department_id: departmentSelected.id,
+  //       page: currentPage,
+  //       per_page: itemsPerPage
+  //     }
+  //     const response = await leadsService.getLeads(filter);
+  //     if (response.status == 200 || response.status == 201) {
+  //        setLeadList(response.data.leads);
+  //        setTotalPages(response.data.pages);
+  //        setTotalLeads(response.data.total)
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível obter as Leads", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível obter as Leads", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to get Leads:', error);
+  //     showErrorAlert('Erro ao obter as Leads', formatAxiosError(error));
+  //   }
+  // };
 
   const fetchLeads = async (params: any) => {
-    if (departmentSelected == null) return;
+    if (activeTab == null) return;
     try {
       let filter = {
         ...params,
-        department_id: departmentSelected.id,
+        departamento: activeTab,
         page: currentPage,
         per_page: itemsPerPage
       }
-      const response = await leadsService.getLeads(filter);
+      const response = await leadsDashAgentService.getLeads(filter);
       if (response.status == 200 || response.status == 201) {
-         setLeadList(response.data.leads);
-         setTotalPages(response.data.pages);
-         setTotalLeads(response.data.total)
+         setLeadList(response.data.data);
+         setTotalPages(response.data.pagination.pages);
+         setTotalLeads(response.data.pagination.total)
       } else if (response.status == 400) {
         if ('message' in response.data) {
           showWarningAlert("Não foi possível obter as Leads", response.data.message,null);
@@ -119,17 +146,17 @@ const Leads = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  // useEffect(() => {
+  //   fetchDepartments();
+  // }, []);
 
   useEffect(() => {
     const run = async () => {
-      await fetchStatus();
+      // await fetchStatus();
       fetchLeads(leadFilter);
     };
      run();
-  }, [departmentSelected]);
+  }, [activeTab]);
 
   useEffect(() => {
     const run = async () => {
@@ -155,13 +182,13 @@ const Leads = () => {
     fetchLeads(leadFilter);
   };
 
-  const handleStatusClick = (status: LeadStatus) => {
-    setStatusSelected(status);
+  const handleStatusClick = (status: string) => {
+    setSelectedStatus(selectedStatus === status ? null : status);
   };
 
-  const handleTabChange = (department: LeadDepartment) => {
-    setDepartmentSelected(department);
-    setStatusSelected(null);
+  const handleTabChange = (tab: 'marketing' | 'vendas' | 'posvenda') => {
+    setActiveTab(tab);
+    setSelectedStatus(null);
   };
 
   const handleLeadEditClick = (lead: Lead) => {
@@ -232,7 +259,7 @@ const Leads = () => {
           setShowFilter={setShowFilter}
         />
 
-        { statusList && departmentList && (
+        {/* { statusList && departmentList && (
           <DetailedProgressBar
             activeTab={departmentSelected}
             selectedStatus={statusSelected}
@@ -241,7 +268,14 @@ const Leads = () => {
             onStatusClick={handleStatusClick}
             onTabChange={handleTabChange}
           />
-        )}
+        )} */}
+
+        <DetailedProgressBar
+          activeTab={activeTab}
+          selectedStatus={selectedStatus}
+          onStatusClick={handleStatusClick}
+          onTabChange={handleTabChange}
+        />
 
         <LeadsSearch
           currentLeadsCount={totalLeads}
@@ -256,22 +290,22 @@ const Leads = () => {
             leads={filteredLeads}
             onLeadClick={handleLeadClick}
             onStatusChange={handleStatusChange}
-            onLeadActivityClick={setLeadSelectedActivities}
+            // onLeadActivityClick={setLeadSelectedActivities}
             isJuliaActive={isJuliaActive}
             onElementClick={handleElementClick}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             totalPages={totalPages}
             totalItens={totalLeads}
-            statusList={statusList}
+            // statusList={statusList}
           />
         ) : (
           <LeadsTable
             leads={filteredLeads}
-            activeTab={departmentSelected}
+            activeTab={activeTab}
             onLeadClick={handleLeadClick}
             onLeadEditClick={handleLeadEditClick}
-            onLeadActivityClick={setLeadSelectedActivities}
+            // onLeadActivityClick={setLeadSelectedActivities}
             isJuliaActive={isJuliaActive}
             onLeadUpdate={() => fetchLeads(leadFilter)}
             currentPage={currentPage}
@@ -293,7 +327,7 @@ const Leads = () => {
       {leadSelecionado && (
         <LeadDetails
           editMode={editMode}
-          departmentList={departmentList}
+          // departmentList={departmentList}
           isJuliaActive={isJuliaActive}
           onElementClick={handleElementClick}
           onClose={handleLeadEditClose}
@@ -304,7 +338,7 @@ const Leads = () => {
       { showNovoLeadModal && (
         <NewLeadModal
           isOpen={showNovoLeadModal}
-          departmentList={departmentList}
+          // departmentList={departmentList}
           onClose={() => setShowNovoLeadModal(false)}
           onSave={handleSaveNovoLead}
         />
@@ -320,14 +354,14 @@ const Leads = () => {
           isOpen={showFilter}
         />
       )}
-      { leadSelectedActivities && (
+      {/* { leadSelectedActivities && (
         <LeadActivities
           isJuliaActive={isJuliaActive}
           leadId={leadSelectedActivities.id}
           onClose={() => setLeadSelectedActivities(null)}
           onElementClick={handleElementClick}
         />
-      )}
+      )} */}
     </div>
   );
 };

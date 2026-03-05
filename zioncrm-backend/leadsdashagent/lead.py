@@ -10,18 +10,20 @@ import psycopg2.extras
 from datetime import datetime
 import json
 import os
+from config import Config
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 CORS(app)
 
 # Configuração do PostgreSQL
-POSTGRES_CONFIG = {
-    "host": "45.160.180.34",
-    "port": 5432,
-    "user": "zioncrm",
-    "password": "kN98upt4gJ3G",
-    "dbname": "zioncrm",
-}
+# POSTGRES_CONFIG = {
+#     "host": "45.160.180.34",
+#     "port": 5432,
+#     "user": "zioncrm",
+#     "password": "kN98upt4gJ3G",
+#     "dbname": "zioncrm",
+# }
+POSTGRES_CONFIG = Config().get_db_config()
 
 
 def get_db_connection():

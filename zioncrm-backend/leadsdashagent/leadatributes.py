@@ -17,6 +17,7 @@ import psycopg2
 import psycopg2.extras
 from datetime import datetime
 import json
+from config import Config
 
 app = Flask(__name__)
 CORS(app)
@@ -145,13 +146,15 @@ CHOICES_POS_VENDA = (
 )
 
 # Configuração do PostgreSQL
-POSTGRES_CONFIG = {
-    "host": "45.160.180.34",
-    "port": 5432,
-    "user": "zioncrm",
-    "password": "kN98upt4gJ3G",
-    "dbname": "zioncrm",
-}
+# POSTGRES_CONFIG = {
+#     "host": "45.160.180.34",
+#     "port": 5432,
+#     "user": "zioncrm",
+#     "password": "kN98upt4gJ3G",
+#     "dbname": "zioncrm",
+# }
+
+POSTGRES_CONFIG = Config().get_db_config()
 
 # ============================================
 # CONFIGURAÇÕES DE INTEGRAÇÃO (A SEREM PREENCHIDAS)

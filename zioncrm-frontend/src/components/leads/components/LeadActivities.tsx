@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, MessageSquareText, User } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { leadsService } from '@/services/api';
+import { leadsDashAgentService } from '@/services/api';
 import { showWarningAlert } from '@/components/ui/alert-dialog-warning';
 import { showErrorAlert } from '@/components/ui/alert-dialog-error';
 import { formatAxiosError } from '@/components/ui/formatResponseError';
@@ -17,27 +17,27 @@ interface LeadActivitiesProps {
 const LeadActivities = ({ leadId, onClose, onElementClick, isJuliaActive }: LeadActivitiesProps) => {
   const [activityList, setActivityList] = useState([]);
  
-  const fetchActivities = async () => {
-    try {
-      const response = await leadsService.getLeadActivities(leadId);
-      if (response.status == 200 || response.status == 201) {
-        setActivityList(response.data.activities);
-      } else if (response.status == 400) {
-        if ('message' in response.data) {
-          showWarningAlert("Não foi possível buscar as Atividades", response.data.message,null);
-        } else {
-          showWarningAlert("Não foi possível buscar as Atividades", response.data,null);
-        }
-      }
-    } catch (error) {
-        console.error('Failed to get Activities:', error);
-        showErrorAlert('Erro ao buscar as Atividadess', formatAxiosError(error));
-    }
-  };
+  // const fetchActivities = async () => {
+  //   try {
+  //     const response = await leadsDashAgentService.getLeadActivities(leadId);
+  //     if (response.status == 200 || response.status == 201) {
+  //       setActivityList(response.data.activities);
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível buscar as Atividades", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível buscar as Atividades", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //       console.error('Failed to get Activities:', error);
+  //       showErrorAlert('Erro ao buscar as Atividadess', formatAxiosError(error));
+  //   }
+  // };
   
-  useEffect(() => {
-    fetchActivities();
-  }, []);
+  // useEffect(() => {
+  //   fetchActivities();
+  // }, []);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>

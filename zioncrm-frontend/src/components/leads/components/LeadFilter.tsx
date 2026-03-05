@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { leadsService, tasksService } from '@/services/api';
+import { leadsDashAgentService, tasksService } from '@/services/api';
 import { showWarningAlert } from '@/components/ui/alert-dialog-warning';
 import { showErrorAlert } from '@/components/ui/alert-dialog-error';
 import { formatAxiosError } from '@/components/ui/formatResponseError';
@@ -20,7 +20,7 @@ export interface LeadFilterProps {
 }
 
 const LeadFilter = ({ isOpen, onApply, onCancel, onElementClick, isJuliaActive, oldFilter }: LeadFilterProps) => {
-  const [sourceList, setSourceList] = useState([]);
+  // const [sourceList, setSourceList] = useState([]);
   const [statusList, setStatusList] = useState([]);
   const [userList, setUserList] = useState([]);
   const [formData, setFormData] = useState({
@@ -32,7 +32,7 @@ const LeadFilter = ({ isOpen, onApply, onCancel, onElementClick, isJuliaActive, 
 
   const fetchStatuses = async () => {
     try {
-      const response = await leadsService.getLeadStatuses();
+      const response = await leadsDashAgentService.getLeadStats();
       if (response.status == 200 || response.status == 201) {
         setStatusList(response.data.statuses);
       } else if (response.status == 400) {
@@ -48,27 +48,27 @@ const LeadFilter = ({ isOpen, onApply, onCancel, onElementClick, isJuliaActive, 
     }
   };
  
-  const fetchSources = async () => {
-    try {
-      const response = await leadsService.getLeadSources();
-      if (response.status == 200 || response.status == 201) {
-        setSourceList(response.data.sources);
-      } else if (response.status == 400) {
-        if ('message' in response.data) {
-          showWarningAlert("Não foi possível buscar as Origens", response.data.message,null);
-        } else {
-          showWarningAlert("Não foi possível buscaras Origens", response.data,null);
-        }
-      }
-    } catch (error) {
-        console.error('Failed to get sources:', error);
-        showErrorAlert('Erro ao buscar as Origens', formatAxiosError(error));
-    }
-  };
+  // const fetchSources = async () => {
+  //   try {
+  //     const response = await leadsDashAgentService.getLeadSources();
+  //     if (response.status == 200 || response.status == 201) {
+  //       setSourceList(response.data.sources);
+  //     } else if (response.status == 400) {
+  //       if ('message' in response.data) {
+  //         showWarningAlert("Não foi possível buscar as Origens", response.data.message,null);
+  //       } else {
+  //         showWarningAlert("Não foi possível buscaras Origens", response.data,null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //       console.error('Failed to get sources:', error);
+  //       showErrorAlert('Erro ao buscar as Origens', formatAxiosError(error));
+  //   }
+  // };
 
   useEffect(() => {
     fetchStatuses();
-    fetchSources();
+    // fetchSources();
   }, []);
 
   const handleSubmit = () => {
@@ -131,7 +131,7 @@ const LeadFilter = ({ isOpen, onApply, onCancel, onElementClick, isJuliaActive, 
               </Select>
             </div>
 
-            <div>
+            {/* <div>
               <Label
                 onClick={(e) => onElementClick(e, "Origem da Lead!")}
                 className={isJuliaActive ? 'cursor-help' : ''}
@@ -155,7 +155,7 @@ const LeadFilter = ({ isOpen, onApply, onCancel, onElementClick, isJuliaActive, 
                 }
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div>
               <Label

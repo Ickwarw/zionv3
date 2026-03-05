@@ -1,5 +1,7 @@
 import os
 from datetime import timedelta
+from sqlalchemy.engine.url import make_url
+
 
 class Config:
     
@@ -27,3 +29,16 @@ class Config:
     SIP_SERVER = os.environ.get('SIP_SERVER')
     SIP_USERNAME = os.environ.get('SIP_USERNAME')
     SIP_PASSWORD = os.environ.get('SIP_PASSWORD')
+
+    def get_db_config(self):
+        url = make_url(self.SQLALCHEMY_DATABASE_URI)
+
+        db_config = {
+            "user": url.username,
+            "password": url.password,
+            "host": url.host,
+            "port": url.port,
+            "dbname": url.database,
+        }
+
+        return db_config

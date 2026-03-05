@@ -104,7 +104,7 @@ const LeadModal = ({ isOpen, lead, onClose }: LeadModalProps) => {
             <div className="space-y-3">
               <div><strong>Origem:</strong> {lead.origem}</div>
               <div><strong>Prioridade:</strong> {lead.prioridade}</div>
-              <div><strong>Status:</strong> {lead.status}</div>
+              {/* <div><strong>Status:</strong> {lead.status}</div> */}
               <div><strong>Ativo:</strong> {lead.ativo === 'S' ? 'Sim' : lead.ativo === 'N' ? 'Não' : lead.ativo}</div>
             </div>
           </div>
