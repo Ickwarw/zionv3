@@ -20,12 +20,14 @@ const ConfiguracoesVoIP = () => {
   const [senhaSipId, setSenhaSipId] = useState(null);
   const [codecAudioId, setCodecAudioId] = useState(null);
   const [qualidadeAudioId, setQualidadeAudioId] = useState(null);
+  const [wsPathId, setWsPathId] = useState(null);
   
   const [formData, setFormData] = useState({
     servidorSip: null,
     portaSip: null,
     usuarioSip: null,
     senhaSip: null,
+    wsPath: null,
     codecAudio: null,
     qualidadeAudio: null
   });
@@ -40,6 +42,7 @@ const ConfiguracoesVoIP = () => {
     handleSaveConfig(portaSipId, 'voip.port', formData.portaSip);
     handleSaveConfig(usuarioSipId, 'voip.user', formData.usuarioSip);
     handleSaveConfig(senhaSipId, 'voip.pass', formData.senhaSip);
+    handleSaveConfig(wsPathId, 'voip.ws_path', formData.wsPath);
     handleSaveConfig(codecAudioId, 'voip.codec', formData.codecAudio);
     handleSaveConfig(qualidadeAudioId, 'voip.quality', formData.qualidadeAudio);
     saveVoipExtension();
@@ -69,6 +72,7 @@ const ConfiguracoesVoIP = () => {
     let port = null;
     let user = null;
     let pass = null;
+    let wsPath = null;
     let codec = null;
     let quality = null;
     confList.map((conf) => {
@@ -84,6 +88,9 @@ const ConfiguracoesVoIP = () => {
       } else if (conf.key == "voip.pass") {
         setSenhaSipId(conf.id);
         pass = conf.value;
+      } else if (conf.key == "voip.ws_path") {
+        setWsPathId(conf.id);
+        wsPath = conf.value;
       } else if (conf.key == "voip.codec") {
         setCodecAudioId(conf.id);
         codec = conf.value;
@@ -97,6 +104,7 @@ const ConfiguracoesVoIP = () => {
       portaSip: port ? port : '5060',
       usuarioSip: user,
       senhaSip: pass,
+      wsPath: wsPath ? wsPath : '/ws',
       codecAudio: codec ? codec : 'G.711',
       qualidadeAudio: quality ? quality : 'Alta'
     });
@@ -130,7 +138,8 @@ const ConfiguracoesVoIP = () => {
           ...prev,
           servidorSip: extension.sip_server || prev.servidorSip,
           usuarioSip: extension.extension_number || prev.usuarioSip,
-          senhaSip: prev.senhaSip
+          senhaSip: prev.senhaSip,
+          wsPath: prev.wsPath || '/ws'
         }));
       }
     } catch {
@@ -182,6 +191,15 @@ const ConfiguracoesVoIP = () => {
             placeholder="••••••••"
             value={formData.senhaSip}
             onChange={(e) => setFormData({...formData, senhaSip: e.target.value})}
+          />
+        </div>
+        <div>
+          <Label htmlFor="wsPath">Path WebSocket SIP</Label>
+          <Input
+            id="wsPath"
+            placeholder="/ws"
+            value={formData.wsPath}
+            onChange={(e) => setFormData({...formData, wsPath: e.target.value})}
           />
         </div>
         <div>

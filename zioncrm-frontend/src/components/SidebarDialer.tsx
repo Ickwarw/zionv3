@@ -28,6 +28,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [sipSettings, setSipSettings] = useState({
     server: '',
     port: '7443',
+    wsPath: '/ws',
     extension: '',
     password: ''
   });
@@ -58,17 +59,30 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     return value.replace(/\s+/g, '').trim();
   };
 
-  const getWsUrl = (server: string, port: string) => {
-    if (!server) {
+  const getWsUrl = (server: string, port: string, wsPath: string) => {
+    const raw = (server || '').trim();
+    if (!raw) {
       return '';
     }
-    if (/^wss?:\/\//i.test(server)) {
-      return server;
+
+    if (/^wss?:\/\//i.test(raw) || /^https?:\/\//i.test(raw)) {
+      return raw.replace(/^http/i, 'ws');
     }
-    if (/^https?:\/\//i.test(server)) {
-      return server.replace(/^http/i, 'ws');
+
+    const serverPath = raw.includes('/') ? raw.slice(raw.indexOf('/')) : '';
+    const hostPortRaw = raw.includes('/') ? raw.slice(0, raw.indexOf('/')) : raw;
+    const hasPort = hostPortRaw.includes(':');
+    const hostPort = hasPort ? hostPortRaw : `${hostPortRaw}:${port || '7443'}`;
+
+    let normalizedPath = (wsPath || '').trim();
+    if (!normalizedPath) {
+      normalizedPath = serverPath || '/ws';
     }
-    return `wss://${server}:${port || '7443'}`;
+    if (!normalizedPath.startsWith('/')) {
+      normalizedPath = `/${normalizedPath}`;
+    }
+
+    return `wss://${hostPort}${normalizedPath}`;
   };
 
   const getDialDestination = (value: string) => {
@@ -106,6 +120,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setSipSettings({
         server: extensionServer || confMap['voip.server'] || '',
         port: confMap['voip.port'] || '7443',
+        wsPath: confMap['voip.ws_path'] || '/ws',
         extension: extensionNumber || confMap['voip.user'] || '',
         password: extensionPassword || confMap['voip.pass'] || ''
       });
@@ -248,7 +263,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       return;
     }
 
-    const wsUrl = getWsUrl(sipSettings.server, sipSettings.port);
+    const wsUrl = getWsUrl(sipSettings.server, sipSettings.port, sipSettings.wsPath);
     const socket = new JsSIP.WebSocketInterface(wsUrl);
     const sipUri = `sip:${sipSettings.extension}@${sipDomain}`;
     const userAgent = new JsSIP.UA({
@@ -259,9 +274,22 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       register: true
     });
 
-    userAgent.on('registered', () => setIsSipReady(true));
-    userAgent.on('registrationFailed', () => setIsSipReady(false));
-    userAgent.on('disconnected', () => setIsSipReady(false));
+    userAgent.on('registered', () => {
+      setIsSipReady(true);
+      console.log('SIP registrado com sucesso:', wsUrl);
+    });
+    userAgent.on('registrationFailed', (event: any) => {
+      setIsSipReady(false);
+      console.error('Falha no registro SIP:', event?.cause || event);
+      showWarningAlert('Falha no registro SIP', `Causa: ${event?.cause || 'desconhecida'}`, null);
+    });
+    userAgent.on('connected', () => {
+      console.log('WebSocket SIP conectado:', wsUrl);
+    });
+    userAgent.on('disconnected', (event: any) => {
+      setIsSipReady(false);
+      console.error('WebSocket SIP desconectado:', event?.cause || event);
+    });
     userAgent.start();
     setUa(userAgent);
 
@@ -271,7 +299,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setActiveSession(null);
       userAgent.stop();
     };
-  }, [isVisible, sipDomain, sipSettings.extension, sipSettings.password, sipSettings.port, sipSettings.server]);
+  }, [isVisible, sipDomain, sipSettings.extension, sipSettings.password, sipSettings.port, sipSettings.server, sipSettings.wsPath]);
 
   useEffect(() => {
     if (!storedUser?.id) {
