@@ -1,0 +1,21 @@
+services:
+  asterisk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voip-mediator-asterisk
+    restart: unless-stopped
+    ports:
+      - "8089:8089/tcp"      # WSS (SIP over WebSocket)
+      - "5060:5060/udp"      # SIP trunk UDP (opcional, comum)
+      - "10000-10100:10000-10100/udp"  # RTP media
+    volumes:
+      - ./config:/etc/asterisk:ro
+      - ./certs:/etc/asterisk/keys:ro
+      - ./logs:/var/log/asterisk
+      - ./spool:/var/spool/asterisk
+    healthcheck:
+      test: ["CMD-SHELL", "asterisk -rx 'core show version' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
