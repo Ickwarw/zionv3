@@ -680,6 +680,10 @@ export const voipService = {
   initiateCall: (phoneNumber: string) => {
     return api.post('/voip/call', { phone_number: phoneNumber });
   },
+
+  updateCallStatus: (payload: any) => {
+    return api.post('/voip/call/status', payload);
+  },
   
   endCall: (callId: string) => {
     return api.post(`/voip/call/${callId}/end`);

@@ -1,7 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, RotateCcw, User, Phone, PhoneOff } from 'lucide-react';
-import { voipService } from '@/services/api';
+import JsSIP from 'jssip';
+import { configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
 import { showErrorAlert } from './ui/alert-dialog-error';
 import { showWarningAlert } from './ui/alert-dialog-warning';
@@ -19,7 +20,24 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSipReady, setIsSipReady] = useState(false);
+  const [ua, setUa] = useState<any>(null);
+  const [activeSession, setActiveSession] = useState<any>(null);
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const callStartRef = useRef<number | null>(null);
+  const [sipSettings, setSipSettings] = useState({
+    server: '',
+    port: '7443',
+    extension: '',
+    password: ''
+  });
+
+  const sipDomain = useMemo(() => {
+    const raw = sipSettings.server || '';
+    const withoutProtocol = raw.replace(/^wss?:\/\//i, '').replace(/^https?:\/\//i, '');
+    const host = withoutProtocol.split('/')[0];
+    return host.split(':')[0] || '';
+  }, [sipSettings.server]);
 
   const dialpadNumbers = [
     ['1', '2', '3'],
@@ -36,8 +54,80 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     setPhoneNumber('');
   };
 
+  const normalizePhoneNumber = (value: string) => {
+    return value.replace(/\s+/g, '').trim();
+  };
+
+  const getWsUrl = (server: string, port: string) => {
+    if (!server) {
+      return '';
+    }
+    if (/^wss?:\/\//i.test(server)) {
+      return server;
+    }
+    if (/^https?:\/\//i.test(server)) {
+      return server.replace(/^http/i, 'ws');
+    }
+    return `wss://${server}:${port || '7443'}`;
+  };
+
+  const getDialDestination = (value: string) => {
+    const target = normalizePhoneNumber(value);
+    if (target.startsWith('sip:')) {
+      return target;
+    }
+    if (target.includes('@')) {
+      return `sip:${target}`;
+    }
+    return `sip:${target}@${sipDomain}`;
+  };
+
+  const loadSipSettings = async () => {
+    try {
+      const response = await configService.getConfigsByGroup('voip');
+      const confs = response?.data?.configs || [];
+      const confMap: Record<string, string> = {};
+      confs.forEach((conf: any) => {
+        confMap[conf.key] = conf.value;
+      });
+
+      let extensionServer = '';
+      let extensionNumber = '';
+      let extensionPassword = '';
+      try {
+        const extResponse = await voipService.getExtension();
+        extensionServer = extResponse?.data?.sip_server || '';
+        extensionNumber = extResponse?.data?.extension_number || '';
+        extensionPassword = extResponse?.data?.password || '';
+      } catch {
+        // usuário sem extensão cadastrada
+      }
+
+      setSipSettings({
+        server: extensionServer || confMap['voip.server'] || '',
+        port: confMap['voip.port'] || '7443',
+        extension: extensionNumber || confMap['voip.user'] || '',
+        password: extensionPassword || confMap['voip.pass'] || ''
+      });
+    } catch (error) {
+      showErrorAlert('Erro ao carregar configurações VoIP', formatAxiosError(error));
+    }
+  };
+
   const handleCall = async () => {
     if (!phoneNumber || isSubmitting) {
+      return;
+    }
+    if (!ua || !isSipReady) {
+      showWarningAlert('SIP não conectado', 'Verifique as configurações VoIP e a conexão com o servidor SIP.', null);
+      return;
+    }
+    if (!sipDomain) {
+      showWarningAlert('Domínio SIP inválido', 'Configure corretamente o servidor SIP.', null);
+      return;
+    }
+    if (activeSession) {
+      showWarningAlert('Ligação em andamento', 'Finalize a ligação atual antes de iniciar outra.', null);
       return;
     }
 
@@ -45,8 +135,66 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setIsSubmitting(true);
       const response = await voipService.initiateCall(phoneNumber);
       const call = response?.data?.call;
-      setCurrentCallId(call?.call_id ?? null);
+      const callId = call?.call_id ?? null;
+      if (!callId) {
+        showWarningAlert('Falha ao iniciar ligação', 'Não foi possível criar o registro da chamada no backend.', null);
+        return;
+      }
+
+      setCurrentCallId(callId);
       setCallStatus(call?.status ?? 'initiating');
+      callStartRef.current = null;
+
+      const eventHandlers = {
+        progress: async () => {
+          setCallStatus('ringing');
+          await voipService.updateCallStatus({ call_id: callId, status: 'ringing' });
+        },
+        confirmed: async () => {
+          const nowIso = new Date().toISOString();
+          callStartRef.current = Date.now();
+          setCallStatus('connected');
+          await voipService.updateCallStatus({
+            call_id: callId,
+            status: 'connected',
+            connect_time: nowIso
+          });
+        },
+        failed: async () => {
+          const nowIso = new Date().toISOString();
+          const duration = callStartRef.current ? Math.floor((Date.now() - callStartRef.current) / 1000) : null;
+          setCallStatus('failed');
+          await voipService.updateCallStatus({
+            call_id: callId,
+            status: 'failed',
+            end_time: nowIso,
+            duration
+          });
+          setActiveSession(null);
+          setCurrentCallId(null);
+          callStartRef.current = null;
+        },
+        ended: async () => {
+          const nowIso = new Date().toISOString();
+          const duration = callStartRef.current ? Math.floor((Date.now() - callStartRef.current) / 1000) : null;
+          setCallStatus('completed');
+          await voipService.updateCallStatus({
+            call_id: callId,
+            status: 'completed',
+            end_time: nowIso,
+            duration
+          });
+          setActiveSession(null);
+          setCurrentCallId(null);
+          callStartRef.current = null;
+        }
+      };
+
+      const session = ua.call(getDialDestination(phoneNumber), {
+        eventHandlers,
+        mediaConstraints: { audio: true, video: false }
+      });
+      setActiveSession(session);
     } catch (error) {
       showErrorAlert('Não foi possível iniciar a ligação', formatAxiosError(error));
     } finally {
@@ -55,7 +203,16 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   };
 
   const handleHangup = async () => {
-    if (!currentCallId || isSubmitting) {
+    if (isSubmitting) {
+      return;
+    }
+
+    if (activeSession) {
+      activeSession.terminate();
+      return;
+    }
+
+    if (!currentCallId) {
       showWarningAlert('Sem ligação ativa', 'Nenhuma ligação em andamento para encerrar.', null);
       return;
     }
@@ -66,6 +223,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       const call = response?.data?.call;
       setCallStatus(call?.status ?? 'completed');
       setCurrentCallId(null);
+      callStartRef.current = null;
     } catch (error) {
       showErrorAlert('Não foi possível encerrar a ligação', formatAxiosError(error));
     } finally {
@@ -76,6 +234,44 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const handleBackspace = () => {
     setPhoneNumber(prev => prev.slice(0, -1));
   };
+
+  useEffect(() => {
+    loadSipSettings();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+    if (!sipSettings.server || !sipSettings.extension || !sipSettings.password) {
+      setIsSipReady(false);
+      return;
+    }
+
+    const wsUrl = getWsUrl(sipSettings.server, sipSettings.port);
+    const socket = new JsSIP.WebSocketInterface(wsUrl);
+    const sipUri = `sip:${sipSettings.extension}@${sipDomain}`;
+    const userAgent = new JsSIP.UA({
+      sockets: [socket],
+      uri: sipUri,
+      password: sipSettings.password,
+      session_timers: false,
+      register: true
+    });
+
+    userAgent.on('registered', () => setIsSipReady(true));
+    userAgent.on('registrationFailed', () => setIsSipReady(false));
+    userAgent.on('disconnected', () => setIsSipReady(false));
+    userAgent.start();
+    setUa(userAgent);
+
+    return () => {
+      setIsSipReady(false);
+      setUa(null);
+      setActiveSession(null);
+      userAgent.stop();
+    };
+  }, [isVisible, sipDomain, sipSettings.extension, sipSettings.password, sipSettings.port, sipSettings.server]);
 
   useEffect(() => {
     if (!storedUser?.id) {
@@ -89,7 +285,9 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       if (!payload?.call_id) {
         return;
       }
-      setCurrentCallId(payload.call_id);
+      if (!currentCallId || payload.call_id === currentCallId) {
+        setCurrentCallId(payload.call_id);
+      }
       setCallStatus(payload.status || null);
       if (payload.status === 'completed' || payload.status === 'failed') {
         setCurrentCallId(null);
@@ -100,7 +298,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     return () => {
       SocketService.off('call_status', onCallStatus);
     };
-  }, [storedUser?.id]);
+  }, [storedUser?.id, currentCallId]);
 
   if (!isVisible) return null;
 
@@ -184,6 +382,9 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       </p>
       <p className="text-center text-slate-300 text-xs mt-2">
         {callStatus ? `Status da chamada: ${callStatus}` : 'Status da chamada: inativa'}
+      </p>
+      <p className="text-center text-slate-300 text-xs mt-1">
+        SIP: {isSipReady ? 'conectado' : 'desconectado'}
       </p>
       <div className="flex justify-center mt-3">
         <button

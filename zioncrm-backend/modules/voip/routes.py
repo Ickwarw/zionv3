@@ -167,18 +167,23 @@ def initiate_call():
     if not target_phone_number:
         return jsonify({'message': 'Invalid phone number'}), 400
 
-    gateway_response, gateway_error = _gateway_post('/calls/initiate', {
-        'from': extension.extension_number,
-        'to': target_phone_number,
-        'extra': {
-            'user_id': current_user_id
-        }
-    })
+    gateway_response = None
+    call_id = str(uuid.uuid4())
+    gateway_enabled = bool(current_app.config.get('VOIP_GATEWAY_URL') and _build_gateway_auth_payload())
 
-    if gateway_error:
-        return jsonify({'message': 'Failed to initiate call', 'detail': gateway_error}), 502
+    if gateway_enabled:
+        gateway_response, gateway_error = _gateway_post('/calls/initiate', {
+            'from': extension.extension_number,
+            'to': target_phone_number,
+            'extra': {
+                'user_id': current_user_id
+            }
+        })
 
-    call_id = str(gateway_response.get('call_uuid') or gateway_response.get('id') or str(uuid.uuid4()))
+        if gateway_error:
+            return jsonify({'message': 'Failed to initiate call', 'detail': gateway_error}), 502
+
+        call_id = str(gateway_response.get('call_uuid') or gateway_response.get('id') or call_id)
 
     call = CallLog(
         user_id=current_user_id,
@@ -201,6 +206,7 @@ def initiate_call():
     
     return jsonify({
         'message': 'Call initiated',
+        'provider_response': gateway_response,
         'call': call.to_dict()
     }), 200
 
@@ -215,12 +221,15 @@ def end_call(call_id):
     if not call:
         return jsonify({'message': 'Call not found'}), 404
     
-    gateway_response, gateway_error = _gateway_post('/calls/hangup', {
-        'call_uuid': call_id
-    })
+    gateway_response = None
+    gateway_enabled = bool(current_app.config.get('VOIP_GATEWAY_URL') and _build_gateway_auth_payload())
+    if gateway_enabled:
+        gateway_response, gateway_error = _gateway_post('/calls/hangup', {
+            'call_uuid': call_id
+        })
 
-    if gateway_error:
-        return jsonify({'message': 'Failed to end call', 'detail': gateway_error}), 502
+        if gateway_error:
+            return jsonify({'message': 'Failed to end call', 'detail': gateway_error}), 502
 
     # Update call status
     call.status = 'completed'
