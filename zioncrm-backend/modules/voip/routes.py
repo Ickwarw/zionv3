@@ -1,16 +1,50 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user import User
 from models.voip import CallLog, VoipExtension, VoipContact
 from extensions import db, socketio
-from flask_socketio import emit
+from flask_socketio import emit, join_room
 import logging
 from datetime import datetime
-import time
 import uuid
+from urllib.parse import urljoin
+import requests
 
 voip_bp = Blueprint('voip', __name__)
 logger = logging.getLogger(__name__)
+
+
+def _normalize_phone_number(phone_number: str) -> str:
+    return ''.join(ch for ch in str(phone_number or '') if ch.isdigit())
+
+
+def _build_gateway_auth_payload():
+    login = current_app.config.get('VOIP_GATEWAY_LOGIN')
+    password = current_app.config.get('VOIP_GATEWAY_PASSWORD')
+    if login and password:
+        return {"login": login, "password": password}
+    return None
+
+
+def _gateway_post(path: str, payload: dict):
+    gateway_url = (current_app.config.get('VOIP_GATEWAY_URL') or '').strip()
+    auth_payload = _build_gateway_auth_payload()
+
+    if not gateway_url or not auth_payload:
+        return None, 'VoIP gateway not configured. Set VOIP_GATEWAY_URL, VOIP_GATEWAY_LOGIN and VOIP_GATEWAY_PASSWORD.'
+
+    base_url = gateway_url if gateway_url.endswith('/') else f'{gateway_url}/'
+    target_url = urljoin(base_url, path.lstrip('/'))
+    data = dict(payload or {})
+    data.update(auth_payload)
+
+    try:
+        response = requests.post(target_url, json=data, timeout=15)
+        response.raise_for_status()
+        return response.json(), None
+    except requests.RequestException as exc:
+        logger.exception('VoIP gateway request failed')
+        return None, str(exc)
 
 # Get user's VoIP extension
 @voip_bp.route('/extension', methods=['GET'])
@@ -111,21 +145,36 @@ def get_call_log(call_id):
 @jwt_required()
 def initiate_call():
     current_user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json() or {}
     
-    if not data or not data.get('phone_number'):
+    if not data.get('phone_number'):
         return jsonify({'message': 'Missing phone number'}), 400
-    
-    # In a real implementation, this would initiate a SIP call
-    # For now, we'll just create a call log
-    
-    call_id = str(uuid.uuid4())
-    
-    # Create call log
+
+    extension = VoipExtension.query.filter_by(user_id=current_user_id).first()
+    if not extension:
+        return jsonify({'message': 'No VoIP extension configured for this user'}), 400
+
+    target_phone_number = _normalize_phone_number(data['phone_number'])
+    if not target_phone_number:
+        return jsonify({'message': 'Invalid phone number'}), 400
+
+    gateway_response, gateway_error = _gateway_post('/calls/initiate', {
+        'from': extension.extension_number,
+        'to': target_phone_number,
+        'extra': {
+            'user_id': current_user_id
+        }
+    })
+
+    if gateway_error:
+        return jsonify({'message': 'Failed to initiate call', 'detail': gateway_error}), 502
+
+    call_id = str(gateway_response.get('call_uuid') or gateway_response.get('id') or str(uuid.uuid4()))
+
     call = CallLog(
         user_id=current_user_id,
         call_id=call_id,
-        phone_number=data['phone_number'],
+        phone_number=target_phone_number,
         direction='outbound',
         start_time=datetime.utcnow(),
         status='initiating'
@@ -138,26 +187,8 @@ def initiate_call():
     socketio.emit('call_status', {
         'call_id': call_id,
         'status': 'initiating',
-        'phone_number': data['phone_number']
+        'phone_number': target_phone_number
     }, room=f'user_{current_user_id}')
-    
-    # Simulate call connection (in a real implementation, this would be handled by SIP events)
-    def connect_call():
-        time.sleep(2)  # Simulate connection delay
-        
-        call.status = 'connected'
-        call.connect_time = datetime.utcnow()
-        db.session.commit()
-        
-        socketio.emit('call_status', {
-            'call_id': call_id,
-            'status': 'connected',
-            'phone_number': data['phone_number']
-        }, room=f'user_{current_user_id}')
-    
-    # Start the call connection process in a background thread
-    # In a real implementation, this would be handled by SIP events
-    # threading.Thread(target=connect_call).start()
     
     return jsonify({
         'message': 'Call initiated',
@@ -175,6 +206,13 @@ def end_call(call_id):
     if not call:
         return jsonify({'message': 'Call not found'}), 404
     
+    gateway_response, gateway_error = _gateway_post('/calls/hangup', {
+        'call_uuid': call_id
+    })
+
+    if gateway_error:
+        return jsonify({'message': 'Failed to end call', 'detail': gateway_error}), 502
+
     # Update call status
     call.status = 'completed'
     call.end_time = datetime.utcnow()
@@ -194,6 +232,7 @@ def end_call(call_id):
     
     return jsonify({
         'message': 'Call ended',
+        'provider_response': gateway_response,
         'call': call.to_dict()
     }), 200
 

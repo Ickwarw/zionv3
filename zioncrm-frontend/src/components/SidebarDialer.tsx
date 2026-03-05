@@ -1,7 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
-import { X, RotateCcw, User, Phone } from 'lucide-react';
-import JsSIP from "jssip";
+import React, { useState } from 'react';
+import { X, RotateCcw, User, Phone, PhoneOff } from 'lucide-react';
+import { voipService } from '@/services/api';
+import { formatAxiosError } from './ui/formatResponseError';
+import { showErrorAlert } from './ui/alert-dialog-error';
+import { showWarningAlert } from './ui/alert-dialog-warning';
 
 
 interface SidebarDialerProps {
@@ -12,18 +15,9 @@ interface SidebarDialerProps {
 
 const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [ua, setUa] = useState(null);
-  
-  const config = {
-      account: {
-        domain: '187.60.60.161',
-        username: '5511920835503',
-        password: '&8oYR0',
-        wssServer: '187.60.60.161',
-        webSocketPort: '5060',
-        serverPath: '',
-      },
-    };
+  const [currentCallId, setCurrentCallId] = useState<string | null>(null);
+  const [callStatus, setCallStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dialpadNumbers = [
     ['1', '2', '3'],
@@ -40,56 +34,46 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     setPhoneNumber('');
   };
 
-  const handleCall = () => {
-    if (phoneNumber) {
-      const eventHandlers = {
-        progress: () => console.log("Chamando..."),
-        failed: (e) => console.error("Falhou:", e),
-        confirmed: () => console.log("Atendeu!"),
-        ended: () => console.log("Encerrada."),
-      };
-    
-      const options = {
-        eventHandlers,
-        mediaConstraints: { audio: true, video: false },
-      };
+  const handleCall = async () => {
+    if (!phoneNumber || isSubmitting) {
+      return;
+    }
 
-       ua.call("sip:5543991171953@187.60.60.161", options);
+    try {
+      setIsSubmitting(true);
+      const response = await voipService.initiateCall(phoneNumber);
+      const call = response?.data?.call;
+      setCurrentCallId(call?.call_id ?? null);
+      setCallStatus(call?.status ?? 'initiating');
+    } catch (error) {
+      showErrorAlert('Não foi possível iniciar a ligação', formatAxiosError(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      // SipConnection.methods('5511920835503').dialByNumber('audio', '5543991171953');
-      
+  const handleHangup = async () => {
+    if (!currentCallId || isSubmitting) {
+      showWarningAlert('Sem ligação ativa', 'Nenhuma ligação em andamento para encerrar.', null);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await voipService.endCall(currentCallId);
+      const call = response?.data?.call;
+      setCallStatus(call?.status ?? 'completed');
+      setCurrentCallId(null);
+    } catch (error) {
+      showErrorAlert('Não foi possível encerrar a ligação', formatAxiosError(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleBackspace = () => {
     setPhoneNumber(prev => prev.slice(0, -1));
   };
-
-   useEffect(() => {
-    const socket = new JsSIP.WebSocketInterface("wss://187.60.60.161:5060");
-
-    const ua = new JsSIP.UA({
-      uri: "sip:+5511920835503@187.60.60.161:5060",
-      password: "&8oYR0",
-      sockets: [socket],
-      session_timers: false,
-    });
-
-    ua.start();
-
-    ua.on("connected", () => console.log("✅ Conectado ao servidor SIP"));
-    ua.on("disconnected", () => console.log("❌ Desconectado do servidor SIP"));
-    ua.on("registered", () => console.log("📡 Registrado com sucesso"));
-    ua.on("unregistered", () => console.log("🚪 Saiu do servidor SIP"));
-    ua.on("registrationFailed", (e) => console.error("⚠️ Falha no registro:", e));
-
-    // Guardar ua em window para testar no console
-    setUa(ua);
-
-    return () => {
-      ua.stop();
-    };
-  }, []);
 
   if (!isVisible) return null;
 
@@ -170,6 +154,19 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       <p className="text-center text-purple-400 text-xs">
         Não utilize o discador para realizar chamadas de emergência.
       </p>
+      <p className="text-center text-slate-300 text-xs mt-2">
+        {callStatus ? `Status da chamada: ${callStatus}` : 'Status da chamada: inativa'}
+      </p>
+      <div className="flex justify-center mt-3">
+        <button
+          onClick={handleHangup}
+          disabled={!currentCallId || isSubmitting}
+          className="p-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+          title="Encerrar ligação"
+        >
+          <PhoneOff size={18} className="text-white" />
+        </button>
+      </div>
     </div>
   );
 };

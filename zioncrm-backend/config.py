@@ -29,6 +29,9 @@ class Config:
     SIP_SERVER = os.environ.get('SIP_SERVER')
     SIP_USERNAME = os.environ.get('SIP_USERNAME')
     SIP_PASSWORD = os.environ.get('SIP_PASSWORD')
+    VOIP_GATEWAY_URL = os.environ.get('VOIP_GATEWAY_URL')
+    VOIP_GATEWAY_LOGIN = os.environ.get('VOIP_GATEWAY_LOGIN')
+    VOIP_GATEWAY_PASSWORD = os.environ.get('VOIP_GATEWAY_PASSWORD')
 
     def get_db_config(self):
         url = make_url(self.SQLALCHEMY_DATABASE_URI)
