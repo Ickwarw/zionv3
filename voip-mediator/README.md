@@ -14,11 +14,11 @@ Pacote enxuto para usar o CRM com WebRTC no navegador, mesmo quando o SIP do cli
 
 ## Estrutura
 - `docker-compose.yml`
-- `Dockerfile`
 - `config/` arquivos minimos do Asterisk
 - `certs/` monte aqui:
   - `fullchain.pem`
   - `privkey.pem`
+  - no container os certificados ficam em `/opt/asterisk-certs`
 
 ## Passo 1: ajustar trunk SIP
 Edite `config/pjsip.conf`:
@@ -38,7 +38,7 @@ cp /etc/letsencrypt/live/SEU_DOMINIO/privkey.pem certs/
 
 ## Passo 3: subir
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 ## Passo 4: validar

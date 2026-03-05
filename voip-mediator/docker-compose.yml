@@ -1,8 +1,6 @@
 services:
   asterisk:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: andrius/asterisk:20
     container_name: voip-mediator-asterisk
     restart: unless-stopped
     ports:
@@ -11,7 +9,7 @@ services:
       - "10000-10100:10000-10100/udp"  # RTP media
     volumes:
       - ./config:/etc/asterisk:ro
-      - ./certs:/etc/asterisk/keys:ro
+      - ./certs:/opt/asterisk-certs:ro
       - ./logs:/var/log/asterisk
       - ./spool:/var/spool/asterisk
     healthcheck:
