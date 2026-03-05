@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RotateCcw, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RotateCcw, Search, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
 import JsSIP from 'jssip';
-import { configService, voipService } from '@/services/api';
+import { chatService, configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
 import { showErrorAlert } from './ui/alert-dialog-error';
 import { showWarningAlert } from './ui/alert-dialog-warning';
@@ -20,6 +20,11 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [isSipReady, setIsSipReady] = useState(false);
   const [ua, setUa] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
+  const [showContactsPopup, setShowContactsPopup] = useState(false);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+  const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
   const [sipSettings, setSipSettings] = useState({
     server: '',
     port: '8088',
@@ -127,6 +132,48 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     } catch (error) {
       showErrorAlert('Erro ao carregar configurações VoIP', formatAxiosError(error));
     }
+  };
+
+  const loadContacts = async () => {
+    try {
+      setContactsLoading(true);
+      const response = await chatService.getContacts();
+      const list = response?.data?.contacts || [];
+      setContacts(list.filter((contact: any) => contact.phone && String(contact.phone).trim() !== ''));
+    } catch (error) {
+      showErrorAlert('Erro ao carregar contatos', formatAxiosError(error));
+    } finally {
+      setContactsLoading(false);
+    }
+  };
+
+  const openContactsPopup = async () => {
+    setShowContactsPopup(true);
+    setSelectedContactId(null);
+    setContactSearch('');
+    await loadContacts();
+  };
+
+  const filteredContacts = contacts.filter((contact) => {
+    const term = contactSearch.toLowerCase().trim();
+    if (!term) return true;
+    const name = String(contact.name || '').toLowerCase();
+    const phone = String(contact.phone || '').toLowerCase();
+    return name.includes(term) || phone.includes(term);
+  });
+
+  const useSelectedContactPhone = () => {
+    if (!selectedContactId) {
+      showWarningAlert('Selecione um contato', 'Escolha um contato para usar o telefone no discador.', null);
+      return;
+    }
+    const selected = contacts.find((contact) => contact.id === selectedContactId);
+    if (!selected?.phone) {
+      showWarningAlert('Contato sem telefone', 'O contato selecionado não possui telefone válido.', null);
+      return;
+    }
+    setPhoneNumber(String(selected.phone));
+    setShowContactsPopup(false);
   };
 
   const cleanupRemoteAudio = () => {
@@ -382,6 +429,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const SipStatusIcon = sipStatusStyle.icon;
 
   return (
+    <>
     <div className="bg-slate-800/50 rounded-lg p-6 max-w-sm mx-auto">
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
@@ -410,6 +458,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
           <Eraser size={20} className="text-purple-400" />
         </button>
         <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
+          onClick={openContactsPopup}
           title="Visualizar contatos">
           <User size={20} className="text-purple-400" />
         </button>
@@ -478,6 +527,76 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       </div>
 
     </div>
+    {showContactsPopup && (
+      <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+          <div className="flex items-center justify-between p-4 border-b border-slate-700">
+            <h3 className="text-white font-semibold">Selecionar Contato</h3>
+            <button
+              onClick={() => setShowContactsPopup(false)}
+              className="text-slate-300 hover:text-white"
+              title="Fechar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-4">
+            <div className="relative mb-3">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou telefone"
+                value={contactSearch}
+                onChange={(e) => setContactSearch(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-600 rounded-md pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+              {contactsLoading && (
+                <p className="text-sm text-slate-300">Carregando contatos...</p>
+              )}
+
+              {!contactsLoading && filteredContacts.length === 0 && (
+                <p className="text-sm text-slate-300">Nenhum contato com telefone encontrado.</p>
+              )}
+
+              {!contactsLoading && filteredContacts.map((contact) => (
+                <button
+                  key={contact.id}
+                  onClick={() => setSelectedContactId(contact.id)}
+                  className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                    selectedContactId === contact.id
+                      ? 'border-green-400 bg-green-500/10'
+                      : 'border-slate-700 bg-slate-800 hover:bg-slate-700/70'
+                  }`}
+                >
+                  <p className="text-white text-sm font-medium">{contact.name || 'Sem nome'}</p>
+                  <p className="text-slate-300 text-xs">{contact.phone}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+            <button
+              onClick={() => setShowContactsPopup(false)}
+              className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={useSelectedContactPhone}
+              className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 text-sm"
+            >
+              Usar telefone
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
