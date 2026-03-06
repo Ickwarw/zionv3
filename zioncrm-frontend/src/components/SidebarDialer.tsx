@@ -454,6 +454,9 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   if (!isVisible) return null;
 
   const hasCallInProgress = Boolean(activeSession || currentCallId);
+  const sipDisconnected = !isSipReady;
+  const hasSipCredentials = sipUsername.trim() !== '' && sipPassword.trim() !== '';
+  const canConnectSip = sipDisconnected && !isSipConnecting && hasSipCredentials;
   const callStatusStyle = getCallStatusStyle();
   const sipStatusStyle = getSipStatusStyle();
   const CallStatusIcon = callStatusStyle.icon;
@@ -484,13 +487,27 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         </div>
 
         <div className="flex justify-center space-x-8 mb-6">
-          <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Limpar número discado">
+          <button
+            onClick={() => setPhoneNumber('')}
+            disabled={sipDisconnected}
+            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Limpar número discado"
+          >
             <Eraser size={20} className="text-purple-400" />
           </button>
-          <button onClick={openContactsPopup} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Visualizar contatos">
+          <button
+            onClick={openContactsPopup}
+            disabled={sipDisconnected}
+            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Visualizar contatos"
+          >
             <User size={20} className="text-purple-400" />
           </button>
-          <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Transferir chamada">
+          <button
+            disabled={sipDisconnected}
+            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Transferir chamada"
+          >
             <PhoneForwarded size={20} className="text-purple-400" />
           </button>
         </div>
@@ -498,23 +515,28 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         <div className="grid grid-cols-3 gap-4 mb-6">
           {dialpadNumbers.flat().map((num) => (
             <button
-              key={num}
-              onClick={() => setPhoneNumber((prev) => prev + num)}
-              className="h-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xl font-semibold transition-colors"
-            >
-              {num}
-            </button>
+            key={num}
+            onClick={() => setPhoneNumber((prev) => prev + num)}
+            disabled={sipDisconnected}
+            className="h-14 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white text-xl font-semibold transition-colors"
+          >
+            {num}
+          </button>
           ))}
         </div>
 
         <div className="flex justify-center space-x-8 mb-4">
-          <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Adicionar contato">
+          <button
+            disabled={sipDisconnected}
+            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Adicionar contato"
+          >
             <UserPlus size={20} className="text-purple-400" />
           </button>
           {hasCallInProgress ? (
             <button
               onClick={handleHangup}
-              disabled={isSubmitting}
+              disabled={sipDisconnected || isSubmitting}
               className="p-4 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
               title="Encerrar ligação"
             >
@@ -523,14 +545,18 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
           ) : (
             <button
               onClick={handleCall}
-              disabled={isSubmitting}
+              disabled={sipDisconnected || isSubmitting}
               className="p-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
               title="Iniciar/atender ligação"
             >
               <Phone size={24} className="text-white" />
             </button>
           )}
-          <button onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
+          <button
+            onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))}
+            disabled={sipDisconnected}
+            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
             <Delete size={20} className="text-purple-400" />
           </button>
         </div>
@@ -573,7 +599,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
             </div>
             <button
               onClick={isSipReady ? disconnectSip : connectSip}
-              disabled={isSipConnecting}
+              disabled={isSipReady ? isSipConnecting : !canConnectSip}
               className="px-2 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-60"
               title={isSipReady ? 'Desconectar' : 'Conectar no SIP'}
             >
