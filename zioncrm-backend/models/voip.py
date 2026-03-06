@@ -44,9 +44,7 @@ class VoipExtension(db.Model, BaseModel):
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     extension_number = db.Column(db.String(20), nullable=False, unique=True)
-    password = db.Column(db.String(64))
     display_name = db.Column(db.String(64))
-    sip_server = db.Column(db.String(128))
     is_active = db.Column(db.Boolean, default=True)
     
     def to_dict(self):
@@ -55,7 +53,6 @@ class VoipExtension(db.Model, BaseModel):
             'user_id': self.user_id,
             'extension_number': self.extension_number,
             'display_name': self.display_name,
-            'sip_server': self.sip_server,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

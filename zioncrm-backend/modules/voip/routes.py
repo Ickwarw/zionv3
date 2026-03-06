@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.user import User
 from models.voip import CallLog, VoipExtension, VoipContact
 from extensions import db, socketio
 from flask_socketio import emit, join_room
@@ -87,7 +86,6 @@ def get_extensions():
                 'user_id': ext.user_id,
                 'extension_number': ext.extension_number,
                 'display_name': ext.display_name,
-                'sip_server': ext.sip_server,
                 'is_current_user': ext.user_id == current_user_id
             }
             for ext in extensions
@@ -99,30 +97,34 @@ def get_extensions():
 @jwt_required()
 def create_extension():
     current_user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json() or {}
     
-    if not data or not data.get('extension_number'):
+    if not data.get('extension_number'):
         return jsonify({'message': 'Missing extension number'}), 400
-    
-    # Check if extension already exists
-    extension = VoipExtension.query.filter_by(user_id=current_user_id).first()
-    
+
+    extension_number = str(data['extension_number']).strip()
+    display_name = str(data.get('display_name') or extension_number).strip()
+
+    # Se a extensão já existe, apenas atualiza o display_name quando necessário.
+    extension = VoipExtension.query.filter_by(extension_number=extension_number).first()
+
     if extension:
-        # Update existing extension
-        extension.extension_number = data['extension_number']
-        extension.password = data.get('password', extension.password)
-        extension.display_name = data.get('display_name', extension.display_name)
-        extension.sip_server = data.get('sip_server', extension.sip_server)
+        if display_name and extension.display_name != display_name:
+            extension.display_name = display_name
     else:
-        # Create new extension
-        extension = VoipExtension(
-            user_id=current_user_id,
-            extension_number=data['extension_number'],
-            password=data.get('password', ''),
-            display_name=data.get('display_name', ''),
-            sip_server=data.get('sip_server', '')
-        )
-        db.session.add(extension)
+        user_extension = VoipExtension.query.filter_by(user_id=current_user_id).first()
+        if user_extension:
+            user_extension.extension_number = extension_number
+            if display_name:
+                user_extension.display_name = display_name
+            extension = user_extension
+        else:
+            extension = VoipExtension(
+                user_id=current_user_id,
+                extension_number=extension_number,
+                display_name=display_name
+            )
+            db.session.add(extension)
     
     db.session.commit()
     

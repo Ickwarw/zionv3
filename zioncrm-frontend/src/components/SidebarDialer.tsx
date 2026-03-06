@@ -42,9 +42,11 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
   const sipUserStorageKey = `voip:sip:user:${storedUser?.id || 'default'}`;
   const sipPassStorageKey = `voip:sip:pass:${storedUser?.id || 'default'}`;
+  const sipNameStorageKey = `voip:sip:name:${storedUser?.id || 'default'}`;
 
   const [sipUsername, setSipUsername] = useState('');
   const [sipPassword, setSipPassword] = useState('');
+  const [sipDisplayName, setSipDisplayName] = useState('');
   const [showSipPassword, setShowSipPassword] = useState(false);
 
   const callStartRef = useRef<number | null>(null);
@@ -140,6 +142,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const loadStoredSipCredentials = () => {
     setSipUsername(localStorage.getItem(sipUserStorageKey) || '');
     setSipPassword(localStorage.getItem(sipPassStorageKey) || '');
+    setSipDisplayName(localStorage.getItem(sipNameStorageKey) || '');
   };
 
   const loadContacts = async () => {
@@ -295,6 +298,12 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         setIsSipReady(true);
         setIsSipConnecting(false);
         console.log('SIP registrado com sucesso:', wsUrl);
+        voipService.createExtension({
+          extension_number: sipUsername,
+          display_name: (sipDisplayName || sipUsername).trim()
+        }).catch((error) => {
+          console.error('Falha ao persistir extensão no backend', error);
+        });
       });
 
       userAgent.on('registrationFailed', (event: any) => {
@@ -314,6 +323,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
       localStorage.setItem(sipUserStorageKey, sipUsername);
       localStorage.setItem(sipPassStorageKey, sipPassword);
+      localStorage.setItem(sipNameStorageKey, sipDisplayName || sipUsername);
     } catch (error) {
       setIsSipConnecting(false);
       showErrorAlert('Erro ao conectar SIP', formatAxiosError(error));
@@ -636,7 +646,15 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
             <span>Chamada: {callStatusStyle.label}</span>
           </div>
 
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2">
+            <input
+              type="text"
+              placeholder="Nome"
+              value={sipDisplayName}
+              onChange={(e) => setSipDisplayName(e.target.value)}
+              disabled={isSipReady || isSipConnecting}
+              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+            />
             <input
               type="text"
               placeholder="Usuário SIP"
