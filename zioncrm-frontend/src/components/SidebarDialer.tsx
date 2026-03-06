@@ -23,10 +23,13 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [activeSession, setActiveSession] = useState<any>(null);
 
   const [showContactsPopup, setShowContactsPopup] = useState(false);
+  const [contactsViewMode, setContactsViewMode] = useState<'clients' | 'extensions'>('clients');
   const [contacts, setContacts] = useState<any[]>([]);
+  const [directoryExtensions, setDirectoryExtensions] = useState<any[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
+  const [selectedDirectoryExtension, setSelectedDirectoryExtension] = useState<string>('');
   const [showTransferPopup, setShowTransferPopup] = useState(false);
   const [extensions, setExtensions] = useState<any[]>([]);
   const [extensionsLoading, setExtensionsLoading] = useState(false);
@@ -171,11 +174,26 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     }
   };
 
+  const loadDirectoryExtensions = async () => {
+    try {
+      setContactsLoading(true);
+      const response = await voipService.getExtensions();
+      const list = response?.data?.extensions || [];
+      setDirectoryExtensions(list);
+    } catch (error) {
+      showErrorAlert('Erro ao carregar ramais', formatAxiosError(error));
+    } finally {
+      setContactsLoading(false);
+    }
+  };
+
   const openContactsPopup = async () => {
     setShowContactsPopup(true);
+    setContactsViewMode('clients');
     setSelectedContactId(null);
+    setSelectedDirectoryExtension('');
     setContactSearch('');
-    await loadContacts();
+    await Promise.all([loadContacts(), loadDirectoryExtensions()]);
   };
 
   const openTransferPopup = async () => {
@@ -195,17 +213,33 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     return name.includes(term) || phone.includes(term);
   });
 
+  const filteredDirectoryExtensions = directoryExtensions.filter((extension) => {
+    const term = contactSearch.toLowerCase().trim();
+    if (!term) return true;
+    const name = String(extension.display_name || '').toLowerCase();
+    const number = String(extension.extension_number || '').toLowerCase();
+    return name.includes(term) || number.includes(term);
+  });
+
   const useSelectedContactPhone = () => {
-    if (!selectedContactId) {
-      showWarningAlert('Selecione um contato', 'Escolha um contato para usar o telefone no discador.', null);
-      return;
+    if (contactsViewMode === 'clients') {
+      if (!selectedContactId) {
+        showWarningAlert('Selecione um contato', 'Escolha um contato para usar o telefone no discador.', null);
+        return;
+      }
+      const selected = contacts.find((contact) => contact.id === selectedContactId);
+      if (!selected?.phone) {
+        showWarningAlert('Contato sem telefone', 'O contato selecionado não possui telefone válido.', null);
+        return;
+      }
+      setPhoneNumber(String(selected.phone));
+    } else {
+      if (!selectedDirectoryExtension) {
+        showWarningAlert('Selecione um ramal', 'Escolha um ramal para usar no discador.', null);
+        return;
+      }
+      setPhoneNumber(String(selectedDirectoryExtension));
     }
-    const selected = contacts.find((contact) => contact.id === selectedContactId);
-    if (!selected?.phone) {
-      showWarningAlert('Contato sem telefone', 'O contato selecionado não possui telefone válido.', null);
-      return;
-    }
-    setPhoneNumber(String(selected.phone));
     setShowContactsPopup(false);
   };
 
@@ -780,11 +814,40 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
             </div>
 
             <div className="p-4">
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => {
+                    setContactsViewMode('clients');
+                    setSelectedDirectoryExtension('');
+                  }}
+                  className={`px-3 py-2 rounded-md text-sm ${
+                    contactsViewMode === 'clients'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-slate-700 text-slate-100 hover:bg-slate-600'
+                  }`}
+                >
+                  Clientes
+                </button>
+                <button
+                  onClick={() => {
+                    setContactsViewMode('extensions');
+                    setSelectedContactId(null);
+                  }}
+                  className={`px-3 py-2 rounded-md text-sm ${
+                    contactsViewMode === 'extensions'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-slate-700 text-slate-100 hover:bg-slate-600'
+                  }`}
+                >
+                  Ramais
+                </button>
+              </div>
+
               <div className="relative mb-3">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Buscar por nome ou telefone"
+                  placeholder={contactsViewMode === 'clients' ? 'Buscar por nome ou telefone' : 'Buscar por nome ou ramal'}
                   value={contactSearch}
                   onChange={(e) => setContactSearch(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-600 rounded-md pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-green-500"
@@ -794,11 +857,15 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
               <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                 {contactsLoading && <p className="text-sm text-slate-300">Carregando contatos...</p>}
 
-                {!contactsLoading && filteredContacts.length === 0 && (
+                {!contactsLoading && contactsViewMode === 'clients' && filteredContacts.length === 0 && (
                   <p className="text-sm text-slate-300">Nenhum contato com telefone encontrado.</p>
                 )}
 
-                {!contactsLoading && filteredContacts.map((contact) => (
+                {!contactsLoading && contactsViewMode === 'extensions' && filteredDirectoryExtensions.length === 0 && (
+                  <p className="text-sm text-slate-300">Nenhum ramal encontrado.</p>
+                )}
+
+                {!contactsLoading && contactsViewMode === 'clients' && filteredContacts.map((contact) => (
                   <button
                     key={contact.id}
                     onClick={() => setSelectedContactId(contact.id)}
@@ -810,6 +877,21 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
                   >
                     <p className="text-white text-sm font-medium">{contact.name || 'Sem nome'}</p>
                     <p className="text-slate-300 text-xs">{contact.phone}</p>
+                  </button>
+                ))}
+
+                {!contactsLoading && contactsViewMode === 'extensions' && filteredDirectoryExtensions.map((extension) => (
+                  <button
+                    key={extension.id}
+                    onClick={() => setSelectedDirectoryExtension(extension.extension_number)}
+                    className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                      selectedDirectoryExtension === extension.extension_number
+                        ? 'border-green-400 bg-green-500/10'
+                        : 'border-slate-700 bg-slate-800 hover:bg-slate-700/70'
+                    }`}
+                  >
+                    <p className="text-white text-sm font-medium">{extension.display_name || extension.extension_number}</p>
+                    <p className="text-slate-300 text-xs">{extension.extension_number}</p>
                   </button>
                 ))}
               </div>
