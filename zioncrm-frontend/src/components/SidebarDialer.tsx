@@ -27,6 +27,11 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
+  const [showTransferPopup, setShowTransferPopup] = useState(false);
+  const [extensions, setExtensions] = useState<any[]>([]);
+  const [extensionsLoading, setExtensionsLoading] = useState(false);
+  const [selectedTransferExtension, setSelectedTransferExtension] = useState<string>('');
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
 
   const [sipSettings, setSipSettings] = useState({
     server: '',
@@ -150,11 +155,33 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     }
   };
 
+  const loadExtensions = async () => {
+    try {
+      setExtensionsLoading(true);
+      const response = await voipService.getExtensions();
+      const list = response?.data?.extensions || [];
+      setExtensions(list.filter((ext: any) => !ext.is_current_user));
+    } catch (error) {
+      showErrorAlert('Erro ao carregar ramais', formatAxiosError(error));
+    } finally {
+      setExtensionsLoading(false);
+    }
+  };
+
   const openContactsPopup = async () => {
     setShowContactsPopup(true);
     setSelectedContactId(null);
     setContactSearch('');
     await loadContacts();
+  };
+
+  const openTransferPopup = async () => {
+    if (!hasCallInProgress) {
+      return;
+    }
+    setShowTransferPopup(true);
+    setSelectedTransferExtension('');
+    await loadExtensions();
   };
 
   const filteredContacts = contacts.filter((contact) => {
@@ -412,6 +439,45 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     }
   };
 
+  const handleTransfer = async () => {
+    if (!activeSession || !currentCallId) {
+      showWarningAlert('Sem ligação ativa', 'Só é possível transferir com uma ligação em andamento.', null);
+      return;
+    }
+    if (!selectedTransferExtension) {
+      showWarningAlert('Selecione um ramal', 'Escolha o ramal de destino para transferir.', null);
+      return;
+    }
+
+    try {
+      setTransferSubmitting(true);
+      const target = selectedTransferExtension.includes('@')
+        ? `sip:${selectedTransferExtension}`
+        : `sip:${selectedTransferExtension}@${sipDomain}`;
+
+      activeSession.refer(target);
+
+      await voipService.updateCallStatus({
+        call_id: currentCallId,
+        status: 'completed',
+        transferred: true,
+        transfer_to_extension: selectedTransferExtension,
+        end_time: new Date().toISOString()
+      });
+
+      setCallStatus('completed');
+      setActiveSession(null);
+      setCurrentCallId(null);
+      callStartRef.current = null;
+      cleanupRemoteAudio();
+      setShowTransferPopup(false);
+    } catch (error) {
+      showErrorAlert('Falha ao transferir chamada', formatAxiosError(error));
+    } finally {
+      setTransferSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     loadSipSettings();
   }, []);
@@ -504,7 +570,8 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
             <User size={20} className="text-purple-400" />
           </button>
           <button
-            disabled={sipDisconnected}
+            onClick={openTransferPopup}
+            disabled={sipDisconnected || !hasCallInProgress}
             className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Transferir chamada"
           >
@@ -613,6 +680,68 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
           </div>
         </div>
       </div>
+
+      {showTransferPopup && (
+        <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold">Transferir Chamada</h3>
+              <button
+                onClick={() => setShowTransferPopup(false)}
+                className="text-slate-300 hover:text-white"
+                title="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {extensionsLoading && (
+                <p className="text-sm text-slate-300">Carregando ramais...</p>
+              )}
+
+              {!extensionsLoading && extensions.length === 0 && (
+                <p className="text-sm text-slate-300">Nenhum ramal disponível para transferência.</p>
+              )}
+
+              {!extensionsLoading && extensions.length > 0 && (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {extensions.map((extension) => (
+                    <button
+                      key={extension.id}
+                      onClick={() => setSelectedTransferExtension(extension.extension_number)}
+                      className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                        selectedTransferExtension === extension.extension_number
+                          ? 'border-green-400 bg-green-500/10'
+                          : 'border-slate-700 bg-slate-800 hover:bg-slate-700/70'
+                      }`}
+                    >
+                      <p className="text-white text-sm font-medium">{extension.display_name || extension.extension_number}</p>
+                      <p className="text-slate-300 text-xs">Ramal: {extension.extension_number}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => setShowTransferPopup(false)}
+                className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleTransfer}
+                disabled={transferSubmitting || !selectedTransferExtension || extensionsLoading}
+                className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 text-sm"
+              >
+                Transferir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showContactsPopup && (
         <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">

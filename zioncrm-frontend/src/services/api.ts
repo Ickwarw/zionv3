@@ -664,6 +664,10 @@ export const voipService = {
   getExtension: () => {
     return api.get('/voip/extension');
   },
+
+  getExtensions: () => {
+    return api.get('/voip/extensions');
+  },
   
   createExtension: (extensionData: any) => {
     return api.post('/voip/extension', extensionData);

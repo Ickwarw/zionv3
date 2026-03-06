@@ -13,6 +13,9 @@ class CallLog(db.Model, BaseModel):
     end_time = db.Column(db.DateTime)
     duration = db.Column(db.Integer)  # in seconds
     status = db.Column(db.String(20))  # initiating, ringing, connected, completed, failed
+    transferred = db.Column(db.Boolean, default=False)
+    transferred_to_extension = db.Column(db.String(20))
+    transferred_at = db.Column(db.DateTime)
     recording_url = db.Column(db.String(255))
     notes = db.Column(db.Text)
     
@@ -28,6 +31,9 @@ class CallLog(db.Model, BaseModel):
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'duration': self.duration,
             'status': self.status,
+            'transferred': self.transferred,
+            'transferred_to_extension': self.transferred_to_extension,
+            'transferred_at': self.transferred_at.isoformat() if self.transferred_at else None,
             'recording_url': self.recording_url,
             'notes': self.notes,
             'created_at': self.created_at.isoformat()

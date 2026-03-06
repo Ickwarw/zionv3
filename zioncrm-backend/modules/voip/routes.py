@@ -68,6 +68,32 @@ def get_extension():
     
     return jsonify(extension.to_dict()), 200
 
+
+@voip_bp.route('/extensions', methods=['GET'])
+@jwt_required()
+def get_extensions():
+    current_user_id = get_jwt_identity()
+    extensions = (
+        VoipExtension.query
+        .filter_by(is_active=True)
+        .order_by(VoipExtension.extension_number.asc())
+        .all()
+    )
+
+    return jsonify({
+        'extensions': [
+            {
+                'id': ext.id,
+                'user_id': ext.user_id,
+                'extension_number': ext.extension_number,
+                'display_name': ext.display_name,
+                'sip_server': ext.sip_server,
+                'is_current_user': ext.user_id == current_user_id
+            }
+            for ext in extensions
+        ]
+    }), 200
+
 # Create or update user's VoIP extension
 @voip_bp.route('/extension', methods=['POST'])
 @jwt_required()
@@ -382,6 +408,12 @@ def update_call_status():
         return jsonify({'message': 'Call not found'}), 404
 
     call.status = status
+    if data.get('transferred') is True:
+        call.transferred = True
+    if data.get('transfer_to_extension'):
+        call.transferred = True
+        call.transferred_to_extension = str(data.get('transfer_to_extension'))
+        call.transferred_at = datetime.utcnow()
 
     if data.get('phone_number'):
         call.phone_number = _normalize_phone_number(data['phone_number']) or call.phone_number
