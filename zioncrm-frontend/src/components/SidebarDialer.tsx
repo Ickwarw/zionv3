@@ -497,6 +497,12 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   }, [storedUser?.id]);
 
   useEffect(() => {
+    localStorage.setItem(sipUserStorageKey, sipUsername);
+    localStorage.setItem(sipPassStorageKey, sipPassword);
+    localStorage.setItem(sipNameStorageKey, sipDisplayName);
+  }, [sipDisplayName, sipNameStorageKey, sipPassStorageKey, sipPassword, sipUserStorageKey, sipUsername]);
+
+  useEffect(() => {
     return () => {
       disconnectSip();
       cleanupRemoteAudio();
@@ -646,14 +652,14 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
             <span>Chamada: {callStatusStyle.label}</span>
           </div>
 
-          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2">
+          <div className="space-y-2">
             <input
               type="text"
               placeholder="Nome"
               value={sipDisplayName}
               onChange={(e) => setSipDisplayName(e.target.value)}
               disabled={isSipReady || isSipConnecting}
-              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+              className="w-full bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
             />
             <input
               type="text"
@@ -661,35 +667,37 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
               value={sipUsername}
               onChange={(e) => setSipUsername(e.target.value)}
               disabled={isSipReady || isSipConnecting}
-              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+              className="w-full bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
             />
-            <div className="relative">
-              <input
-                type={showSipPassword ? 'text' : 'password'}
-                placeholder="Senha SIP"
-                value={sipPassword}
-                onChange={(e) => setSipPassword(e.target.value)}
-                disabled={isSipReady || isSipConnecting}
-                className="w-full bg-slate-800 border border-slate-600 rounded-md px-2 py-1 pr-8 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
-              />
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="relative">
+                <input
+                  type={showSipPassword ? 'text' : 'password'}
+                  placeholder="Senha SIP"
+                  value={sipPassword}
+                  onChange={(e) => setSipPassword(e.target.value)}
+                  disabled={isSipReady || isSipConnecting}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-md px-2 py-1 pr-8 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSipPassword((prev) => !prev)}
+                  disabled={isSipReady || isSipConnecting}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white disabled:opacity-60"
+                  title={showSipPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showSipPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
               <button
-                type="button"
-                onClick={() => setShowSipPassword((prev) => !prev)}
-                disabled={isSipReady || isSipConnecting}
-                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white disabled:opacity-60"
-                title={showSipPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                onClick={isSipReady ? disconnectSip : connectSip}
+                disabled={isSipReady ? isSipConnecting : !canConnectSip}
+                className="px-2 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-60"
+                title={isSipReady ? 'Desconectar' : 'Conectar no SIP'}
               >
-                {showSipPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                {isSipReady ? <WifiOff size={16} /> : <RefreshCw size={16} className={isSipConnecting ? 'animate-spin' : ''} />}
               </button>
             </div>
-            <button
-              onClick={isSipReady ? disconnectSip : connectSip}
-              disabled={isSipReady ? isSipConnecting : !canConnectSip}
-              className="px-2 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-60"
-              title={isSipReady ? 'Desconectar' : 'Conectar no SIP'}
-            >
-              {isSipReady ? <WifiOff size={16} /> : <RefreshCw size={16} className={isSipConnecting ? 'animate-spin' : ''} />}
-            </button>
           </div>
 
           <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${sipStatusStyle.cls}`}>
