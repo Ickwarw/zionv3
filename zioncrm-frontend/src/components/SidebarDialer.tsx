@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RefreshCw, Search, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Delete, Eraser, Eye, EyeOff, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RefreshCw, Search, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
 import JsSIP from 'jssip';
 import { chatService, configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
@@ -40,6 +40,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
   const [sipUsername, setSipUsername] = useState('');
   const [sipPassword, setSipPassword] = useState('');
+  const [showSipPassword, setShowSipPassword] = useState(false);
 
   const callStartRef = useRef<number | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -551,14 +552,25 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
               disabled={isSipReady || isSipConnecting}
               className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
             />
-            <input
-              type="password"
-              placeholder="Senha SIP"
-              value={sipPassword}
-              onChange={(e) => setSipPassword(e.target.value)}
-              disabled={isSipReady || isSipConnecting}
-              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
-            />
+            <div className="relative">
+              <input
+                type={showSipPassword ? 'text' : 'password'}
+                placeholder="Senha SIP"
+                value={sipPassword}
+                onChange={(e) => setSipPassword(e.target.value)}
+                disabled={isSipReady || isSipConnecting}
+                className="w-full bg-slate-800 border border-slate-600 rounded-md px-2 py-1 pr-8 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSipPassword((prev) => !prev)}
+                disabled={isSipReady || isSipConnecting}
+                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white disabled:opacity-60"
+                title={showSipPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showSipPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
             <button
               onClick={isSipReady ? disconnectSip : connectSip}
               disabled={isSipConnecting}
