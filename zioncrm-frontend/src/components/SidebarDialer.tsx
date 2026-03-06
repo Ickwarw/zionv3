@@ -35,6 +35,12 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [extensionsLoading, setExtensionsLoading] = useState(false);
   const [selectedTransferExtension, setSelectedTransferExtension] = useState<string>('');
   const [transferSubmitting, setTransferSubmitting] = useState(false);
+  const [showAddContactPopup, setShowAddContactPopup] = useState(false);
+  const [addContactSubmitting, setAddContactSubmitting] = useState(false);
+  const [addContactForm, setAddContactForm] = useState({
+    name: '',
+    phone: ''
+  });
 
   const [sipSettings, setSipSettings] = useState({
     server: '',
@@ -205,6 +211,14 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     await loadExtensions();
   };
 
+  const openAddContactPopup = () => {
+    setAddContactForm({
+      name: '',
+      phone: phoneNumber ? String(phoneNumber) : ''
+    });
+    setShowAddContactPopup(true);
+  };
+
   const filteredContacts = contacts.filter((contact) => {
     const term = contactSearch.toLowerCase().trim();
     if (!term) return true;
@@ -241,6 +255,36 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
       setPhoneNumber(String(selectedDirectoryExtension));
     }
     setShowContactsPopup(false);
+  };
+
+  const saveNewContact = async () => {
+    const name = addContactForm.name.trim();
+    const phone = addContactForm.phone.trim();
+    const phoneDigits = phone.replace(/\D/g, '');
+
+    if (!name || !phone) {
+      showWarningAlert('Campos obrigatórios', 'Nome e telefone são obrigatórios.', null);
+      return;
+    }
+
+    if (phoneDigits.length <= 4) {
+      showWarningAlert('Telefone inválido', 'O telefone deve ter mais de 4 dígitos (não pode ser apenas ramal).', null);
+      return;
+    }
+
+    try {
+      setAddContactSubmitting(true);
+      await chatService.addContact({
+        name,
+        phone,
+        contact_type: 'phone'
+      });
+      setShowAddContactPopup(false);
+    } catch (error) {
+      showErrorAlert('Erro ao salvar contato', formatAxiosError(error));
+    } finally {
+      setAddContactSubmitting(false);
+    }
   };
 
   const cleanupRemoteAudio = () => {
@@ -644,6 +688,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
         <div className="flex justify-center space-x-8 mb-4">
           <button
+            onClick={openAddContactPopup}
             disabled={sipDisconnected}
             className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Adicionar contato"
@@ -740,6 +785,63 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
           </div>
         </div>
       </div>
+
+      {showAddContactPopup && (
+        <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold">Adicionar Contato</h3>
+              <button
+                onClick={() => setShowAddContactPopup(false)}
+                className="text-slate-300 hover:text-white"
+                title="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs text-slate-300 mb-1 block">Nome *</label>
+                <input
+                  type="text"
+                  value={addContactForm.name}
+                  onChange={(e) => setAddContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Nome do contato"
+                  className="w-full bg-slate-800 border border-slate-600 rounded-md px-3 py-2 text-sm text-white placeholder:text-slate-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-300 mb-1 block">Telefone *</label>
+                <input
+                  type="text"
+                  value={addContactForm.phone}
+                  onChange={(e) => setAddContactForm((prev) => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Telefone do contato"
+                  className="w-full bg-slate-800 border border-slate-600 rounded-md px-3 py-2 text-sm text-white placeholder:text-slate-400"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">Deve ter mais de 4 dígitos.</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => setShowAddContactPopup(false)}
+                className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveNewContact}
+                disabled={addContactSubmitting}
+                className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 text-sm"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showTransferPopup && (
         <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
