@@ -677,8 +677,8 @@ export const voipService = {
     return api.get(`/voip/calls/${id}`);
   },
   
-  initiateCall: (phoneNumber: string) => {
-    return api.post('/voip/call', { phone_number: phoneNumber });
+  initiateCall: (phoneNumber: string, fromExtension?: string) => {
+    return api.post('/voip/call', { phone_number: phoneNumber, from_extension: fromExtension });
   },
 
   updateCallStatus: (payload: any) => {

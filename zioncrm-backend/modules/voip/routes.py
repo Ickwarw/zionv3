@@ -160,8 +160,9 @@ def initiate_call():
         return jsonify({'message': 'Missing phone number'}), 400
 
     extension = VoipExtension.query.filter_by(user_id=current_user_id).first()
-    if not extension:
-        return jsonify({'message': 'No VoIP extension configured for this user'}), 400
+    from_extension = data.get('from_extension')
+    if not from_extension and extension:
+        from_extension = extension.extension_number
 
     target_phone_number = _normalize_phone_number(data['phone_number'])
     if not target_phone_number:
@@ -172,8 +173,11 @@ def initiate_call():
     gateway_enabled = bool(current_app.config.get('VOIP_GATEWAY_URL') and _build_gateway_auth_payload())
 
     if gateway_enabled:
+        if not from_extension:
+            return jsonify({'message': 'Missing from_extension to initiate gateway call'}), 400
+
         gateway_response, gateway_error = _gateway_post('/calls/initiate', {
-            'from': extension.extension_number,
+            'from': from_extension,
             'to': target_phone_number,
             'extra': {
                 'user_id': current_user_id

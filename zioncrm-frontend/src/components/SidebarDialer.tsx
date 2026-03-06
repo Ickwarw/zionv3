@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RotateCcw, Search, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Delete, Eraser, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, RefreshCw, Search, User, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
 import JsSIP from 'jssip';
 import { chatService, configService, voipService } from '@/services/api';
 import { formatAxiosError } from './ui/formatResponseError';
@@ -18,22 +18,29 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSipReady, setIsSipReady] = useState(false);
+  const [isSipConnecting, setIsSipConnecting] = useState(false);
   const [ua, setUa] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
+
   const [showContactsPopup, setShowContactsPopup] = useState(false);
   const [contacts, setContacts] = useState<any[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
+
   const [sipSettings, setSipSettings] = useState({
     server: '',
     port: '8088',
-    wsPath: '/ws',
-    extension: '',
-    password: ''
+    wsPath: '/ws'
   });
 
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const sipUserStorageKey = `voip:sip:user:${storedUser?.id || 'default'}`;
+  const sipPassStorageKey = `voip:sip:pass:${storedUser?.id || 'default'}`;
+
+  const [sipUsername, setSipUsername] = useState('');
+  const [sipPassword, setSipPassword] = useState('');
+
   const callStartRef = useRef<number | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
@@ -68,7 +75,8 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     let path = (wsPath || '').trim() || pathFromServer || '/ws';
     if (!path.startsWith('/')) path = `/${path}`;
 
-    return `ws://${hostWithPort}${path}`;
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${protocol}://${hostWithPort}${path}`;
   };
 
   const getDialDestination = (value: string) => {
@@ -98,6 +106,9 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     if (isSipReady) {
       return { label: 'SIP conectado', icon: Wifi, cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' };
     }
+    if (isSipConnecting) {
+      return { label: 'Conectando SIP...', icon: RefreshCw, cls: 'bg-amber-500/20 text-amber-300 border border-amber-400/40' };
+    }
     return { label: 'SIP desconectado', icon: WifiOff, cls: 'bg-red-500/20 text-red-300 border border-red-400/40' };
   };
 
@@ -110,28 +121,19 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
         confMap[conf.key] = conf.value;
       });
 
-      let extensionServer = '';
-      let extensionNumber = '';
-      let extensionPassword = '';
-      try {
-        const extResponse = await voipService.getExtension();
-        extensionServer = extResponse?.data?.sip_server || '';
-        extensionNumber = extResponse?.data?.extension_number || '';
-        extensionPassword = extResponse?.data?.password || '';
-      } catch {
-        // usuario sem extensao cadastrada
-      }
-
       setSipSettings({
-        server: extensionServer || confMap['voip.server'] || '',
+        server: confMap['voip.server'] || '',
         port: confMap['voip.port'] || '8088',
-        wsPath: confMap['voip.ws_path'] || '/ws',
-        extension: extensionNumber || confMap['voip.user'] || '',
-        password: extensionPassword || confMap['voip.pass'] || ''
+        wsPath: confMap['voip.ws_path'] || '/ws'
       });
     } catch (error) {
       showErrorAlert('Erro ao carregar configurações VoIP', formatAxiosError(error));
     }
+  };
+
+  const loadStoredSipCredentials = () => {
+    setSipUsername(localStorage.getItem(sipUserStorageKey) || '');
+    setSipPassword(localStorage.getItem(sipPassStorageKey) || '');
   };
 
   const loadContacts = async () => {
@@ -196,7 +198,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
     const playRemoteAudio = () => {
       remoteAudioRef.current?.play().catch(() => {
-        // navegador pode bloquear autoplay sem gesto adicional
+        // browser pode bloquear autoplay sem gesto adicional
       });
     };
 
@@ -220,11 +222,81 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
     });
   };
 
+  const disconnectSip = () => {
+    if (activeSession) {
+      activeSession.terminate();
+    }
+    ua?.stop();
+    setUa(null);
+    setIsSipReady(false);
+    setIsSipConnecting(false);
+  };
+
+  const connectSip = () => {
+    if (!sipSettings.server) {
+      showWarningAlert('Servidor SIP não configurado', 'Defina servidor/porta/path nas configurações VoIP.', null);
+      return;
+    }
+    if (!sipUsername || !sipPassword) {
+      showWarningAlert('Credenciais obrigatórias', 'Informe usuário e senha SIP para conectar.', null);
+      return;
+    }
+
+    const wsUrl = getWsUrl(sipSettings.server, sipSettings.port, sipSettings.wsPath);
+    if (!wsUrl) {
+      showWarningAlert('WebSocket SIP inválido', 'Não foi possível montar a URL WS/WSS.', null);
+      return;
+    }
+
+    try {
+      setIsSipConnecting(true);
+      ua?.stop();
+
+      const socket = new JsSIP.WebSocketInterface(wsUrl);
+      const sipUri = sipUsername.includes('@') ? `sip:${sipUsername}` : `sip:${sipUsername}@${sipDomain}`;
+
+      const userAgent = new JsSIP.UA({
+        sockets: [socket],
+        uri: sipUri,
+        password: sipPassword,
+        session_timers: false,
+        register: true
+      });
+
+      userAgent.on('registered', () => {
+        setIsSipReady(true);
+        setIsSipConnecting(false);
+        console.log('SIP registrado com sucesso:', wsUrl);
+      });
+
+      userAgent.on('registrationFailed', (event: any) => {
+        setIsSipReady(false);
+        setIsSipConnecting(false);
+        console.error('Falha no registro SIP:', event?.cause || event);
+        showWarningAlert('Falha no registro SIP', `Causa: ${event?.cause || 'desconhecida'}`, null);
+      });
+
+      userAgent.on('disconnected', () => {
+        setIsSipReady(false);
+        setIsSipConnecting(false);
+      });
+
+      userAgent.start();
+      setUa(userAgent);
+
+      localStorage.setItem(sipUserStorageKey, sipUsername);
+      localStorage.setItem(sipPassStorageKey, sipPassword);
+    } catch (error) {
+      setIsSipConnecting(false);
+      showErrorAlert('Erro ao conectar SIP', formatAxiosError(error));
+    }
+  };
+
   const handleCall = async () => {
     if (!phoneNumber || isSubmitting) return;
 
     if (!ua || !isSipReady) {
-      showWarningAlert('SIP não conectado', 'Verifique as configurações VoIP e a conexão com o servidor SIP.', null);
+      showWarningAlert('SIP não conectado', 'Conecte no SIP antes de iniciar a ligação.', null);
       return;
     }
 
@@ -240,7 +312,7 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
     try {
       setIsSubmitting(true);
-      const response = await voipService.initiateCall(phoneNumber);
+      const response = await voipService.initiateCall(phoneNumber, sipUsername);
       const call = response?.data?.call;
       const callId = call?.call_id ?? null;
       if (!callId) {
@@ -344,57 +416,15 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
   }, []);
 
   useEffect(() => {
-    if (!isVisible) return;
+    loadStoredSipCredentials();
+  }, [storedUser?.id]);
 
-    if (!sipSettings.server || !sipSettings.extension || !sipSettings.password) {
-      setIsSipReady(false);
-      return;
-    }
-
-    const wsUrl = getWsUrl(sipSettings.server, sipSettings.port, sipSettings.wsPath);
-    if (!wsUrl) {
-      setIsSipReady(false);
-      return;
-    }
-
-    const socket = new JsSIP.WebSocketInterface(wsUrl);
-    const sipUri = `sip:${sipSettings.extension}@${sipDomain}`;
-    const userAgent = new JsSIP.UA({
-      sockets: [socket],
-      uri: sipUri,
-      password: sipSettings.password,
-      session_timers: false,
-      register: true
-    });
-
-    userAgent.on('registered', () => {
-      setIsSipReady(true);
-      console.log('SIP registrado com sucesso:', wsUrl);
-    });
-    userAgent.on('registrationFailed', (event: any) => {
-      setIsSipReady(false);
-      console.error('Falha no registro SIP:', event?.cause || event);
-      showWarningAlert('Falha no registro SIP', `Causa: ${event?.cause || 'desconhecida'}`, null);
-    });
-    userAgent.on('connected', () => {
-      console.log('WebSocket SIP conectado:', wsUrl);
-    });
-    userAgent.on('disconnected', (event: any) => {
-      setIsSipReady(false);
-      console.error('WebSocket SIP desconectado:', event?.cause || event);
-    });
-
-    userAgent.start();
-    setUa(userAgent);
-
+  useEffect(() => {
     return () => {
-      setIsSipReady(false);
-      setUa(null);
-      setActiveSession(null);
+      disconnectSip();
       cleanupRemoteAudio();
-      userAgent.stop();
     };
-  }, [isVisible, sipDomain, sipSettings.extension, sipSettings.password, sipSettings.port, sipSettings.server, sipSettings.wsPath]);
+  }, []);
 
   useEffect(() => {
     if (!storedUser?.id) return;
@@ -430,172 +460,179 @@ const SidebarDialer = ({ isVisible, onClose }: SidebarDialerProps) => {
 
   return (
     <>
-    <div className="bg-slate-800/50 rounded-lg p-6 max-w-sm mx-auto">
-      <audio ref={remoteAudioRef} autoPlay playsInline />
+      <div className="bg-slate-800/50 rounded-lg p-6 max-w-sm mx-auto">
+        <audio ref={remoteAudioRef} autoPlay playsInline />
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${isSipReady ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-          <span className="text-white font-semibold">Discador</span>
-        </div>
-        <button onClick={onClose} className="text-purple-400 hover:text-white">
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="w-6 h-4 bg-green-500 rounded-sm flex items-center justify-center">
-          <span className="text-xs">🇧🇷</span>
-        </div>
-        <div className="flex-1 bg-slate-700 rounded px-3 py-2 min-h-[40px] flex items-center">
-          <span className="text-white font-mono text-lg">{phoneNumber || ''}</span>
-        </div>
-      </div>
-
-      <div className="flex justify-center space-x-8 mb-6">
-        <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-          title="Limpar número discado">
-          <Eraser size={20} className="text-purple-400" />
-        </button>
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-          onClick={openContactsPopup}
-          title="Visualizar contatos">
-          <User size={20} className="text-purple-400" />
-        </button>
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-          title="Transferir chamada">
-          <PhoneForwarded size={20} className="text-purple-400" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {dialpadNumbers.flat().map((num) => (
-          <button
-            key={num}
-            onClick={() => setPhoneNumber((prev) => prev + num)}
-            className="h-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xl font-semibold transition-colors"
-          >
-            {num}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <div className={`w-3 h-3 rounded-full ${isSipReady ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+            <span className="text-white font-semibold">Discador</span>
+          </div>
+          <button onClick={onClose} className="text-purple-400 hover:text-white">
+            <X size={16} />
           </button>
-        ))}
-      </div>
-
-      <div className="flex justify-center space-x-8 mb-4">
-        <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-          title="Adicionar contato">
-          <UserPlus size={20} className="text-purple-400" />
-        </button>
-        {hasCallInProgress ? (
-          <button
-            onClick={handleHangup}
-            disabled={isSubmitting}
-            className="p-4 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-            title="Encerrar ligação"
-          >
-            <PhoneOff size={24} className="text-white" />
-          </button>
-        ) : (
-          <button
-            onClick={handleCall}
-            disabled={isSubmitting}
-            className="p-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-            title="Iniciar/atender ligação"
-          >
-            <Phone size={24} className="text-white" />
-          </button>
-        )}
-        <button
-          onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))}
-          className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors"
-        >
-          <Delete size={20} className="text-purple-400" />
-        </button>
-      </div>
-
-      <p className="text-center text-purple-400 text-xs">Não utilize o discador para realizar chamadas de emergência.</p>
-
-      <div className="mt-3 space-y-2">
-        <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${callStatusStyle.cls}`}>
-          <CallStatusIcon size={14} />
-          <span>Chamada: {callStatusStyle.label}</span>
         </div>
 
-        <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${sipStatusStyle.cls}`}>
-          <SipStatusIcon size={14} />
-          <span>{sipStatusStyle.label}</span>
+        <div className="flex items-center space-x-2 mb-6">
+          <div className="w-6 h-4 bg-green-500 rounded-sm flex items-center justify-center">
+            <span className="text-xs">🇧🇷</span>
+          </div>
+          <div className="flex-1 bg-slate-700 rounded px-3 py-2 min-h-[40px] flex items-center">
+            <span className="text-white font-mono text-lg">{phoneNumber || ''}</span>
+          </div>
         </div>
-      </div>
 
-    </div>
-    {showContactsPopup && (
-      <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
-          <div className="flex items-center justify-between p-4 border-b border-slate-700">
-            <h3 className="text-white font-semibold">Selecionar Contato</h3>
+        <div className="flex justify-center space-x-8 mb-6">
+          <button onClick={() => setPhoneNumber('')} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Limpar número discado">
+            <Eraser size={20} className="text-purple-400" />
+          </button>
+          <button onClick={openContactsPopup} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Visualizar contatos">
+            <User size={20} className="text-purple-400" />
+          </button>
+          <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Transferir chamada">
+            <PhoneForwarded size={20} className="text-purple-400" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {dialpadNumbers.flat().map((num) => (
             <button
-              onClick={() => setShowContactsPopup(false)}
-              className="text-slate-300 hover:text-white"
-              title="Fechar"
+              key={num}
+              onClick={() => setPhoneNumber((prev) => prev + num)}
+              className="h-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xl font-semibold transition-colors"
             >
-              <X size={18} />
+              {num}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex justify-center space-x-8 mb-4">
+          <button className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors" title="Adicionar contato">
+            <UserPlus size={20} className="text-purple-400" />
+          </button>
+          {hasCallInProgress ? (
+            <button
+              onClick={handleHangup}
+              disabled={isSubmitting}
+              className="p-4 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+              title="Encerrar ligação"
+            >
+              <PhoneOff size={24} className="text-white" />
+            </button>
+          ) : (
+            <button
+              onClick={handleCall}
+              disabled={isSubmitting}
+              className="p-4 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+              title="Iniciar/atender ligação"
+            >
+              <Phone size={24} className="text-white" />
+            </button>
+          )}
+          <button onClick={() => setPhoneNumber((prev) => prev.slice(0, -1))} className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors">
+            <Delete size={20} className="text-purple-400" />
+          </button>
+        </div>
+
+        <p className="text-center text-purple-400 text-xs">Não utilize o discador para realizar chamadas de emergência.</p>
+
+        <div className="mt-3 space-y-2">
+          <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${callStatusStyle.cls}`}>
+            <CallStatusIcon size={14} />
+            <span>Chamada: {callStatusStyle.label}</span>
+          </div>
+
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <input
+              type="text"
+              placeholder="Usuário SIP"
+              value={sipUsername}
+              onChange={(e) => setSipUsername(e.target.value)}
+              disabled={isSipReady || isSipConnecting}
+              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+            />
+            <input
+              type="password"
+              placeholder="Senha SIP"
+              value={sipPassword}
+              onChange={(e) => setSipPassword(e.target.value)}
+              disabled={isSipReady || isSipConnecting}
+              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-400 disabled:opacity-60"
+            />
+            <button
+              onClick={isSipReady ? disconnectSip : connectSip}
+              disabled={isSipConnecting}
+              className="px-2 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-60"
+              title={isSipReady ? 'Desconectar' : 'Conectar no SIP'}
+            >
+              {isSipReady ? <WifiOff size={16} /> : <RefreshCw size={16} className={isSipConnecting ? 'animate-spin' : ''} />}
             </button>
           </div>
 
-          <div className="p-4">
-            <div className="relative mb-3">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar por nome ou telefone"
-                value={contactSearch}
-                onChange={(e) => setContactSearch(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-md pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-green-500"
-              />
+          <div className={`flex items-center justify-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${sipStatusStyle.cls}`}>
+            <SipStatusIcon size={14} />
+            <span>{sipStatusStyle.label}</span>
+          </div>
+        </div>
+      </div>
+
+      {showContactsPopup && (
+        <div className="fixed inset-0 z-[9999] bg-black/65 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold">Selecionar Contato</h3>
+              <button onClick={() => setShowContactsPopup(false)} className="text-slate-300 hover:text-white" title="Fechar">
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-              {contactsLoading && (
-                <p className="text-sm text-slate-300">Carregando contatos...</p>
-              )}
+            <div className="p-4">
+              <div className="relative mb-3">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome ou telefone"
+                  value={contactSearch}
+                  onChange={(e) => setContactSearch(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-md pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
 
-              {!contactsLoading && filteredContacts.length === 0 && (
-                <p className="text-sm text-slate-300">Nenhum contato com telefone encontrado.</p>
-              )}
+              <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                {contactsLoading && <p className="text-sm text-slate-300">Carregando contatos...</p>}
 
-              {!contactsLoading && filteredContacts.map((contact) => (
-                <button
-                  key={contact.id}
-                  onClick={() => setSelectedContactId(contact.id)}
-                  className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
-                    selectedContactId === contact.id
-                      ? 'border-green-400 bg-green-500/10'
-                      : 'border-slate-700 bg-slate-800 hover:bg-slate-700/70'
-                  }`}
-                >
-                  <p className="text-white text-sm font-medium">{contact.name || 'Sem nome'}</p>
-                  <p className="text-slate-300 text-xs">{contact.phone}</p>
-                </button>
-              ))}
+                {!contactsLoading && filteredContacts.length === 0 && (
+                  <p className="text-sm text-slate-300">Nenhum contato com telefone encontrado.</p>
+                )}
+
+                {!contactsLoading && filteredContacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    onClick={() => setSelectedContactId(contact.id)}
+                    className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                      selectedContactId === contact.id
+                        ? 'border-green-400 bg-green-500/10'
+                        : 'border-slate-700 bg-slate-800 hover:bg-slate-700/70'
+                    }`}
+                  >
+                    <p className="text-white text-sm font-medium">{contact.name || 'Sem nome'}</p>
+                    <p className="text-slate-300 text-xs">{contact.phone}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button onClick={() => setShowContactsPopup(false)} className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm">
+                Cancelar
+              </button>
+              <button onClick={useSelectedContactPhone} className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 text-sm">
+                Usar telefone
+              </button>
             </div>
           </div>
-
-          <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
-            <button
-              onClick={() => setShowContactsPopup(false)}
-              className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={useSelectedContactPhone}
-              className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 text-sm"
-            >
-              Usar telefone
-            </button>
-          </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 };
